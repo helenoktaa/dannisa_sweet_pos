@@ -16,15 +16,15 @@ class ProductProvider extends ChangeNotifier {
   String? get error => _error;
   bool get isLoading => _status == ProductStatus.loading;
 
-  // Fetch products — token otomatis disertakan oleh DioClient interceptor
+  // Fetch semua produk — token otomatis disertakan oleh DioClient interceptor
   Future<void> fetchProducts() async {
     _status = ProductStatus.loading;
     notifyListeners();
 
     try {
-      final response = await DioClient.instance.get(ApiConstants.products);
+      final response = await DioClient.instance.get(ApiConstants.produk);
 
-      // Backend response: { "data": [ {...}, {...} ] }
+      // Backend response: { "data": [ {...}, {...} ], "success": true }
       final List<dynamic> data = response.data['data'];
       _products = data.map((e) => ProductModel.fromJson(e)).toList();
       _status = ProductStatus.loaded;

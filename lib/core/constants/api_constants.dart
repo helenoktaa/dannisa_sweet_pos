@@ -1,12 +1,19 @@
 class ApiConstants {
-  static const String baseUrl = 'http://10.0.2.2:8082/v1';
+ static const String baseUrl = 'http://192.168.100.6:8080/v1';
 
   // Auth endpoints
-  static const String verifyToken = '/auth/verify-token';
+  static const String login    = '/auth/login';    
+  static const String register = '/auth/register'; 
+  static const String profile  = '/auth/profile';  
 
-  // Product endpoints
-  static const String products = '/products';
+  // Produk endpoints
+  static const String produk   = '/produk';        
 
+  // Transaksi endpoints
+  static const String transaksi = '/transaksi';    
+
+  // Kategori endpoints
+  static const String kategori = '/kategori';      
   // Timeout
   static const int connectTimeout = 15000;
   static const int receiveTimeout = 15000;

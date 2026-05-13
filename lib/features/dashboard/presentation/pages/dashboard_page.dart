@@ -2,32 +2,28 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:dannisa_sweet_pos/core/routes/app_router.dart';
 import 'package:dannisa_sweet_pos/features/auth/presentation/providers/auth_provider.dart';
-import 'package:dannisa_sweet_pos/features/dashboard/data/models/product_model.dart';
 import 'package:dannisa_sweet_pos/features/dashboard/presentation/providers/product_provider.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
+
   @override
   State<DashboardPage> createState() => _DashboardPageState();
 }
-
 
 class _DashboardPageState extends State<DashboardPage> {
   @override
   void initState() {
     super.initState();
-    // Fetch produk begitu halaman dibuka
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<ProductProvider>().fetchProducts();
     });
   }
 
-
   @override
   Widget build(BuildContext context) {
-    final auth    = context.watch<AuthProvider>();
+    final auth = context.watch<AuthProvider>();
     final product = context.watch<ProductProvider>();
-
 
     return Scaffold(
       appBar: AppBar(
@@ -36,8 +32,11 @@ class _DashboardPageState extends State<DashboardPage> {
           children: [
             const Text('Dashboard', style: TextStyle(fontSize: 18)),
             Text(
-              'Halo, ${auth.firebaseUser?.displayName ?? 'User'}!',
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.normal),
+              'Halo, ${auth.user?.namaUser ?? 'User'}!', // ← ganti dari firebaseUser
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.normal,
+              ),
             ),
           ],
         ),
@@ -53,7 +52,6 @@ class _DashboardPageState extends State<DashboardPage> {
         ],
       ),
 
-
       body: switch (product.status) {
         ProductStatus.loading || ProductStatus.initial => const Center(
             child: Column(
@@ -65,7 +63,6 @@ class _DashboardPageState extends State<DashboardPage> {
               ],
             ),
           ),
-
 
         ProductStatus.error => Center(
             child: Column(
@@ -84,14 +81,13 @@ class _DashboardPageState extends State<DashboardPage> {
             ),
           ),
 
-
         ProductStatus.loaded => RefreshIndicator(
             onRefresh: () => product.fetchProducts(),
             child: GridView.builder(
               padding: const EdgeInsets.all(16),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
-                childAspectRatio: 0.75,
+                childAspectRatio: 0.8,
                 crossAxisSpacing: 12,
                 mainAxisSpacing: 12,
               ),
@@ -100,47 +96,93 @@ class _DashboardPageState extends State<DashboardPage> {
                 final p = product.products[i];
                 return Card(
                   elevation: 2,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      ClipRRect(
-                        borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-                        child: Image.network(
-                          p.imageUrl, height: 120, width: double.infinity,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => Container(
-                            height: 120,
-                            color: Colors.grey.shade200,
-                            child: const Icon(Icons.image_not_supported, size: 40),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Icon produk (tidak ada imageUrl di backend)
+                        Container(
+                          height: 80,
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            color: Colors.blue.shade50,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(
+                            Icons.cake_outlined,
+                            size: 40,
+                            color: Color(0xFF1565C0),
                           ),
                         ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(10),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                        const SizedBox(height: 8),
+
+                        // Nama produk
+                        Text(
+                          p.namaProduk,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+
+                        // Harga jual
+                        Text(
+                          'Rp ${p.hargaJual.toStringAsFixed(0)}',
+                          style: const TextStyle(
+                            color: Color(0xFF1565C0),
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+
+                        // Kategori
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.shade50,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            p.kategori?.namaKategori ?? '-',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: Color(0xFF1565C0),
+                            ),
+                          ),
+                        ),
+                        const Spacer(),
+
+                        // Stok
+                        Row(
                           children: [
-                            Text(p.name,
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                              maxLines: 2, overflow: TextOverflow.ellipsis),
-                            const SizedBox(height: 4),
-                            Text('Rp ${p.price.toStringAsFixed(0)}',
-                              style: const TextStyle(color: Color(0xFF1565C0), fontWeight: FontWeight.w600)),
-                            const SizedBox(height: 4),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: Colors.blue.shade50,
-                                borderRadius: BorderRadius.circular(20),
+                            Icon(
+                              Icons.inventory_2_outlined,
+                              size: 14,
+                              color: p.stok > 0 ? Colors.green : Colors.red,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Stok: ${p.stok}',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: p.stok > 0 ? Colors.green : Colors.red,
                               ),
-                              child: Text(p.category,
-                                style: const TextStyle(fontSize: 11, color: Color(0xFF1565C0))),
                             ),
                           ],
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 );
               },
