@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "232180290147",
+    "project_id": "shopping-tangerang-ilen",
+    "storage_bucket": "shopping-tangerang-ilen.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:232180290147:android:20e3a49dc2343da2d9de56",
+        "android_client_info": {
+          "package_name": "com.example.shopping_tangerang"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB1IxPw8FEi6SkQzSGVadeTuf5MuxcH3Eo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
