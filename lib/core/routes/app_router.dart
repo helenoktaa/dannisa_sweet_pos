@@ -5,39 +5,37 @@ import 'package:dannisa_sweet_pos/core/theme/app_theme.dart';
 import 'package:dannisa_sweet_pos/features/auth/presentation/pages/login_page.dart';
 import 'package:dannisa_sweet_pos/features/auth/presentation/pages/register_page.dart';
 import 'package:dannisa_sweet_pos/features/auth/presentation/providers/auth_provider.dart';
-import 'package:dannisa_sweet_pos/features/dashboard/presentation/pages/dashboard_page.dart';
+import 'package:dannisa_sweet_pos/features/admin/presentation/pages/admin_home_page.dart';
 import 'package:dannisa_sweet_pos/features/dashboard/presentation/providers/product_provider.dart';
 
 class AppRouter {
-  static const String splash   = '/';
-  static const String login    = '/login';
-  static const String register = '/register';
-  static const String dashboard = '/dashboard';
+  static const String splash        = '/';
+  static const String login         = '/login';
+  static const String register      = '/register';
 
-  // verifyEmail dihapus — tidak pakai Firebase lagi
+  // Admin routes
+  static const String adminHome     = '/admin/home';
+  static const String kelolaProduk  = '/admin/produk';
+  static const String kelolaKategori = '/admin/kategori';
+  static const String kelolaUser    = '/admin/user';
+  static const String daftarProduk  = '/admin/daftar-produk';
+  static const String inputTransaksi = '/admin/transaksi';
+  static const String laporan       = '/admin/laporan';
+
+  // Kasir routes
+  static const String kasirHome     = '/kasir/home';
+
+  // Legacy (tetap ada untuk backward compat)
+  static const String dashboard     = '/dashboard';
 
   static Map<String, WidgetBuilder> get routes => {
-    splash:    (_) => const SplashPage(),
-    login:     (_) => const LoginPage(),
-    register:  (_) => const RegisterPage(),
-    dashboard: (_) => const AuthGuard(child: DashboardPage()),
+    splash:          (_) => const SplashPage(),
+    login:           (_) => const LoginPage(),
+    register:        (_) => const RegisterPage(),
+    adminHome:       (_) => const AdminHomePage(),
+    // Route lain akan ditambahkan step by step
+    dashboard:       (_) => const AdminHomePage(), // legacy redirect
   };
-}
-
-// AuthGuard: cek status auth sebelum masuk halaman
-class AuthGuard extends StatelessWidget {
-  final Widget child;
-  const AuthGuard({super.key, required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    final status = context.watch<AuthProvider>().status;
-
-    return switch (status) {
-      AuthStatus.authenticated => child,      // Lanjut ke halaman
-      _ => const LoginPage(),                 // Redirect login
-    };
-  }
 }
 
 class MyApp extends StatelessWidget {
@@ -61,7 +59,6 @@ class MyApp extends StatelessWidget {
   }
 }
 
-// SplashPage: cek token tersimpan, redirect otomatis
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
 
@@ -81,7 +78,7 @@ class _SplashPageState extends State<SplashPage> {
     if (!mounted) return;
 
     final token = await SecureStorageService.getToken();
-    final route = token != null ? AppRouter.dashboard : AppRouter.login;
+    final route = token != null ? AppRouter.adminHome : AppRouter.login;
     Navigator.pushReplacementNamed(context, route);
   }
 
@@ -91,7 +88,6 @@ class _SplashPageState extends State<SplashPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Logo atau nama app
           const Icon(Icons.storefront, size: 80, color: Color(0xFF1565C0)),
           const SizedBox(height: 16),
           const Text(
