@@ -3,13 +3,7 @@ import 'package:dannisa_sweet_pos/core/services/secure_storage.dart';
 import 'package:dannisa_sweet_pos/features/auth/data/models/auth_response_model.dart';
 import 'package:dannisa_sweet_pos/features/auth/data/models/auth_repository_impl.dart';
 
-enum AuthStatus {
-  initial,
-  loading,
-  authenticated,
-  unauthenticated,
-  error,
-}
+enum AuthStatus { initial, loading, authenticated, unauthenticated, error }
 
 class AuthProvider extends ChangeNotifier {
   final AuthRepositoryImpl _authRepo = AuthRepositoryImpl();
@@ -34,7 +28,13 @@ class AuthProvider extends ChangeNotifier {
     _setLoading();
     try {
       final responseData = await _authRepo.login(email, password);
+
+      debugPrint('=== RESPONSE LOGIN: $responseData ===');
+
       final authResponse = AuthResponseModel.fromJson(responseData);
+
+      debugPrint('=== USER: ${authResponse.user.namaUser} ===');
+      debugPrint('=== JABATAN: ${authResponse.user.jabatan.namaJabatan} ===');
 
       // Simpan token ke secure storage
       await SecureStorageService.saveToken(authResponse.token);
