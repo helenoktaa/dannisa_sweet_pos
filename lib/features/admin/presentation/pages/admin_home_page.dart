@@ -3,20 +3,44 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:dannisa_sweet_pos/core/routes/app_router.dart';
 import 'package:dannisa_sweet_pos/features/auth/presentation/providers/auth_provider.dart';
+import 'package:dannisa_sweet_pos/features/admin/presentation/providers/transaksi_provider.dart';
 
 // ── Warna tema Dannisa Sweet ───────────────────────────────
 const _primary = Color(0xFFE91E8C);
 const _primaryDark = Color(0xFFC2185B);
-const _accent = Color(0xFFFF6B9D);
 const _surface = Color(0xFFFFF0F7);
 const _textPrimary = Color(0xFF1A1A2E);
 const _textSecondary = Color(0xFF6B7280);
 
-class AdminHomePage extends StatelessWidget {
+// ══════════════════════════════════════════════════════════
+//  Diubah dari StatelessWidget → StatefulWidget
+//  Tujuan: agar bisa pakai initState untuk set idUser
+// ══════════════════════════════════════════════════════════
+class AdminHomePage extends StatefulWidget {
   const AdminHomePage({super.key});
 
   @override
+  State<AdminHomePage> createState() => _AdminHomePageState();
+}
+
+class _AdminHomePageState extends State<AdminHomePage> {
+  @override
+  void initState() {
+    super.initState();
+
+    // ── Set idUser ke TransaksiProvider ───────────────────
+    // Dijalankan setelah frame pertama selesai build,
+    // karena context.read tidak boleh dipanggil saat build berlangsung.
+    // AuthProvider sudah punya data user dari proses login sebelumnya.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final idUser = context.read<AuthProvider>().user?.idUser ?? '';
+      context.read<TransaksiProvider>().setIdUser(idUser);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    // Gunakan watch agar UI update otomatis jika auth berubah
     final auth = context.watch<AuthProvider>();
     final namaUser = auth.user?.namaUser ?? 'Admin';
     final jabatan = auth.user?.jabatan.namaJabatan ?? 'Admin';
@@ -24,10 +48,10 @@ class AdminHomePage extends StatelessWidget {
     final greeting = now.hour < 11
         ? 'Selamat Pagi'
         : now.hour < 15
-        ? 'Selamat Siang'
-        : now.hour < 18
-        ? 'Selamat Sore'
-        : 'Selamat Malam';
+            ? 'Selamat Siang'
+            : now.hour < 18
+                ? 'Selamat Sore'
+                : 'Selamat Malam';
 
     return Scaffold(
       backgroundColor: _surface,
@@ -115,7 +139,6 @@ class AdminHomePage extends StatelessWidget {
               ),
               child: Stack(
                 children: [
-                  // Dekorasi lingkaran
                   Positioned(
                     right: -40,
                     top: -40,
@@ -152,7 +175,6 @@ class AdminHomePage extends StatelessWidget {
                       ),
                     ),
                   ),
-                  // Konten header
                   SafeArea(
                     bottom: false,
                     child: Padding(
@@ -160,7 +182,6 @@ class AdminHomePage extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Greeting & nama
                           Row(
                             children: [
                               Expanded(
@@ -187,7 +208,6 @@ class AdminHomePage extends StatelessWidget {
                                   ],
                                 ),
                               ),
-                              // Avatar
                               Container(
                                 width: 52,
                                 height: 52,
@@ -215,8 +235,6 @@ class AdminHomePage extends StatelessWidget {
                             ],
                           ),
                           const SizedBox(height: 16),
-
-                          // Badge jabatan & info toko
                           Row(
                             children: [
                               Container(
@@ -301,21 +319,20 @@ class AdminHomePage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // ── Section: Transaksi ──────────────────────
-                  _SectionHeader(
+                  const _SectionHeader(
                     icon: Icons.point_of_sale_outlined,
                     title: 'Transaksi',
                     color: _primary,
                   ),
                   const SizedBox(height: 12),
 
-                  // Input Transaksi — card besar utama
                   _PrimaryMenuCard(
                     icon: Icons.point_of_sale,
                     label: 'Input Transaksi',
                     description: 'Catat penjualan baru',
                     color: const Color(0xFF10B981),
-                    onTap: () =>
-                        Navigator.pushNamed(context, AppRouter.inputTransaksi),
+                    onTap: () => Navigator.pushNamed(
+                        context, AppRouter.inputTransaksi),
                   ),
                   const SizedBox(height: 10),
                   _PrimaryMenuCard(
@@ -330,7 +347,7 @@ class AdminHomePage extends StatelessWidget {
                   const SizedBox(height: 28),
 
                   // ── Section: Kelola Data ────────────────────
-                  _SectionHeader(
+                  const _SectionHeader(
                     icon: Icons.manage_accounts_outlined,
                     title: 'Kelola Data',
                     color: _primary,
@@ -338,53 +355,48 @@ class AdminHomePage extends StatelessWidget {
                   const SizedBox(height: 12),
 
                   GridView.count(
+                    padding: EdgeInsets.zero,
                     crossAxisCount: 2,
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     mainAxisSpacing: 12,
                     crossAxisSpacing: 12,
-                    childAspectRatio: 1.1,
+                    childAspectRatio: 1.3,
                     children: [
                       _GridMenuCard(
                         icon: Icons.cake_outlined,
                         label: 'Kelola Produk',
                         color: _primary,
                         onTap: () => Navigator.pushNamed(
-                          context,
-                          AppRouter.kelolaProduk,
-                        ),
+                            context, AppRouter.kelolaProduk),
                       ),
                       _GridMenuCard(
                         icon: Icons.category_outlined,
                         label: 'Kelola Kategori',
                         color: const Color(0xFF0EA5E9),
                         onTap: () => Navigator.pushNamed(
-                          context,
-                          AppRouter.kelolaKategori,
-                        ),
+                            context, AppRouter.kelolaKategori),
                       ),
                       _GridMenuCard(
                         icon: Icons.people_outline,
                         label: 'Kelola User',
                         color: const Color(0xFF8B5CF6),
-                        onTap: () =>
-                            Navigator.pushNamed(context, AppRouter.kelolaUser),
+                        onTap: () => Navigator.pushNamed(
+                            context, AppRouter.kelolaUser),
                       ),
                       _GridMenuCard(
                         icon: Icons.inventory_2_outlined,
                         label: 'Daftar Produk',
                         color: const Color(0xFF06B6D4),
                         onTap: () => Navigator.pushNamed(
-                          context,
-                          AppRouter.daftarProduk,
-                        ),
+                            context, AppRouter.daftarProduk),
                       ),
                     ],
                   ),
 
                   const SizedBox(height: 28),
 
-                  // ── Footer info toko ────────────────────────
+                  // ── Footer ──────────────────────────────────
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(16),
@@ -401,11 +413,7 @@ class AdminHomePage extends StatelessWidget {
                             color: _primary.withOpacity(0.1),
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(
-                            Icons.cake,
-                            color: _primary,
-                            size: 22,
-                          ),
+                          child: const Icon(Icons.cake, color: _primary, size: 22),
                         ),
                         const SizedBox(width: 14),
                         Column(
@@ -480,7 +488,7 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
-// ── Primary Menu Card (full width, horizontal) ─────────────
+// ── Primary Menu Card ──────────────────────────────────────
 class _PrimaryMenuCard extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -567,7 +575,7 @@ class _PrimaryMenuCard extends StatelessWidget {
   }
 }
 
-// ── Grid Menu Card (2 kolom) ───────────────────────────────
+// ── Grid Menu Card ─────────────────────────────────────────
 class _GridMenuCard extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -603,7 +611,6 @@ class _GridMenuCard extends StatelessWidget {
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Container(
                 padding: const EdgeInsets.all(10),
@@ -613,6 +620,7 @@ class _GridMenuCard extends StatelessWidget {
                 ),
                 child: Icon(icon, color: color, size: 24),
               ),
+              const SizedBox(height: 18),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

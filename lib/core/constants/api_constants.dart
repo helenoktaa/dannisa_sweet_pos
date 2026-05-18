@@ -14,6 +14,16 @@ class ApiConstants {
 
   // Kategori endpoints
   static const String kategori = '/kategori';      
+
+  // User endpoints
+  static const String users = '/users';
+ 
+  // Jabatan endpoints
+  static const String jabatan = '/jabatan';
+
+  // Laporan endpoints
+  static const String laporan   = '/transaksi/laporan';
+  
   // Timeout
   static const int connectTimeout = 15000;
   static const int receiveTimeout = 15000;
