@@ -33,8 +33,19 @@ String _formatTanggal(String raw) {
   try {
     final dt = DateTime.parse(raw).toLocal();
     const bulan = [
-      '', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
-      'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'
+      '',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'Mei',
+      'Jun',
+      'Jul',
+      'Agu',
+      'Sep',
+      'Okt',
+      'Nov',
+      'Des',
     ];
     return '${dt.day} ${bulan[dt.month]} ${dt.year}  '
         '${dt.hour.toString().padLeft(2, '0')}:'
@@ -98,29 +109,40 @@ class _LaporanTransaksiPageState extends State<LaporanTransaksiPage>
       backgroundColor: _surface,
       body: NestedScrollView(
         headerSliverBuilder: (context, _) => [
-          // ── App Bar ─────────────────────────────────────────
           SliverAppBar(
-            expandedHeight: 130,
+            expandedHeight: 155,
             floating: false,
             pinned: true,
             elevation: 0,
             backgroundColor: _primary,
             systemOverlayStyle: SystemUiOverlayStyle.light,
-            bottom: TabBar(
-              controller: _tabController,
-              indicatorColor: Colors.white,
-              indicatorWeight: 3,
-              labelColor: Colors.white,
-              unselectedLabelColor: Colors.white.withOpacity(0.6),
-              labelStyle: const TextStyle(
-                  fontWeight: FontWeight.w700, fontSize: 14),
-              tabs: const [
-                Tab(text: 'Harian'),
-                Tab(text: 'Bulanan'),
-                Tab(text: 'Rentang'),
-              ],
+
+            bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(52),
+              child: Padding(
+                padding: const EdgeInsets.only(left: 12, right: 12, bottom: 10),
+                child: TabBar(
+                  controller: _tabController,
+                  indicatorColor: Colors.white,
+                  indicatorWeight: 3,
+                  indicatorSize: TabBarIndicatorSize.tab,
+                  labelColor: Colors.white,
+                  unselectedLabelColor: Colors.white.withOpacity(0.65),
+                  labelStyle: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                  ),
+                  tabs: const [
+                    Tab(text: 'Harian'),
+                    Tab(text: 'Bulanan'),
+                    Tab(text: 'Rentang'),
+                  ],
+                ),
+              ),
             ),
+
             flexibleSpace: FlexibleSpaceBar(
+              collapseMode: CollapseMode.pin,
               background: Container(
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
@@ -129,20 +151,28 @@ class _LaporanTransaksiPageState extends State<LaporanTransaksiPage>
                     colors: [_primary, _primaryDark],
                   ),
                 ),
+
                 child: Stack(
                   children: [
+                    // bubble kanan
                     Positioned(
-                      right: -30, top: -20,
+                      right: -30,
+                      top: -20,
                       child: Container(
-                        width: 150, height: 150,
+                        width: 150,
+                        height: 150,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: Colors.white.withOpacity(0.08),
                         ),
                       ),
                     ),
+
+                    // text header
                     Positioned(
-                      left: 20, bottom: 52,
+                      left: 35,
+                      right: 24,
+                      bottom: 60,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
@@ -151,16 +181,21 @@ class _LaporanTransaksiPageState extends State<LaporanTransaksiPage>
                             'Laporan Transaksi',
                             style: TextStyle(
                               color: Colors.white,
-                              fontSize: 22,
+                              fontSize: 24,
                               fontWeight: FontWeight.w800,
                               letterSpacing: -0.5,
+                              height: 1.0,
                             ),
                           ),
+
+                          const SizedBox(height: 8),
+
                           Text(
                             'Rekap penjualan & laba',
                             style: TextStyle(
-                              color: Colors.white.withOpacity(0.8),
+                              color: Colors.white.withOpacity(0.82),
                               fontSize: 13,
+                              height: 1.2,
                             ),
                           ),
                         ],
@@ -197,8 +232,19 @@ class _LaporanTransaksiPageState extends State<LaporanTransaksiPage>
   // ── Date Selector: Harian ──────────────────────────────────
   Widget _buildHarianSelector() {
     const namaBulan = [
-      '', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+      '',
+      'Januari',
+      'Februari',
+      'Maret',
+      'April',
+      'Mei',
+      'Juni',
+      'Juli',
+      'Agustus',
+      'September',
+      'Oktober',
+      'November',
+      'Desember',
     ];
     return _DateSelectorBar(
       label:
@@ -211,9 +257,9 @@ class _LaporanTransaksiPageState extends State<LaporanTransaksiPage>
           firstDate: DateTime(2024),
           lastDate: DateTime.now(),
           builder: (ctx, child) => Theme(
-            data: Theme.of(ctx).copyWith(
-              colorScheme: const ColorScheme.light(primary: _primary),
-            ),
+            data: Theme.of(
+              ctx,
+            ).copyWith(colorScheme: const ColorScheme.light(primary: _primary)),
             child: child!,
           ),
         );
@@ -228,12 +274,22 @@ class _LaporanTransaksiPageState extends State<LaporanTransaksiPage>
   // ── Date Selector: Bulanan ─────────────────────────────────
   Widget _buildBulananSelector() {
     const namaBulan = [
-      '', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+      '',
+      'Januari',
+      'Februari',
+      'Maret',
+      'April',
+      'Mei',
+      'Juni',
+      'Juli',
+      'Agustus',
+      'September',
+      'Oktober',
+      'November',
+      'Desember',
     ];
     return _DateSelectorBar(
-      label:
-          '${namaBulan[_selectedMonth.month]} ${_selectedMonth.year}',
+      label: '${namaBulan[_selectedMonth.month]} ${_selectedMonth.year}',
       icon: Icons.date_range_outlined,
       onTap: () async {
         final picked = await showDatePicker(
@@ -242,15 +298,14 @@ class _LaporanTransaksiPageState extends State<LaporanTransaksiPage>
           firstDate: DateTime(2024),
           lastDate: DateTime.now(),
           builder: (ctx, child) => Theme(
-            data: Theme.of(ctx).copyWith(
-              colorScheme: const ColorScheme.light(primary: _primary),
-            ),
+            data: Theme.of(
+              ctx,
+            ).copyWith(colorScheme: const ColorScheme.light(primary: _primary)),
             child: child!,
           ),
         );
         if (picked != null) {
-          setState(
-              () => _selectedMonth = DateTime(picked.year, picked.month));
+          setState(() => _selectedMonth = DateTime(picked.year, picked.month));
           _loadData();
         }
       },
@@ -263,8 +318,7 @@ class _LaporanTransaksiPageState extends State<LaporanTransaksiPage>
     if (_selectedRange != null) {
       final s = _selectedRange!.start;
       final e = _selectedRange!.end;
-      label =
-          '${s.day}/${s.month}/${s.year} – ${e.day}/${e.month}/${e.year}';
+      label = '${s.day}/${s.month}/${s.year} – ${e.day}/${e.month}/${e.year}';
     }
     return _DateSelectorBar(
       label: label,
@@ -276,9 +330,9 @@ class _LaporanTransaksiPageState extends State<LaporanTransaksiPage>
           lastDate: DateTime.now(),
           initialDateRange: _selectedRange,
           builder: (ctx, child) => Theme(
-            data: Theme.of(ctx).copyWith(
-              colorScheme: const ColorScheme.light(primary: _primary),
-            ),
+            data: Theme.of(
+              ctx,
+            ).copyWith(colorScheme: const ColorScheme.light(primary: _primary)),
             child: child!,
           ),
         );
@@ -306,49 +360,47 @@ class _TabContent extends StatelessWidget {
 
     return switch (provider.status) {
       LaporanStatus.loading || LaporanStatus.initial => Column(
-          children: [
-            _HeaderArea(dateSelector: dateSelector),
-            const Expanded(
-              child: Center(
-                child: CircularProgressIndicator(color: _primary),
-              ),
-            ),
-          ],
-        ),
+        children: [
+          _HeaderArea(dateSelector: dateSelector),
+          const Expanded(
+            child: Center(child: CircularProgressIndicator(color: _primary)),
+          ),
+        ],
+      ),
       LaporanStatus.error => Column(
-          children: [
-            _HeaderArea(dateSelector: dateSelector),
-            Expanded(
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.cloud_off, size: 56, color: _primary),
-                    const SizedBox(height: 12),
-                    Text(
-                      provider.error ?? 'Terjadi kesalahan',
-                      style: const TextStyle(color: _textSecondary),
+        children: [
+          _HeaderArea(dateSelector: dateSelector),
+          Expanded(
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.cloud_off, size: 56, color: _primary),
+                  const SizedBox(height: 12),
+                  Text(
+                    provider.error ?? 'Terjadi kesalahan',
+                    style: const TextStyle(color: _textSecondary),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton.icon(
+                    onPressed: onLoad,
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Coba Lagi'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _primary,
+                      foregroundColor: Colors.white,
                     ),
-                    const SizedBox(height: 16),
-                    ElevatedButton.icon(
-                      onPressed: onLoad,
-                      icon: const Icon(Icons.refresh),
-                      label: const Text('Coba Lagi'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: _primary,
-                        foregroundColor: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
+      ),
       LaporanStatus.loaded => _LaporanContent(
-          dateSelector: dateSelector,
-          laporan: provider.laporan!,
-        ),
+        dateSelector: dateSelector,
+        laporan: provider.laporan!,
+      ),
     };
   }
 }
@@ -384,10 +436,7 @@ class _LaporanContent extends StatelessWidget {
   final Widget dateSelector;
   final LaporanData laporan;
 
-  const _LaporanContent({
-    required this.dateSelector,
-    required this.laporan,
-  });
+  const _LaporanContent({required this.dateSelector, required this.laporan});
 
   @override
   Widget build(BuildContext context) {
@@ -415,7 +464,9 @@ class _LaporanContent extends StatelessWidget {
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 8),
+                      horizontal: 14,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: _primary.withOpacity(0.08),
                       borderRadius: BorderRadius.circular(10),
@@ -423,8 +474,11 @@ class _LaporanContent extends StatelessWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.calendar_month_outlined,
-                            size: 14, color: _primary),
+                        const Icon(
+                          Icons.calendar_month_outlined,
+                          size: 14,
+                          color: _primary,
+                        ),
                         const SizedBox(width: 6),
                         Text(
                           '${laporan.tanggalMulai}  →  ${laporan.tanggalAkhir}',
@@ -496,8 +550,11 @@ class _LaporanContent extends StatelessWidget {
                     color: _primary.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Icon(Icons.receipt_long_outlined,
-                      color: _primary, size: 16),
+                  child: const Icon(
+                    Icons.receipt_long_outlined,
+                    color: _primary,
+                    size: 16,
+                  ),
                 ),
                 const SizedBox(width: 8),
                 const Text(
@@ -511,7 +568,9 @@ class _LaporanContent extends StatelessWidget {
                 const Spacer(),
                 Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 10, vertical: 4),
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: _primary.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(20),
@@ -538,8 +597,11 @@ class _LaporanContent extends StatelessWidget {
                     padding: EdgeInsets.all(40),
                     child: Column(
                       children: [
-                        Icon(Icons.receipt_long_outlined,
-                            size: 56, color: Color(0xFFD1D5DB)),
+                        Icon(
+                          Icons.receipt_long_outlined,
+                          size: 56,
+                          color: Color(0xFFD1D5DB),
+                        ),
                         SizedBox(height: 12),
                         Text(
                           'Belum ada transaksi pada periode ini',
@@ -551,21 +613,18 @@ class _LaporanContent extends StatelessWidget {
                 ),
               )
             : SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, i) {
-                    final t = laporan.transaksis[i];
-                    return Padding(
-                      padding: EdgeInsets.fromLTRB(
-                        16,
-                        0,
-                        16,
-                        i == laporan.transaksis.length - 1 ? 24 : 10,
-                      ),
-                      child: _TransaksiCard(transaksi: t),
-                    );
-                  },
-                  childCount: laporan.transaksis.length,
-                ),
+                delegate: SliverChildBuilderDelegate((context, i) {
+                  final t = laporan.transaksis[i];
+                  return Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      16,
+                      0,
+                      16,
+                      i == laporan.transaksis.length - 1 ? 24 : 10,
+                    ),
+                    child: _TransaksiCard(transaksi: t),
+                  );
+                }, childCount: laporan.transaksis.length),
               ),
       ],
     );
@@ -623,8 +682,11 @@ class _DateSelectorBar extends StatelessWidget {
               ),
             ),
             const Spacer(),
-            const Icon(Icons.keyboard_arrow_down_rounded,
-                color: _primary, size: 20),
+            const Icon(
+              Icons.keyboard_arrow_down_rounded,
+              color: _primary,
+              size: 20,
+            ),
           ],
         ),
       ),
@@ -683,8 +745,7 @@ class _SummaryCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     label,
-                    style: const TextStyle(
-                        fontSize: 11, color: _textSecondary),
+                    style: const TextStyle(fontSize: 11, color: _textSecondary),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
@@ -747,10 +808,14 @@ class _TransaksiCardState extends State<_TransaksiCard>
 
   Color get _metodColor {
     switch (widget.transaksi.metodePembayaran) {
-      case 'Tunai':    return _success;
-      case 'Transfer': return _info;
-      case 'QRIS':     return const Color(0xFF8B5CF6);
-      default:         return _textSecondary;
+      case 'Tunai':
+        return _success;
+      case 'Transfer':
+        return _info;
+      case 'QRIS':
+        return const Color(0xFF8B5CF6);
+      default:
+        return _textSecondary;
     }
   }
 
@@ -787,8 +852,11 @@ class _TransaksiCardState extends State<_TransaksiCard>
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Center(
-                      child: Icon(Icons.receipt_long_outlined,
-                          color: _primary, size: 22),
+                      child: Icon(
+                        Icons.receipt_long_outlined,
+                        color: _primary,
+                        size: 22,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -810,7 +878,9 @@ class _TransaksiCardState extends State<_TransaksiCard>
                             ),
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 3),
+                                horizontal: 8,
+                                vertical: 3,
+                              ),
                               decoration: BoxDecoration(
                                 color: _metodColor.withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(6),
@@ -830,7 +900,9 @@ class _TransaksiCardState extends State<_TransaksiCard>
                         Text(
                           _formatTanggal(t.tanggalTransaksi),
                           style: const TextStyle(
-                              fontSize: 11, color: _textSecondary),
+                            fontSize: 11,
+                            color: _textSecondary,
+                          ),
                         ),
                         const SizedBox(height: 4),
                         Row(
@@ -838,7 +910,9 @@ class _TransaksiCardState extends State<_TransaksiCard>
                             Text(
                               t.idTransaksi,
                               style: const TextStyle(
-                                  fontSize: 11, color: _textSecondary),
+                                fontSize: 11,
+                                color: _textSecondary,
+                              ),
                             ),
                             const Spacer(),
                             Text(
@@ -858,8 +932,10 @@ class _TransaksiCardState extends State<_TransaksiCard>
                   AnimatedRotation(
                     turns: _isExpanded ? 0.5 : 0,
                     duration: const Duration(milliseconds: 250),
-                    child: const Icon(Icons.keyboard_arrow_down_rounded,
-                        color: _textSecondary),
+                    child: const Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      color: _textSecondary,
+                    ),
                   ),
                 ],
               ),
@@ -894,15 +970,19 @@ class _TransaksiCardState extends State<_TransaksiCard>
                               padding: const EdgeInsets.only(bottom: 6),
                               child: Row(
                                 children: [
-                                  const Icon(Icons.circle,
-                                      size: 6, color: _primary),
+                                  const Icon(
+                                    Icons.circle,
+                                    size: 6,
+                                    color: _primary,
+                                  ),
                                   const SizedBox(width: 8),
                                   Expanded(
                                     child: Text(
                                       '${d.produk.namaProduk} x${d.qty}',
                                       style: const TextStyle(
-                                          fontSize: 13,
-                                          color: _textPrimary),
+                                        fontSize: 13,
+                                        color: _textPrimary,
+                                      ),
                                     ),
                                   ),
                                   Text(
@@ -927,17 +1007,22 @@ class _TransaksiCardState extends State<_TransaksiCard>
                           Expanded(
                             child: Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 10),
+                                horizontal: 12,
+                                vertical: 10,
+                              ),
                               decoration: BoxDecoration(
                                 color: _warning.withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: Column(
                                 children: [
-                                  const Text('Modal',
-                                      style: TextStyle(
-                                          fontSize: 11,
-                                          color: _textSecondary)),
+                                  const Text(
+                                    'Modal',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: _textSecondary,
+                                    ),
+                                  ),
                                   const SizedBox(height: 4),
                                   Text(
                                     _formatRupiah(t.totalModal),
@@ -955,17 +1040,22 @@ class _TransaksiCardState extends State<_TransaksiCard>
                           Expanded(
                             child: Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 10),
+                                horizontal: 12,
+                                vertical: 10,
+                              ),
                               decoration: BoxDecoration(
                                 color: _success.withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: Column(
                                 children: [
-                                  const Text('Laba',
-                                      style: TextStyle(
-                                          fontSize: 11,
-                                          color: _textSecondary)),
+                                  const Text(
+                                    'Laba',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: _textSecondary,
+                                    ),
+                                  ),
                                   const SizedBox(height: 4),
                                   Text(
                                     _formatRupiah(t.laba),
@@ -983,17 +1073,22 @@ class _TransaksiCardState extends State<_TransaksiCard>
                           Expanded(
                             child: Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 10),
+                                horizontal: 12,
+                                vertical: 10,
+                              ),
                               decoration: BoxDecoration(
                                 color: _info.withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: Column(
                                 children: [
-                                  const Text('Item',
-                                      style: TextStyle(
-                                          fontSize: 11,
-                                          color: _textSecondary)),
+                                  const Text(
+                                    'Item',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: _textSecondary,
+                                    ),
+                                  ),
                                   const SizedBox(height: 4),
                                   Text(
                                     '${t.totalItem} pcs',
