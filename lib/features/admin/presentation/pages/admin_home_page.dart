@@ -11,6 +11,9 @@ const _primaryDark = Color(0xFFC2185B);
 const _surface = Color(0xFFFFF0F7);
 const _textPrimary = Color(0xFF1A1A2E);
 const _textSecondary = Color(0xFF6B7280);
+const _warning = Color(0xFFF59E0B);
+final pendingBg = const Color(0xFFFFF1E8);
+final pendingIcon = const Color(0xFFFF9F43);
 
 // ══════════════════════════════════════════════════════════
 //  Diubah dari StatelessWidget → StatefulWidget
@@ -27,11 +30,6 @@ class _AdminHomePageState extends State<AdminHomePage> {
   @override
   void initState() {
     super.initState();
-
-    // ── Set idUser ke TransaksiProvider ───────────────────
-    // Dijalankan setelah frame pertama selesai build,
-    // karena context.read tidak boleh dipanggil saat build berlangsung.
-    // AuthProvider sudah punya data user dari proses login sebelumnya.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final idUser = context.read<AuthProvider>().user?.idUser ?? '';
       context.read<TransaksiProvider>().setIdUser(idUser);
@@ -48,10 +46,10 @@ class _AdminHomePageState extends State<AdminHomePage> {
     final greeting = now.hour < 11
         ? 'Selamat Pagi'
         : now.hour < 15
-            ? 'Selamat Siang'
-            : now.hour < 18
-                ? 'Selamat Sore'
-                : 'Selamat Malam';
+        ? 'Selamat Siang'
+        : now.hour < 18
+        ? 'Selamat Sore'
+        : 'Selamat Malam';
 
     return Scaffold(
       backgroundColor: _surface,
@@ -331,8 +329,19 @@ class _AdminHomePageState extends State<AdminHomePage> {
                     label: 'Input Transaksi',
                     description: 'Catat penjualan baru',
                     color: const Color(0xFF10B981),
+                    onTap: () =>
+                        Navigator.pushNamed(context, AppRouter.inputTransaksi),
+                  ),
+                  const SizedBox(height: 10),
+                  _PrimaryMenuCard(
+                    icon: Icons.pending_actions_outlined,
+                    label: 'Transaksi Pending',
+                    description: 'Konfirmasi pembayaran Transfer/QRIS',
+                    color: const Color(0xFFFFA552),
                     onTap: () => Navigator.pushNamed(
-                        context, AppRouter.inputTransaksi),
+                      context,
+                      AppRouter.transaksiPending,
+                    ),
                   ),
                   const SizedBox(height: 10),
                   _PrimaryMenuCard(
@@ -361,35 +370,41 @@ class _AdminHomePageState extends State<AdminHomePage> {
                     physics: const NeverScrollableScrollPhysics(),
                     mainAxisSpacing: 12,
                     crossAxisSpacing: 12,
-                    childAspectRatio: 1.3,
+                    childAspectRatio: 1.1,
                     children: [
                       _GridMenuCard(
                         icon: Icons.cake_outlined,
                         label: 'Kelola Produk',
                         color: _primary,
                         onTap: () => Navigator.pushNamed(
-                            context, AppRouter.kelolaProduk),
+                          context,
+                          AppRouter.kelolaProduk,
+                        ),
                       ),
                       _GridMenuCard(
                         icon: Icons.category_outlined,
                         label: 'Kelola Kategori',
                         color: const Color(0xFF0EA5E9),
                         onTap: () => Navigator.pushNamed(
-                            context, AppRouter.kelolaKategori),
+                          context,
+                          AppRouter.kelolaKategori,
+                        ),
                       ),
                       _GridMenuCard(
                         icon: Icons.people_outline,
                         label: 'Kelola User',
                         color: const Color(0xFF8B5CF6),
-                        onTap: () => Navigator.pushNamed(
-                            context, AppRouter.kelolaUser),
+                        onTap: () =>
+                            Navigator.pushNamed(context, AppRouter.kelolaUser),
                       ),
                       _GridMenuCard(
                         icon: Icons.inventory_2_outlined,
                         label: 'Daftar Produk',
                         color: const Color(0xFF06B6D4),
                         onTap: () => Navigator.pushNamed(
-                            context, AppRouter.daftarProduk),
+                          context,
+                          AppRouter.daftarProduk,
+                        ),
                       ),
                     ],
                   ),
@@ -413,7 +428,11 @@ class _AdminHomePageState extends State<AdminHomePage> {
                             color: _primary.withOpacity(0.1),
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(Icons.cake, color: _primary, size: 22),
+                          child: const Icon(
+                            Icons.cake,
+                            color: _primary,
+                            size: 22,
+                          ),
                         ),
                         const SizedBox(width: 14),
                         Column(

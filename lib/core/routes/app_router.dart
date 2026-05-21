@@ -16,6 +16,10 @@ import 'package:dannisa_sweet_pos/features/admin/presentation/pages/kelola_user_
 import 'package:dannisa_sweet_pos/features/admin/presentation/pages/daftar_produk_page.dart';
 import 'package:dannisa_sweet_pos/features/admin/presentation/pages/input_transaksi_page.dart';
 import 'package:dannisa_sweet_pos/features/admin/presentation/pages/laporan_transaksi_page.dart';
+import 'package:dannisa_sweet_pos/features/admin/presentation/pages/transaksi_pending_page.dart';
+
+// ── Kasir Pages ────────────────────────────────────────────
+import 'package:dannisa_sweet_pos/features/kasir/presentation/pages/kasir_home_page.dart';
 
 // ── Providers ──────────────────────────────────────────────
 import 'package:dannisa_sweet_pos/features/admin/presentation/providers/kategori_provider.dart';
@@ -23,49 +27,50 @@ import 'package:dannisa_sweet_pos/features/admin/presentation/providers/produk_p
 import 'package:dannisa_sweet_pos/features/admin/presentation/providers/user_provider.dart';
 import 'package:dannisa_sweet_pos/features/admin/presentation/providers/transaksi_provider.dart';
 import 'package:dannisa_sweet_pos/features/admin/presentation/providers/laporan_provider.dart';
-
-// ── Legacy provider (jika masih dipakai di dashboard lama) ─
 import 'package:dannisa_sweet_pos/features/dashboard/presentation/providers/product_provider.dart';
 
 // ══════════════════════════════════════════════════════════
 //  AppRouter
 // ══════════════════════════════════════════════════════════
 class AppRouter {
-  static const String splash = '/';
-  static const String login = '/login';
-  static const String register = '/register';
+  static const String splash         = '/';
+  static const String login          = '/login';
+  static const String register       = '/register';
 
   // Admin routes
-  static const String adminHome = '/admin/home';
-  static const String kelolaProduk = '/admin/produk';
+  static const String adminHome      = '/admin/home';
+  static const String kelolaProduk   = '/admin/produk';
   static const String kelolaKategori = '/admin/kategori';
-  static const String kelolaUser = '/admin/user';
-  static const String daftarProduk = '/admin/daftar-produk';
+  static const String kelolaUser     = '/admin/user';
+  static const String daftarProduk   = '/admin/daftar-produk';
   static const String inputTransaksi = '/admin/transaksi';
-  static const String laporan = '/admin/laporan';
+  static const String laporan        = '/admin/laporan';
+  static const String transaksiPending = '/admin/transaksi-pending';
 
   // Kasir routes
-  static const String kasirHome = '/kasir/home';
+  static const String kasirHome      = '/kasir/home';
 
   // Legacy
-  static const String dashboard = '/dashboard';
+  static const String dashboard      = '/dashboard';
 
   static Map<String, WidgetBuilder> get routes => {
-        splash: (_) => const SplashPage(),
-        login: (_) => const LoginPage(),
-        register: (_) => const RegisterPage(),
-        adminHome: (_) => const AdminHomePage(),
-        dashboard: (_) => const AdminHomePage(), // legacy redirect
+        splash:         (_) => const SplashPage(),
+        login:          (_) => const LoginPage(),
+        register:       (_) => const RegisterPage(),
 
-        // ── Kelola Data ──────────────────────────────────
-        kelolaProduk: (_) => const KelolaProdukPage(),
+        // ── Admin ──────────────────────────────────────────
+        adminHome:      (_) => const AdminHomePage(),
+        dashboard:      (_) => const AdminHomePage(), // legacy
+        kelolaProduk:   (_) => const KelolaProdukPage(),
         kelolaKategori: (_) => const KelolaKategoriPage(),
-        kelolaUser: (_) => const KelolaUserPage(),       
-        daftarProduk: (_) => const DaftarProdukPage(),   
+        kelolaUser:     (_) => const KelolaUserPage(),
+        daftarProduk:   (_) => const DaftarProdukPage(),
+        inputTransaksi: (_) => const InputTransaksiPage(),
+        laporan:        (_) => const LaporanTransaksiPage(),
+        transaksiPending: (_) => const TransaksiPendingPage(),
 
-        // ── Transaksi & Laporan ──────────────────────────
-        inputTransaksi: (_) => const InputTransaksiPage(), 
-        laporan: (_) => const LaporanTransaksiPage(),       
+        // ── Kasir ──────────────────────────────────────────
+        kasirHome:      (_) => const KasirHomePage(),
       };
 }
 
@@ -79,18 +84,13 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        // ── Auth ────────────────────────────────────────
         ChangeNotifierProvider(create: (_) => AuthProvider()),
-
-        // ── Legacy (jika masih dipakai) ─────────────────
         ChangeNotifierProvider(create: (_) => ProductProvider()),
-
-        // ── Admin providers ──────────────────────────────
         ChangeNotifierProvider(create: (_) => KategoriProvider()),
-        ChangeNotifierProvider(create: (_) => ProdukProvider()),   
-        ChangeNotifierProvider(create: (_) => UserProvider()),     
-        ChangeNotifierProvider(create: (_) => TransaksiProvider()), 
-        ChangeNotifierProvider(create: (_) => LaporanProvider()),  
+        ChangeNotifierProvider(create: (_) => ProdukProvider()),
+        ChangeNotifierProvider(create: (_) => UserProvider()),
+        ChangeNotifierProvider(create: (_) => TransaksiProvider()),
+        ChangeNotifierProvider(create: (_) => LaporanProvider()),
       ],
       child: MaterialApp(
         title: 'Dannisa Sweet POS',
@@ -105,6 +105,8 @@ class MyApp extends StatelessWidget {
 
 // ══════════════════════════════════════════════════════════
 //  SplashPage
+//  Masalah sebelumnya: hanya cek token (tidak tahu role)
+//  Fix: pakai AuthProvider.checkAuthStatus() lalu cek role
 // ══════════════════════════════════════════════════════════
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -125,34 +127,59 @@ class _SplashPageState extends State<SplashPage> {
     if (!mounted) return;
 
     final token = await SecureStorageService.getToken();
-    final route = token != null ? AppRouter.adminHome : AppRouter.login;
-    Navigator.pushReplacementNamed(context, route);
+
+    if (token == null || token.isEmpty) {
+      // Belum login → ke halaman login
+      Navigator.pushReplacementNamed(context, AppRouter.login);
+      return;
+    }
+
+    // Sudah punya token → fetch profile untuk dapat data user + role
+    final auth = context.read<AuthProvider>();
+    await auth.checkAuthStatus();
+
+    if (!mounted) return;
+
+    if (auth.isAuthenticated && auth.user != null) {
+      // Redirect berdasarkan role jabatan
+      final role = auth.user!.jabatan.namaJabatan;
+      if (role == 'Admin') {
+        Navigator.pushReplacementNamed(context, AppRouter.adminHome);
+      } else {
+        // Kasir atau role lain
+        Navigator.pushReplacementNamed(context, AppRouter.kasirHome);
+      }
+    } else {
+      // Token expired / invalid → ke login
+      Navigator.pushReplacementNamed(context, AppRouter.login);
+    }
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-        body: Center(
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFFE91E8C), Color(0xFFC2185B)],
+          ),
+        ),
+        child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // ── Logo ──────────────────────────────────
+              // Logo
               Container(
-                width: 100,
-                height: 100,
+                width: 100, height: 100,
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFFE91E8C), Color(0xFFC2185B)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(28),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.3),
+                    width: 2,
                   ),
-                  borderRadius: BorderRadius.circular(24),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFFE91E8C).withOpacity(0.3),
-                      blurRadius: 20,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
                 ),
                 child: const Icon(
                   Icons.cake_outlined,
@@ -162,13 +189,13 @@ class _SplashPageState extends State<SplashPage> {
               ),
               const SizedBox(height: 20),
 
-              // ── App name ──────────────────────────────
+              // App name
               const Text(
                 'Dannisa Sweet',
                 style: TextStyle(
-                  fontSize: 26,
+                  fontSize: 28,
                   fontWeight: FontWeight.w800,
-                  color: Color(0xFFE91E8C),
+                  color: Colors.white,
                   letterSpacing: -0.5,
                 ),
               ),
@@ -176,23 +203,24 @@ class _SplashPageState extends State<SplashPage> {
                 'Point of Sale',
                 style: TextStyle(
                   fontSize: 14,
-                  color: Color(0xFF6B7280),
-                  letterSpacing: 1.2,
+                  color: Colors.white70,
+                  letterSpacing: 2,
                 ),
               ),
-              const SizedBox(height: 40),
+              const SizedBox(height: 48),
 
-              // ── Loading indicator ──────────────────────
+              // Loading
               const SizedBox(
-                width: 24,
-                height: 24,
+                width: 24, height: 24,
                 child: CircularProgressIndicator(
                   strokeWidth: 2.5,
-                  color: Color(0xFFE91E8C),
+                  color: Colors.white,
                 ),
               ),
             ],
           ),
         ),
-      );
+      ),
+    );
+  }
 }

@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter/rendering.dart';
+import 'dart:ui' as ui;
+import 'dart:io';
+import 'package:share_plus/share_plus.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:dannisa_sweet_pos/features/admin/presentation/providers/transaksi_provider.dart';
 import 'package:dannisa_sweet_pos/features/admin/presentation/providers/produk_provider.dart';
 import 'package:dannisa_sweet_pos/features/admin/presentation/providers/kategori_provider.dart';
@@ -37,8 +42,19 @@ String _formatTanggal(String raw) {
   try {
     final dt = DateTime.parse(raw).toLocal();
     const bulan = [
-      '', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
-      'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'
+      '',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'Mei',
+      'Jun',
+      'Jul',
+      'Agu',
+      'Sep',
+      'Okt',
+      'Nov',
+      'Des',
     ];
     return '${dt.day} ${bulan[dt.month]} ${dt.year}  '
         '${dt.hour.toString().padLeft(2, '0')}:'
@@ -79,8 +95,9 @@ class _InputTransaksiPageState extends State<InputTransaksiPage> {
     final transaksiProvider = context.watch<TransaksiProvider>();
 
     final filtered = produkProvider.produks.where((p) {
-      final matchSearch =
-          p.namaProduk.toLowerCase().contains(_searchQuery.toLowerCase());
+      final matchSearch = p.namaProduk.toLowerCase().contains(
+        _searchQuery.toLowerCase(),
+      );
       final matchKategori =
           _filterKategoriId == 'Semua' || p.idKategori == _filterKategoriId;
       return matchSearch && matchKategori && p.stok > 0;
@@ -95,15 +112,20 @@ class _InputTransaksiPageState extends State<InputTransaksiPage> {
         title: const Text(
           'Input Transaksi',
           style: TextStyle(
-              color: Colors.white, fontSize: 20, fontWeight: FontWeight.w800),
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.w800,
+          ),
         ),
         actions: [
           if (transaksiProvider.keranjang.isNotEmpty)
             Stack(
               children: [
                 IconButton(
-                  icon: const Icon(Icons.shopping_cart_outlined,
-                      color: Colors.white),
+                  icon: const Icon(
+                    Icons.shopping_cart_outlined,
+                    color: Colors.white,
+                  ),
                   onPressed: () =>
                       _showKeranjangSheet(context, transaksiProvider),
                 ),
@@ -164,21 +186,30 @@ class _InputTransaksiPageState extends State<InputTransaksiPage> {
                       onChanged: (v) => setState(() => _searchQuery = v),
                       decoration: InputDecoration(
                         hintText: 'Cari produk...',
-                        hintStyle:
-                            TextStyle(color: _textSecondary, fontSize: 14),
-                        prefixIcon:
-                            const Icon(Icons.search, color: _primary, size: 20),
+                        hintStyle: TextStyle(
+                          color: _textSecondary,
+                          fontSize: 14,
+                        ),
+                        prefixIcon: const Icon(
+                          Icons.search,
+                          color: _primary,
+                          size: 20,
+                        ),
                         suffixIcon: _searchQuery.isNotEmpty
                             ? IconButton(
-                                icon: const Icon(Icons.close,
-                                    size: 18, color: _textSecondary),
+                                icon: const Icon(
+                                  Icons.close,
+                                  size: 18,
+                                  color: _textSecondary,
+                                ),
                                 onPressed: () =>
                                     setState(() => _searchQuery = ''),
                               )
                             : null,
                         border: InputBorder.none,
-                        contentPadding:
-                            const EdgeInsets.symmetric(vertical: 14),
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 14,
+                        ),
                       ),
                     ),
                   ),
@@ -206,43 +237,49 @@ class _InputTransaksiPageState extends State<InputTransaksiPage> {
           Expanded(
             child: produkProvider.status == ProdukStatus.loading
                 ? const Center(
-                    child: CircularProgressIndicator(color: _primary))
+                    child: CircularProgressIndicator(color: _primary),
+                  )
                 : filtered.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.inventory_2_outlined,
-                                size: 56, color: Colors.grey.shade300),
-                            const SizedBox(height: 12),
-                            Text('Produk tidak ditemukan',
-                                style: TextStyle(color: _textSecondary)),
-                          ],
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.inventory_2_outlined,
+                          size: 56,
+                          color: Colors.grey.shade300,
                         ),
-                      )
-                    : GridView.builder(
-                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
+                        const SizedBox(height: 12),
+                        Text(
+                          'Produk tidak ditemukan',
+                          style: TextStyle(color: _textSecondary),
+                        ),
+                      ],
+                    ),
+                  )
+                : GridView.builder(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
-                          childAspectRatio: 0.80,
+                          childAspectRatio: 0.76,
                           crossAxisSpacing: 12,
                           mainAxisSpacing: 12,
                         ),
-                        itemCount: filtered.length,
-                        itemBuilder: (ctx, i) {
-                          final p = filtered[i];
-                          final qty = transaksiProvider.getQty(p.idProduk);
-                          return _ProdukCard(
-                            produk: p,
-                            index: i,
-                            qty: qty,
-                            onAdd: () => transaksiProvider.tambahItem(p),
-                            onRemove: () =>
-                                transaksiProvider.kurangiItem(p.idProduk),
-                          );
-                        },
-                      ),
+                    itemCount: filtered.length,
+                    itemBuilder: (ctx, i) {
+                      final p = filtered[i];
+                      final qty = transaksiProvider.getQty(p.idProduk);
+                      return _ProdukCard(
+                        produk: p,
+                        index: i,
+                        qty: qty,
+                        onAdd: () => transaksiProvider.tambahItem(p),
+                        onRemove: () =>
+                            transaksiProvider.kurangiItem(p.idProduk),
+                      );
+                    },
+                  ),
           ),
         ],
       ),
@@ -273,7 +310,9 @@ class _InputTransaksiPageState extends State<InputTransaksiPage> {
                           Text(
                             '${transaksiProvider.totalItem} item',
                             style: const TextStyle(
-                                fontSize: 12, color: _textSecondary),
+                              fontSize: 12,
+                              color: _textSecondary,
+                            ),
                           ),
                           Text(
                             _formatRupiah(transaksiProvider.totalHarga),
@@ -293,14 +332,19 @@ class _InputTransaksiPageState extends State<InputTransaksiPage> {
                         backgroundColor: _primary,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 20, vertical: 14),
+                          horizontal: 20,
+                          vertical: 14,
+                        ),
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14)),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
                         elevation: 0,
                       ),
                       icon: const Icon(Icons.shopping_cart_outlined, size: 18),
-                      label: const Text('Keranjang',
-                          style: TextStyle(fontWeight: FontWeight.w700)),
+                      label: const Text(
+                        'Keranjang',
+                        style: TextStyle(fontWeight: FontWeight.w700),
+                      ),
                     ),
                   ],
                 ),
@@ -320,15 +364,14 @@ class _InputTransaksiPageState extends State<InputTransaksiPage> {
         decoration: BoxDecoration(
           color: isActive ? _primary : _cardBg,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-              color: isActive ? _primary : Colors.grey.shade300),
+          border: Border.all(color: isActive ? _primary : Colors.grey.shade300),
           boxShadow: isActive
               ? [
                   BoxShadow(
                     color: _primary.withOpacity(0.3),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
-                  )
+                  ),
                 ]
               : [],
         ),
@@ -344,8 +387,7 @@ class _InputTransaksiPageState extends State<InputTransaksiPage> {
     );
   }
 
-  void _showKeranjangSheet(
-      BuildContext context, TransaksiProvider provider) {
+  void _showKeranjangSheet(BuildContext context, TransaksiProvider provider) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -402,7 +444,13 @@ class _ProdukCard extends StatelessWidget {
   });
 
   Color get _accent {
-    final colors = [_primary, _info, const Color(0xFF8B5CF6), _success, _warning];
+    final colors = [
+      _primary,
+      _info,
+      const Color(0xFF8B5CF6),
+      _success,
+      _warning,
+    ];
     return colors[index % colors.length];
   }
 
@@ -448,14 +496,21 @@ class _ProdukCard extends StatelessWidget {
             child: Stack(
               children: [
                 const Center(
-                  child: Icon(Icons.cake_outlined, color: Colors.white, size: 36),
+                  child: Icon(
+                    Icons.cake_outlined,
+                    color: Colors.white,
+                    size: 36,
+                  ),
                 ),
                 if (isInCart)
                   Positioned(
-                    top: 8, left: 8,
+                    top: 8,
+                    left: 8,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: _primary,
                         borderRadius: BorderRadius.circular(10),
@@ -471,10 +526,13 @@ class _ProdukCard extends StatelessWidget {
                     ),
                   ),
                 Positioned(
-                  top: 8, right: 8,
+                  top: 8,
+                  right: 8,
                   child: Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 6, vertical: 3),
+                      horizontal: 6,
+                      vertical: 3,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.black.withOpacity(0.3),
                       borderRadius: BorderRadius.circular(8),
@@ -482,9 +540,10 @@ class _ProdukCard extends StatelessWidget {
                     child: Text(
                       'Stok: ${produk.stok}',
                       style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 9,
-                          fontWeight: FontWeight.w600),
+                        color: Colors.white,
+                        fontSize: 9,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ),
@@ -541,11 +600,14 @@ class _ProdukCard extends StatelessWidget {
                         children: [
                           Icon(Icons.add, color: Colors.white, size: 16),
                           SizedBox(width: 4),
-                          Text('Tambah',
-                              style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w700)),
+                          Text(
+                            'Tambah',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -555,39 +617,49 @@ class _ProdukCard extends StatelessWidget {
                       GestureDetector(
                         onTap: onRemove,
                         child: Container(
-                          width: 32, height: 32,
+                          width: 32,
+                          height: 32,
                           decoration: BoxDecoration(
                             color: _danger.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: const Icon(Icons.remove,
-                              color: _danger, size: 16),
+                          child: const Icon(
+                            Icons.remove,
+                            color: _danger,
+                            size: 16,
+                          ),
                         ),
                       ),
                       Expanded(
                         child: Center(
-                          child: Text('$qty',
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 16,
-                                  color: _textPrimary)),
+                          child: Text(
+                            '$qty',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 16,
+                              color: _textPrimary,
+                            ),
+                          ),
                         ),
                       ),
                       GestureDetector(
                         onTap: qty < produk.stok ? onAdd : null,
                         child: Container(
-                          width: 32, height: 32,
+                          width: 32,
+                          height: 32,
                           decoration: BoxDecoration(
                             color: qty < produk.stok
                                 ? _primary.withOpacity(0.1)
                                 : Colors.grey.shade100,
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: Icon(Icons.add,
-                              color: qty < produk.stok
-                                  ? _primary
-                                  : Colors.grey.shade400,
-                              size: 16),
+                          child: Icon(
+                            Icons.add,
+                            color: qty < produk.stok
+                                ? _primary
+                                : Colors.grey.shade400,
+                            size: 16,
+                          ),
                         ),
                       ),
                     ],
@@ -613,11 +685,10 @@ class _KeranjangSheet extends StatefulWidget {
 class _KeranjangSheetState extends State<_KeranjangSheet> {
   final _namaCtrl = TextEditingController();
   final _bayarCtrl = TextEditingController();
+  final _waCtrl = TextEditingController();
   String _metode = 'Tunai';
   bool _isLoading = false;
 
-  // Tunai → wajib input nominal
-  // Transfer/QRIS → nominal 0, bayar nanti
   bool get _isTunai => _metode == 'Tunai';
   double get _jumlahBayar =>
       double.tryParse(_bayarCtrl.text.replaceAll('.', '')) ?? 0;
@@ -626,6 +697,7 @@ class _KeranjangSheetState extends State<_KeranjangSheet> {
   void dispose() {
     _namaCtrl.dispose();
     _bayarCtrl.dispose();
+    _waCtrl.dispose();
     super.dispose();
   }
 
@@ -637,16 +709,37 @@ class _KeranjangSheetState extends State<_KeranjangSheet> {
     return true;
   }
 
+  InputDecoration _inputDeco({required String hint, required IconData icon}) {
+    return InputDecoration(
+      hintText: hint,
+      hintStyle: TextStyle(color: _textSecondary, fontSize: 14),
+      prefixIcon: Icon(icon, color: _primary, size: 20),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.grey.shade300),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.grey.shade300),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: _primary, width: 1.5),
+      ),
+      filled: true,
+      fillColor: Colors.grey.shade50,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<TransaksiProvider>();
-    final kembalian = _isTunai
-        ? _jumlahBayar - provider.totalHarga
-        : 0.0;
+    final kembalian = _isTunai ? _jumlahBayar - provider.totalHarga : 0.0;
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
     return Container(
-      height: MediaQuery.of(context).size.height * 0.88,
+      height: MediaQuery.of(context).size.height * 0.92,
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -654,11 +747,11 @@ class _KeranjangSheetState extends State<_KeranjangSheet> {
       padding: EdgeInsets.fromLTRB(0, 0, 0, bottomInset),
       child: Column(
         children: [
-          // Handle bar
           Center(
             child: Container(
               margin: const EdgeInsets.only(top: 12, bottom: 4),
-              width: 40, height: 4,
+              width: 40,
+              height: 4,
               decoration: BoxDecoration(
                 color: Colors.grey.shade300,
                 borderRadius: BorderRadius.circular(2),
@@ -677,8 +770,11 @@ class _KeranjangSheetState extends State<_KeranjangSheet> {
                     color: _primary.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Icon(Icons.shopping_cart_outlined,
-                      color: _primary, size: 20),
+                  child: const Icon(
+                    Icons.shopping_cart_outlined,
+                    color: _primary,
+                    size: 20,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Text(
@@ -695,8 +791,10 @@ class _KeranjangSheetState extends State<_KeranjangSheet> {
                     provider.clearKeranjang();
                     Navigator.pop(context);
                   },
-                  child: const Text('Kosongkan',
-                      style: TextStyle(color: _danger, fontSize: 13)),
+                  child: const Text(
+                    'Kosongkan',
+                    style: TextStyle(color: _danger, fontSize: 13),
+                  ),
                 ),
               ],
             ),
@@ -724,51 +822,67 @@ class _KeranjangSheetState extends State<_KeranjangSheet> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(item.produk.namaProduk,
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 14,
-                                    color: _textPrimary)),
-                            Text(_formatRupiah(item.produk.hargaJual),
-                                style: const TextStyle(
-                                    fontSize: 12, color: _textSecondary)),
+                            Text(
+                              item.produk.namaProduk,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                                color: _textPrimary,
+                              ),
+                            ),
+                            Text(
+                              _formatRupiah(item.produk.hargaJual),
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: _textSecondary,
+                              ),
+                            ),
                           ],
                         ),
                       ),
-                      // Qty control
                       Row(
                         children: [
                           GestureDetector(
                             onTap: () =>
                                 provider.kurangiItem(item.produk.idProduk),
                             child: Container(
-                              width: 30, height: 30,
+                              width: 30,
+                              height: 30,
                               decoration: BoxDecoration(
                                 color: _danger.withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              child: const Icon(Icons.remove,
-                                  color: _danger, size: 14),
+                              child: const Icon(
+                                Icons.remove,
+                                color: _danger,
+                                size: 14,
+                              ),
                             ),
                           ),
                           Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 10),
-                            child: Text('${item.qty}',
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.w800,
-                                    fontSize: 16)),
+                            padding: const EdgeInsets.symmetric(horizontal: 10),
+                            child: Text(
+                              '${item.qty}',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w800,
+                                fontSize: 16,
+                              ),
+                            ),
                           ),
                           GestureDetector(
                             onTap: () => provider.tambahItem(item.produk),
                             child: Container(
-                              width: 30, height: 30,
+                              width: 30,
+                              height: 30,
                               decoration: BoxDecoration(
                                 color: _primary.withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              child: const Icon(Icons.add,
-                                  color: _primary, size: 14),
+                              child: const Icon(
+                                Icons.add,
+                                color: _primary,
+                                size: 14,
+                              ),
                             ),
                           ),
                         ],
@@ -780,9 +894,10 @@ class _KeranjangSheetState extends State<_KeranjangSheet> {
                           _formatRupiah(item.subtotal),
                           textAlign: TextAlign.right,
                           style: const TextStyle(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 13,
-                              color: _primary),
+                            fontWeight: FontWeight.w700,
+                            fontSize: 13,
+                            color: _primary,
+                          ),
                         ),
                       ),
                     ],
@@ -803,23 +918,28 @@ class _KeranjangSheetState extends State<_KeranjangSheet> {
                 Container(
                   padding: const EdgeInsets.all(14),
                   decoration: const BoxDecoration(
-                    gradient:
-                        LinearGradient(colors: [_primary, _primaryDark]),
+                    gradient: LinearGradient(colors: [_primary, _primaryDark]),
                     borderRadius: BorderRadius.all(Radius.circular(14)),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Total Belanja',
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600)),
-                      Text(_formatRupiah(provider.totalHarga),
-                          style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 20,
-                              fontWeight: FontWeight.w800)),
+                      const Text(
+                        'Total Belanja',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        _formatRupiah(provider.totalHarga),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -831,37 +951,70 @@ class _KeranjangSheetState extends State<_KeranjangSheet> {
                   textCapitalization: TextCapitalization.words,
                   onChanged: (_) => setState(() {}),
                   decoration: _inputDeco(
-                      hint: 'Nama Customer',
-                      icon: Icons.person_outline),
+                    hint: 'Nama Customer',
+                    icon: Icons.person_outline,
+                  ),
                 ),
                 const SizedBox(height: 10),
 
                 Row(
                   children: [
-                    // Metode pembayaran
+                    // Metode
                     Expanded(
-                      child: DropdownButtonFormField<String>(
-                        value: _metode,
-                        decoration: _inputDeco(
-                            hint: 'Metode',
-                            icon: Icons.payment_outlined),
-                        items: const [
-                          DropdownMenuItem(
-                              value: 'Tunai', child: Text('Tunai')),
-                          DropdownMenuItem(
-                              value: 'Transfer', child: Text('Transfer')),
-                          DropdownMenuItem(
-                              value: 'QRIS', child: Text('QRIS')),
-                        ],
-                        onChanged: (v) => setState(() {
-                          _metode = v!;
-                          _bayarCtrl.clear();
-                        }),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade50,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.grey.shade300),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.payment_outlined,
+                              color: _primary,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: DropdownButton<String>(
+                                value: _metode,
+                                isExpanded: true,
+                                underline: const SizedBox(),
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: _textPrimary,
+                                ),
+                                items: const [
+                                  DropdownMenuItem(
+                                    value: 'Tunai',
+                                    child: Text('Tunai'),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 'Transfer',
+                                    child: Text('Transfer'),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 'QRIS',
+                                    child: Text('QRIS'),
+                                  ),
+                                ],
+                                onChanged: (v) => setState(() {
+                                  _metode = v!;
+                                  _bayarCtrl.clear();
+                                }),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                     const SizedBox(width: 10),
 
-                    // Jumlah bayar (hanya untuk Tunai)
+                    // Jumlah bayar / Bayar nanti
                     Expanded(
                       child: _isTunai
                           ? TextField(
@@ -869,8 +1022,9 @@ class _KeranjangSheetState extends State<_KeranjangSheet> {
                               keyboardType: TextInputType.number,
                               onChanged: (_) => setState(() {}),
                               decoration: _inputDeco(
-                                  hint: 'Jumlah Bayar',
-                                  icon: Icons.attach_money_outlined),
+                                hint: 'Jumlah Bayar',
+                                icon: Icons.attach_money_outlined,
+                              ),
                             )
                           : Container(
                               padding: const EdgeInsets.all(14),
@@ -878,7 +1032,8 @@ class _KeranjangSheetState extends State<_KeranjangSheet> {
                                 color: _info.withOpacity(0.08),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                    color: _info.withOpacity(0.3)),
+                                  color: _info.withOpacity(0.3),
+                                ),
                               ),
                               child: Row(
                                 children: [
@@ -890,13 +1045,14 @@ class _KeranjangSheetState extends State<_KeranjangSheet> {
                                     size: 18,
                                   ),
                                   const SizedBox(width: 8),
-                                  Expanded(
+                                  const Expanded(
                                     child: Text(
                                       'Bayar nanti',
                                       style: TextStyle(
-                                          color: _info,
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w600),
+                                        color: _info,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -906,12 +1062,14 @@ class _KeranjangSheetState extends State<_KeranjangSheet> {
                   ],
                 ),
 
-                // Kembalian (hanya Tunai)
+                // Kembalian (Tunai)
                 if (_isTunai && _jumlahBayar > 0) ...[
                   const SizedBox(height: 8),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 10),
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
                     decoration: BoxDecoration(
                       color: kembalian >= 0
                           ? _success.withOpacity(0.1)
@@ -924,55 +1082,34 @@ class _KeranjangSheetState extends State<_KeranjangSheet> {
                         Text(
                           kembalian >= 0 ? 'Kembalian' : 'Kurang Bayar',
                           style: TextStyle(
-                              color:
-                                  kembalian >= 0 ? _success : _danger,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14),
+                            color: kembalian >= 0 ? _success : _danger,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                          ),
                         ),
                         Text(
                           _formatRupiah(kembalian.abs()),
                           style: TextStyle(
-                              color:
-                                  kembalian >= 0 ? _success : _danger,
-                              fontWeight: FontWeight.w800,
-                              fontSize: 16),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-
-                // Info untuk Transfer/QRIS
-                if (!_isTunai) ...[
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: _info.withOpacity(0.08),
-                      borderRadius: BorderRadius.circular(10),
-                      border:
-                          Border.all(color: _info.withOpacity(0.2)),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.info_outline,
-                            color: _info, size: 16),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'Invoice akan ditampilkan untuk dikirim ke WhatsApp customer',
-                            style: TextStyle(
-                                color: _info,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500),
+                            color: kembalian >= 0 ? _success : _danger,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 16,
                           ),
                         ),
                       ],
                     ),
                   ),
                 ],
-                const SizedBox(height: 12),
+
+                // Info Transfer/QRIS
+                if (!_isTunai) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
+                  ),
+                ],
 
                 // Tombol proses
                 SizedBox(
@@ -987,24 +1124,31 @@ class _KeranjangSheetState extends State<_KeranjangSheet> {
                       foregroundColor: Colors.white,
                       elevation: 0,
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14)),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
                       disabledBackgroundColor: Colors.grey.shade200,
                     ),
                     child: _isLoading
                         ? const SizedBox(
-                            width: 22, height: 22,
+                            width: 22,
+                            height: 22,
                             child: CircularProgressIndicator(
-                                strokeWidth: 2.5, color: Colors.white),
+                              strokeWidth: 2.5,
+                              color: Colors.white,
+                            ),
                           )
                         : const Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Icon(Icons.check_circle_outline, size: 20),
                               SizedBox(width: 8),
-                              Text('Proses Transaksi',
-                                  style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w700)),
+                              Text(
+                                'Proses Transaksi',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
                             ],
                           ),
                   ),
@@ -1017,39 +1161,18 @@ class _KeranjangSheetState extends State<_KeranjangSheet> {
     );
   }
 
-  InputDecoration _inputDeco(
-      {required String hint, required IconData icon}) {
-    return InputDecoration(
-      hintText: hint,
-      hintStyle: TextStyle(color: _textSecondary, fontSize: 14),
-      prefixIcon: Icon(icon, color: _primary, size: 20),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.grey.shade300),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.grey.shade300),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: _primary, width: 1.5),
-      ),
-      filled: true,
-      fillColor: Colors.grey.shade50,
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-    );
-  }
-
   Future<void> _prosesTransaksi(
-      BuildContext context, TransaksiProvider provider) async {
+    BuildContext context,
+    TransaksiProvider provider,
+  ) async {
     setState(() => _isLoading = true);
 
     final result = await provider.checkout(
       namaCustomer: _namaCtrl.text.trim(),
       jumlahBayar: _isTunai ? _jumlahBayar : 0,
       metodePembayaran: _metode,
+      // Kirim nomor WA customer ke callback
+      waCustomer: _waCtrl.text.trim(),
     );
 
     setState(() => _isLoading = false);
@@ -1064,7 +1187,8 @@ class _KeranjangSheetState extends State<_KeranjangSheet> {
           backgroundColor: _danger,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10)),
+            borderRadius: BorderRadius.circular(10),
+          ),
         ),
       );
     }
@@ -1072,9 +1196,7 @@ class _KeranjangSheetState extends State<_KeranjangSheet> {
 }
 
 // ══════════════════════════════════════════════════════════
-//  Invoice Dialog
-//  Tampil setelah checkout berhasil
-//  Flow: lihat invoice → kirim WA → update status Lunas
+//  Invoice Dialog — dengan screenshot sebagai PNG
 // ══════════════════════════════════════════════════════════
 class _InvoiceDialog extends StatefulWidget {
   final InvoiceResult invoice;
@@ -1085,15 +1207,17 @@ class _InvoiceDialog extends StatefulWidget {
 }
 
 class _InvoiceDialogState extends State<_InvoiceDialog> {
+  // GlobalKey untuk screenshot widget invoice
+  final _invoiceKey = GlobalKey();
   bool _isUpdatingStatus = false;
   bool _sudahLunas = false;
+  bool _isSharingImage = false;
   final _bayarCtrl = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _sudahLunas =
-        widget.invoice.statusPembayaran.toLowerCase() == 'lunas';
+    _sudahLunas = widget.invoice.statusPembayaran.toLowerCase() == 'lunas';
   }
 
   @override
@@ -1102,59 +1226,44 @@ class _InvoiceDialogState extends State<_InvoiceDialog> {
     super.dispose();
   }
 
-  // Buat pesan WA dari invoice
-  String _buildWaMessage() {
-    final inv = widget.invoice;
-    final buffer = StringBuffer();
-    buffer.writeln('🍰 *Dannisa Sweet*');
-    buffer.writeln('━━━━━━━━━━━━━━━━━');
-    buffer.writeln('📋 *Invoice: ${inv.idTransaksi}*');
-    buffer.writeln('👤 Customer: ${inv.namaCustomer}');
-    buffer.writeln('📅 Tanggal: ${_formatTanggal(inv.tanggalTransaksi)}');
-    buffer.writeln('');
-    buffer.writeln('*Detail Pesanan:*');
-    for (final d in inv.detail) {
-      buffer.writeln(
-          '• ${d.namaProduk} x${d.qty} = ${_formatRupiah(d.subTotal)}');
-    }
-    buffer.writeln('━━━━━━━━━━━━━━━━━');
-    buffer.writeln('💰 Total: *${_formatRupiah(inv.totalPenjualan)}*');
-    buffer.writeln('💳 Metode: ${inv.metodePembayaran}');
+  // ── Screenshot widget → share sebagai gambar ───────────
+  Future<void> _shareInvoiceAsImage() async {
+    setState(() => _isSharingImage = true);
 
-    if (inv.infoPembayaran != null && inv.metodePembayaran != 'Tunai') {
-      final info = inv.infoPembayaran!;
-      buffer.writeln('');
-      buffer.writeln('*Info Transfer:*');
-      buffer.writeln('🏦 ${info.noRekening}');
-      buffer.writeln('👤 a.n. ${info.namaRekening}');
-      buffer.writeln('📝 ${info.catatan}');
-    }
+    try {
+      // Capture widget sebagai image
+      final boundary =
+          _invoiceKey.currentContext?.findRenderObject()
+              as RenderRepaintBoundary?;
+      if (boundary == null) return;
 
-    buffer.writeln('');
-    buffer.writeln('Terima kasih sudah berbelanja! 🙏');
-    return buffer.toString();
-  }
+      final image = await boundary.toImage(pixelRatio: 3.0);
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      if (byteData == null) return;
 
-  Future<void> _kirimWa() async {
-    final inv = widget.invoice;
-    String? noWa;
+      final pngBytes = byteData.buffer.asUint8List();
 
-    // Ambil nomor WA dari info_pembayaran jika Transfer/QRIS
-    if (inv.infoPembayaran != null && inv.infoPembayaran!.whatsapp.isNotEmpty) {
-      noWa = inv.infoPembayaran!.whatsapp.replaceAll(RegExp(r'[^0-9]'), '');
-      if (noWa.startsWith('0')) {
-        noWa = '62${noWa.substring(1)}';
+      // Simpan ke temp directory
+      final tempDir = await getTemporaryDirectory();
+      final file = File(
+        '${tempDir.path}/invoice_${widget.invoice.idTransaksi}.png',
+      );
+      await file.writeAsBytes(pngBytes);
+
+      // Share ke WhatsApp atau app lain
+      await Share.shareXFiles([XFile(file.path)]);
+    } catch (e) {
+      debugPrint('Error share image: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Gagal membuat gambar invoice'),
+            backgroundColor: _danger,
+          ),
+        );
       }
-    }
-
-    final message = Uri.encodeComponent(_buildWaMessage());
-    final url = noWa != null
-        ? 'https://wa.me/$noWa?text=$message'
-        : 'https://wa.me/?text=$message';
-
-    final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } finally {
+      if (mounted) setState(() => _isSharingImage = false);
     }
   }
 
@@ -1162,7 +1271,7 @@ class _InvoiceDialogState extends State<_InvoiceDialog> {
     final provider = context.read<TransaksiProvider>();
     final jumlahBayar =
         double.tryParse(_bayarCtrl.text.replaceAll('.', '')) ??
-            widget.invoice.totalPenjualan;
+        widget.invoice.totalPenjualan;
 
     setState(() => _isUpdatingStatus = true);
 
@@ -1179,9 +1288,11 @@ class _InvoiceDialogState extends State<_InvoiceDialog> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(ok
-            ? 'Status pembayaran diperbarui menjadi Lunas ✓'
-            : 'Gagal update status'),
+        content: Text(
+          ok
+              ? 'Status pembayaran diperbarui menjadi Lunas ✓'
+              : 'Gagal update status',
+        ),
         backgroundColor: ok ? _success : _danger,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -1200,256 +1311,305 @@ class _InvoiceDialogState extends State<_InvoiceDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // ── Header ──────────────────────────────────────
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                    colors: [_primary, _primaryDark]),
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(20),
-                  topRight: Radius.circular(20),
-                ),
-              ),
-              child: Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      _sudahLunas
-                          ? Icons.check_circle
-                          : Icons.receipt_long_outlined,
-                      color: Colors.white,
-                      size: 32,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    _sudahLunas ? 'Transaksi Selesai!' : 'Invoice',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  // Status badge
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: _sudahLunas
-                          ? _success.withOpacity(0.3)
-                          : _warning.withOpacity(0.3),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      _sudahLunas ? '✓ Lunas' : '⏳ Pending',
-                      style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // ── Body invoice ─────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  // Info dasar
-                  _InvoiceRow(label: 'ID Transaksi', value: inv.idTransaksi),
-                  _InvoiceRow(
-                      label: 'Tanggal',
-                      value: _formatTanggal(inv.tanggalTransaksi)),
-                  _InvoiceRow(label: 'Customer', value: inv.namaCustomer),
-                  _InvoiceRow(label: 'Kasir', value: inv.namaKasir),
-                  _InvoiceRow(label: 'Metode', value: inv.metodePembayaran),
-                  const Divider(height: 20),
-
-                  // Detail item
-                  ...inv.detail.map((d) => Padding(
-                        padding: const EdgeInsets.only(bottom: 6),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.circle,
-                                size: 5, color: _primary),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                '${d.namaProduk} x${d.qty}',
-                                style: const TextStyle(fontSize: 13),
-                              ),
-                            ),
-                            Text(
-                              _formatRupiah(d.subTotal),
-                              style: const TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600),
-                            ),
-                          ],
-                        ),
-                      )),
-
-                  const Divider(height: 20),
-
-                  // Total
-                  _InvoiceRow(
-                    label: 'Total',
-                    value: _formatRupiah(inv.totalPenjualan),
-                    isBold: true,
-                    color: _textPrimary,
-                  ),
-
-                  // Info Transfer/QRIS
-                  if (isTransfer && inv.infoPembayaran != null) ...[
-                    const SizedBox(height: 12),
+            // ── Widget yang akan di-screenshot ──────────────
+            RepaintBoundary(
+              key: _invoiceKey,
+              child: Container(
+                color: Colors.white,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Header
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: _info.withOpacity(0.08),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                            color: _info.withOpacity(0.2)),
+                        gradient: const LinearGradient(
+                          colors: [_primary, _primaryDark],
+                        ),
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(20),
+                          topRight: Radius.circular(20),
+                        ),
                       ),
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Info Pembayaran',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 13,
-                              color: _info,
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              _sudahLunas
+                                  ? Icons.check_circle
+                                  : Icons.receipt_long_outlined,
+                              color: Colors.white,
+                              size: 32,
                             ),
                           ),
                           const SizedBox(height: 8),
-                          _InvoiceRow(
-                            label: 'Rekening',
-                            value: inv.infoPembayaran!.noRekening,
+                          const Text(
+                            'Dannisa Sweet',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w800,
+                            ),
                           ),
-                          _InvoiceRow(
-                            label: 'Atas Nama',
-                            value: inv.infoPembayaran!.namaRekening,
+                          const Text(
+                            'Invoice Pembelian',
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 13,
+                            ),
                           ),
-                          _InvoiceRow(
-                            label: 'WA Konfirmasi',
-                            value: inv.infoPembayaran!.whatsapp,
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            inv.infoPembayaran!.catatan,
-                            style: const TextStyle(
-                              fontSize: 11,
-                              color: _textSecondary,
-                              fontStyle: FontStyle.italic,
+                          const SizedBox(height: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: _sudahLunas
+                                  ? _success.withOpacity(0.3)
+                                  : _warning.withOpacity(0.3),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              _sudahLunas ? '✓ Lunas' : '⏳ Pending',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
                         ],
                       ),
                     ),
-                  ],
 
-                  // Input jumlah bayar (Transfer/QRIS, belum lunas)
-                  if (isTransfer && !_sudahLunas) ...[
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: _bayarCtrl,
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                        hintText: 'Masukkan jumlah yang dibayar',
-                        hintStyle: TextStyle(
-                            color: _textSecondary, fontSize: 13),
-                        prefixIcon: const Icon(
-                            Icons.attach_money_outlined,
+                    // Body invoice
+                    Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        children: [
+                          _InvRow(
+                            label: 'ID Transaksi',
+                            value: inv.idTransaksi,
+                          ),
+                          _InvRow(
+                            label: 'Tanggal',
+                            value: _formatTanggal(inv.tanggalTransaksi),
+                          ),
+                          _InvRow(label: 'Customer', value: inv.namaCustomer),
+                          _InvRow(label: 'Kasir', value: inv.namaKasir),
+                          _InvRow(label: 'Metode', value: inv.metodePembayaran),
+                          const Divider(height: 20),
+
+                          // Items
+                          ...inv.detail.map(
+                            (d) => Padding(
+                              padding: const EdgeInsets.only(bottom: 6),
+                              child: Row(
+                                children: [
+                                  const Icon(
+                                    Icons.circle,
+                                    size: 5,
+                                    color: _primary,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      '${d.namaProduk} x${d.qty}',
+                                      style: const TextStyle(fontSize: 13),
+                                    ),
+                                  ),
+                                  Text(
+                                    _formatRupiah(d.subTotal),
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+
+                          const Divider(height: 20),
+                          _InvRow(
+                            label: 'Total',
+                            value: _formatRupiah(inv.totalPenjualan),
+                            isBold: true,
                             color: _primary,
-                            size: 20),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide:
-                              BorderSide(color: Colors.grey.shade300),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide:
-                              BorderSide(color: Colors.grey.shade300),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                              color: _primary, width: 1.5),
-                        ),
-                        filled: true,
-                        fillColor: Colors.grey.shade50,
-                        contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 14),
+                          ),
+
+                          // Kembalian (Tunai)
+                          if (!isTransfer && inv.kembalian > 0)
+                            _InvRow(
+                              label: 'Kembalian',
+                              value: _formatRupiah(inv.kembalian),
+                              color: _success,
+                            ),
+
+                          // Info Transfer
+                          if (isTransfer && inv.infoPembayaran != null) ...[
+                            const SizedBox(height: 12),
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: _info.withOpacity(0.08),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: _info.withOpacity(0.2),
+                                ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Info Pembayaran',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 13,
+                                      color: _info,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  _InvRow(
+                                    label: 'Rekening',
+                                    value: inv.infoPembayaran!.noRekening,
+                                  ),
+                                  _InvRow(
+                                    label: 'Atas Nama',
+                                    value: inv.infoPembayaran!.namaRekening,
+                                  ),
+                                  _InvRow(
+                                    label: 'WA Konfirmasi',
+                                    value: inv.infoPembayaran!.whatsapp,
+                                  ),
+                                  Text(
+                                    inv.infoPembayaran!.catatan,
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      color: _textSecondary,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                     ),
                   ],
-                ],
+                ),
               ),
             ),
+
+            // ── Input jumlah bayar (Transfer/QRIS belum lunas) ──
+            if (isTransfer && !_sudahLunas)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+                child: TextField(
+                  controller: _bayarCtrl,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    hintText: 'Masukkan jumlah yang dibayar',
+                    prefixIcon: const Icon(
+                      Icons.attach_money_outlined,
+                      color: _primary,
+                      size: 20,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: _primary, width: 1.5),
+                    ),
+                    filled: true,
+                    fillColor: Colors.grey.shade50,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
+                  ),
+                ),
+              ),
 
             // ── Action buttons ───────────────────────────────
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
               child: Column(
                 children: [
-                  // Kirim WA
+                  // Share sebagai gambar PNG
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
-                      onPressed: _kirimWa,
+                      onPressed: _isSharingImage ? null : _shareInvoiceAsImage,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF25D366),
                         foregroundColor: Colors.white,
                         elevation: 0,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
-                      icon: const Icon(Icons.chat, size: 20),
-                      label: const Text(
-                        'Kirim Invoice ke WhatsApp',
-                        style: TextStyle(fontWeight: FontWeight.w700),
+                      icon: _isSharingImage
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Icon(Icons.chat, size: 20),
+                      label: Text(
+                        _isSharingImage
+                            ? 'Membuat gambar...'
+                            : 'Kirim Invoice ke WhatsApp',
+                        style: const TextStyle(fontWeight: FontWeight.w700),
                       ),
                     ),
                   ),
 
-                  // Update Lunas (hanya Transfer/QRIS & belum lunas)
+                  // Tandai Lunas (Transfer/QRIS)
                   if (isTransfer && !_sudahLunas) ...[
                     const SizedBox(height: 10),
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton.icon(
-                        onPressed:
-                            _isUpdatingStatus ? null : _updateLunas,
+                        onPressed: _isUpdatingStatus ? null : _updateLunas,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: _success,
                           foregroundColor: Colors.white,
                           elevation: 0,
-                          padding:
-                              const EdgeInsets.symmetric(vertical: 14),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
                         icon: _isUpdatingStatus
                             ? const SizedBox(
-                                width: 18, height: 18,
+                                width: 18,
+                                height: 18,
                                 child: CircularProgressIndicator(
-                                    strokeWidth: 2, color: Colors.white),
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
                               )
-                            : const Icon(
-                                Icons.check_circle_outline, size: 20),
+                            : const Icon(Icons.check_circle_outline, size: 20),
                         label: const Text(
                           'Tandai Sudah Lunas',
                           style: TextStyle(fontWeight: FontWeight.w700),
@@ -1459,8 +1619,6 @@ class _InvoiceDialogState extends State<_InvoiceDialog> {
                   ],
 
                   const SizedBox(height: 10),
-
-                  // Tutup
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton(
@@ -1469,10 +1627,13 @@ class _InvoiceDialogState extends State<_InvoiceDialog> {
                         side: const BorderSide(color: _primary),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
-                      child: const Text('Tutup',
-                          style: TextStyle(color: _primary)),
+                      child: const Text(
+                        'Tutup',
+                        style: TextStyle(color: _primary),
+                      ),
                     ),
                   ),
                 ],
@@ -1486,13 +1647,13 @@ class _InvoiceDialogState extends State<_InvoiceDialog> {
 }
 
 // ── Invoice Row ────────────────────────────────────────────
-class _InvoiceRow extends StatelessWidget {
+class _InvRow extends StatelessWidget {
   final String label;
   final String value;
   final bool isBold;
   final Color? color;
 
-  const _InvoiceRow({
+  const _InvRow({
     required this.label,
     required this.value,
     this.isBold = false,
@@ -1506,17 +1667,17 @@ class _InvoiceRow extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label,
-              style: const TextStyle(
-                  fontSize: 13, color: _textSecondary)),
+          Text(
+            label,
+            style: const TextStyle(fontSize: 13, color: _textSecondary),
+          ),
           Flexible(
             child: Text(
               value,
               textAlign: TextAlign.right,
               style: TextStyle(
                 fontSize: 13,
-                fontWeight:
-                    isBold ? FontWeight.w800 : FontWeight.w600,
+                fontWeight: isBold ? FontWeight.w800 : FontWeight.w600,
                 color: color ?? _textPrimary,
               ),
             ),

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:dannisa_sweet_pos/core/services/secure_storage.dart';
 import 'package:dannisa_sweet_pos/features/auth/data/models/auth_response_model.dart';
 import 'package:dannisa_sweet_pos/features/auth/data/models/auth_repository_impl.dart';
+import 'package:dannisa_sweet_pos/core/constants/api_constants.dart';
+import 'package:dannisa_sweet_pos/core/services/dio_client.dart';
 
 enum AuthStatus { initial, loading, authenticated, unauthenticated, error }
 
@@ -84,21 +86,26 @@ class AuthProvider extends ChangeNotifier {
 
   // ── Check token saat app start (SplashScreen) ──────────────
   Future<void> checkAuthStatus() async {
-    _setLoading();
-    try {
-      final token = await SecureStorageService.getToken();
-      if (token != null && token.isNotEmpty) {
-        _token = token;
-        _status = AuthStatus.authenticated;
-      } else {
-        _status = AuthStatus.unauthenticated;
-      }
-    } catch (e) {
+  _setLoading();
+  try {
+    final token = await SecureStorageService.getToken();
+    if (token != null && token.isNotEmpty) {
+      _token = token;
+      // Fetch profile untuk dapat data user + role
+      final response = await DioClient.instance.get(ApiConstants.profile);
+      final data = response.data['data'] as Map<String, dynamic>;
+      _user = UserModel.fromJson(data['user'] ?? data);
+      _status = AuthStatus.authenticated;
+    } else {
       _status = AuthStatus.unauthenticated;
     }
-    notifyListeners();
+  } catch (e) {
+    // Token expired → clear dan paksa login ulang
+    await SecureStorageService.clearAll();
+    _status = AuthStatus.unauthenticated;
   }
-
+  notifyListeners();
+}
   // ── Logout ─────────────────────────────────────────────────
   Future<void> logout() async {
     await SecureStorageService.clearAll();

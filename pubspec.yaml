@@ -40,6 +40,9 @@ dependencies:
   equatable: ^2.0.8
   email_validator: ^3.0.0
   url_launcher: ^6.3.2
+  screenshot: ^3.0.0
+  path_provider: ^2.1.4
+  share_plus: ^10.1.4
 
 dev_dependencies:
   flutter_test:
