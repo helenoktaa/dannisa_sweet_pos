@@ -18,10 +18,10 @@ class JabatanModel {
   });
 
   factory JabatanModel.fromJson(Map<String, dynamic> json) => JabatanModel(
-        idJabatan: json['id_jabatan'] as String,
-        namaJabatan: json['nama_jabatan'] as String,
-        gaji: (json['gaji'] as num).toDouble(),
-      );
+    idJabatan: json['id_jabatan'] as String,
+    namaJabatan: json['nama_jabatan'] as String,
+    gaji: (json['gaji'] as num).toDouble(),
+  );
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -46,20 +46,20 @@ class UserModel {
     required this.namaJabatan,
   });
 
-factory UserModel.fromJson(Map<String, dynamic> json) {
-  // Ambil nested object jabatan
-  final jabatan = json['jabatan'] as Map<String, dynamic>? ?? {};
-  
-  return UserModel(
-    idUser: json['id_user'] as String,
-    namaUser: json['nama_user'] as String,
-    email: json['email'] as String,
-    rekPembayaran: json['rek_pembayaran'] as String?,
-    whatsapp: json['whatsapp'] as String?,
-    idJabatan: jabatan['id_jabatan'] as String? ?? '',   // ← dari nested
-    namaJabatan: jabatan['nama_jabatan'] as String? ?? '', // ← dari nested
-  );
-}
+  factory UserModel.fromJson(Map<String, dynamic> json) {
+    // Ambil nested object jabatan
+    final jabatan = json['jabatan'] as Map<String, dynamic>? ?? {};
+
+    return UserModel(
+      idUser: json['id_user'] as String,
+      namaUser: json['nama_user'] as String,
+      email: json['email'] as String,
+      rekPembayaran: json['rek_pembayaran'] as String?,
+      whatsapp: json['whatsapp'] as String?,
+      idJabatan: jabatan['id_jabatan'] as String? ?? '', // ← dari nested
+      namaJabatan: jabatan['nama_jabatan'] as String? ?? '', // ← dari nested
+    );
+  }
 }
 
 // ─────────────────────────────────────────────────────────────

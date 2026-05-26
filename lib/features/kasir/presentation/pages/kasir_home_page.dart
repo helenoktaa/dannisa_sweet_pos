@@ -38,10 +38,10 @@ class _KasirHomePageState extends State<KasirHomePage> {
     final greeting = now.hour < 11
         ? 'Selamat Pagi'
         : now.hour < 15
-            ? 'Selamat Siang'
-            : now.hour < 18
-                ? 'Selamat Sore'
-                : 'Selamat Malam';
+        ? 'Selamat Siang'
+        : now.hour < 18
+        ? 'Selamat Sore'
+        : 'Selamat Malam';
 
     return Scaffold(
       backgroundColor: _surface,
@@ -70,23 +70,28 @@ class _KasirHomePageState extends State<KasirHomePage> {
                 context: context,
                 builder: (_) => AlertDialog(
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20)),
-                  title: const Text('Logout',
-                      style: TextStyle(fontWeight: FontWeight.bold)),
-                  content:
-                      const Text('Yakin ingin keluar dari aplikasi?'),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  title: const Text(
+                    'Logout',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  content: const Text('Yakin ingin keluar dari aplikasi?'),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.pop(context, false),
-                      child: const Text('Batal',
-                          style: TextStyle(color: _textSecondary)),
+                      child: const Text(
+                        'Batal',
+                        style: TextStyle(color: _textSecondary),
+                      ),
                     ),
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: _primary,
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10)),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
                       onPressed: () => Navigator.pop(context, true),
                       child: const Text('Logout'),
@@ -126,9 +131,11 @@ class _KasirHomePageState extends State<KasirHomePage> {
                 children: [
                   // Dekorasi
                   Positioned(
-                    right: -40, top: -40,
+                    right: -40,
+                    top: -40,
                     child: Container(
-                      width: 180, height: 180,
+                      width: 180,
+                      height: 180,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: Colors.white.withOpacity(0.07),
@@ -136,9 +143,11 @@ class _KasirHomePageState extends State<KasirHomePage> {
                     ),
                   ),
                   Positioned(
-                    right: 40, top: 40,
+                    right: 40,
+                    top: 40,
                     child: Container(
-                      width: 90, height: 90,
+                      width: 90,
+                      height: 90,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: Colors.white.withOpacity(0.05),
@@ -146,9 +155,11 @@ class _KasirHomePageState extends State<KasirHomePage> {
                     ),
                   ),
                   Positioned(
-                    left: -20, bottom: -20,
+                    left: -20,
+                    bottom: -20,
                     child: Container(
-                      width: 120, height: 120,
+                      width: 120,
+                      height: 120,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: Colors.white.withOpacity(0.05),
@@ -168,14 +179,12 @@ class _KasirHomePageState extends State<KasirHomePage> {
                             children: [
                               Expanded(
                                 child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
                                       '$greeting,',
                                       style: TextStyle(
-                                        color:
-                                            Colors.white.withOpacity(0.85),
+                                        color: Colors.white.withOpacity(0.85),
                                         fontSize: 14,
                                       ),
                                     ),
@@ -194,7 +203,8 @@ class _KasirHomePageState extends State<KasirHomePage> {
                               ),
                               // Avatar
                               Container(
-                                width: 52, height: 52,
+                                width: 52,
+                                height: 52,
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
                                   color: Colors.white.withOpacity(0.2),
@@ -283,8 +293,20 @@ class _KasirHomePageState extends State<KasirHomePage> {
                     label: 'Input Transaksi',
                     description: 'Catat penjualan baru',
                     color: const Color(0xFF10B981),
+                    onTap: () =>
+                        Navigator.pushNamed(context, AppRouter.inputTransaksi),
+                  ),
+                  const SizedBox(height: 12),
+
+                  _MenuCard(
+                    icon: Icons.pending_actions_outlined,
+                    label: 'Transaksi Pending',
+                    description: 'Follow up pembayaran customer',
+                    color: const Color(0xFFF59E0B), // warning/orange
                     onTap: () => Navigator.pushNamed(
-                        context, AppRouter.inputTransaksi),
+                      context,
+                      AppRouter.transaksiPending,
+                    ),
                   ),
                   const SizedBox(height: 12),
 
@@ -294,8 +316,8 @@ class _KasirHomePageState extends State<KasirHomePage> {
                     label: 'Daftar Produk',
                     description: 'Lihat katalog produk & stok',
                     color: const Color(0xFF0EA5E9),
-                    onTap: () => Navigator.pushNamed(
-                        context, AppRouter.daftarProduk),
+                    onTap: () =>
+                        Navigator.pushNamed(context, AppRouter.daftarProduk),
                   ),
 
                   const SizedBox(height: 32),
@@ -307,8 +329,7 @@ class _KasirHomePageState extends State<KasirHomePage> {
                     decoration: BoxDecoration(
                       color: _primary.withOpacity(0.06),
                       borderRadius: BorderRadius.circular(16),
-                      border:
-                          Border.all(color: _primary.withOpacity(0.15)),
+                      border: Border.all(color: _primary.withOpacity(0.15)),
                     ),
                     child: Row(
                       children: [
@@ -318,8 +339,11 @@ class _KasirHomePageState extends State<KasirHomePage> {
                             color: _primary.withOpacity(0.1),
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(Icons.cake,
-                              color: _primary, size: 22),
+                          child: const Icon(
+                            Icons.cake,
+                            color: _primary,
+                            size: 22,
+                          ),
                         ),
                         const SizedBox(width: 14),
                         Column(
@@ -429,7 +453,8 @@ class _MenuCard extends StatelessWidget {
           child: Row(
             children: [
               Container(
-                width: 56, height: 56,
+                width: 56,
+                height: 56,
                 decoration: BoxDecoration(
                   color: color.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(16),
@@ -453,7 +478,9 @@ class _MenuCard extends StatelessWidget {
                     Text(
                       description,
                       style: const TextStyle(
-                          fontSize: 12, color: _textSecondary),
+                        fontSize: 12,
+                        color: _textSecondary,
+                      ),
                     ),
                   ],
                 ),
@@ -464,8 +491,7 @@ class _MenuCard extends StatelessWidget {
                   color: color.withOpacity(0.08),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(Icons.arrow_forward_ios,
-                    color: color, size: 12),
+                child: Icon(Icons.arrow_forward_ios, color: color, size: 12),
               ),
             ],
           ),

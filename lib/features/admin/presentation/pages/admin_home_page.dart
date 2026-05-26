@@ -336,7 +336,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                   _PrimaryMenuCard(
                     icon: Icons.pending_actions_outlined,
                     label: 'Transaksi Pending',
-                    description: 'Konfirmasi pembayaran Transfer/QRIS',
+                    description: 'Konfirmasi pembayaran Transfer',
                     color: const Color(0xFFFFA552),
                     onTap: () => Navigator.pushNamed(
                       context,
