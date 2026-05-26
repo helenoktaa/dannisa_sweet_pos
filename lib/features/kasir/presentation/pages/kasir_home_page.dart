@@ -302,7 +302,7 @@ class _KasirHomePageState extends State<KasirHomePage> {
                     icon: Icons.pending_actions_outlined,
                     label: 'Transaksi Pending',
                     description: 'Follow up pembayaran customer',
-                    color: const Color(0xFFF59E0B), // warning/orange
+                    color: const Color(0xFFF59E0B), 
                     onTap: () => Navigator.pushNamed(
                       context,
                       AppRouter.transaksiPending,
@@ -320,7 +320,7 @@ class _KasirHomePageState extends State<KasirHomePage> {
                         Navigator.pushNamed(context, AppRouter.daftarProduk),
                   ),
 
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 100),
 
                   // ── Info toko ───────────────────────────────
                   Container(
