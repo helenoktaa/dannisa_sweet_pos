@@ -1008,54 +1008,58 @@ class _ProdukFormSheetState extends State<_ProdukFormSheet> {
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.90,
+      ),
       padding: EdgeInsets.fromLTRB(20, 0, 20, 20 + bottomInset),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Handle bar
-          Center(
-            child: Container(
-              margin: const EdgeInsets.only(top: 12, bottom: 16),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade300,
-                borderRadius: BorderRadius.circular(2),
+      child: SingleChildScrollView(
+        controller: ScrollController(),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle bar
+            Center(
+              child: Container(
+                margin: const EdgeInsets.only(top: 12, bottom: 16),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
             ),
-          ),
 
-          // Title
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: _primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
+            // Title
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: _primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    _isEdit ? Icons.edit_outlined : Icons.add_circle_outline,
+                    color: _primary,
+                    size: 20,
+                  ),
                 ),
-                child: Icon(
-                  _isEdit ? Icons.edit_outlined : Icons.add_circle_outline,
-                  color: _primary,
-                  size: 20,
+                const SizedBox(width: 12),
+                Text(
+                  _isEdit ? 'Edit Produk' : 'Tambah Produk Baru',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: _textPrimary,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                _isEdit ? 'Edit Produk' : 'Tambah Produk Baru',
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  color: _textPrimary,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
+              ],
+            ),
+            const SizedBox(height: 20),
 
-          // Form
-          Flexible(
-            child: SingleChildScrollView(
+            // Form
+            Flexible(
               child: Form(
                 key: _formKey,
                 child: Column(
@@ -1119,8 +1123,20 @@ class _ProdukFormSheetState extends State<_ProdukFormSheet> {
                             inputFormatters: [
                               FilteringTextInputFormatter.digitsOnly,
                             ],
-                            validator: (v) =>
-                                (v?.isEmpty ?? true) ? 'Wajib diisi' : null,
+                            // Harga Jual validator
+                            validator: (v) {
+                              if (v?.isEmpty ?? true)
+                                return 'Harga jual wajib diisi';
+                              final hargaJual = double.tryParse(v!) ?? 0;
+                              if (hargaJual <= 0)
+                                return 'Harga jual harus lebih dari 0';
+                              final hargaModal =
+                                  double.tryParse(_hargaModalCtrl.text) ?? 0;
+                              if (hargaJual < hargaModal) {
+                                return 'Harga jual tidak boleh kurang dari modal';
+                              }
+                              return null;
+                            },
                           ),
                         ),
                       ],
@@ -1165,9 +1181,15 @@ class _ProdukFormSheetState extends State<_ProdukFormSheet> {
                               ),
                             ),
                             if (_labaPreview < 0)
-                              const Text(
-                                ' ⚠️ Harga jual lebih rendah dari modal!',
-                                style: TextStyle(fontSize: 11, color: _danger),
+                              const Flexible(
+                                child: Text(
+                                  ' ⚠️ Harga jual tidak boleh kurang dari modal!',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: _danger,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ),
                           ],
                         ),
@@ -1253,11 +1275,15 @@ class _ProdukFormSheetState extends State<_ProdukFormSheet> {
                       width: double.infinity,
                       height: 52,
                       child: ElevatedButton(
-                        onPressed: _isLoading ? null : _submit,
+                        onPressed: _isLoading || _labaPreview < 0
+                            ? null
+                            : _submit,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: _primary,
                           foregroundColor: Colors.white,
                           elevation: 0,
+                          disabledBackgroundColor:
+                              Colors.grey.shade300,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14),
                           ),
@@ -1284,8 +1310,8 @@ class _ProdukFormSheetState extends State<_ProdukFormSheet> {
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
