@@ -17,6 +17,9 @@ import 'package:dannisa_sweet_pos/features/admin/presentation/pages/daftar_produ
 import 'package:dannisa_sweet_pos/features/admin/presentation/pages/input_transaksi_page.dart';
 import 'package:dannisa_sweet_pos/features/admin/presentation/pages/laporan_transaksi_page.dart';
 import 'package:dannisa_sweet_pos/features/admin/presentation/pages/transaksi_pending_page.dart';
+import 'package:dannisa_sweet_pos/features/admin/presentation/providers/dashboard_provider.dart';
+import 'package:dannisa_sweet_pos/features/admin/presentation/pages/admin_main_page.dart';
+import 'package:dannisa_sweet_pos/features/admin/presentation/pages/stok_history_page.dart';
 
 // ── Kasir Pages ────────────────────────────────────────────
 import 'package:dannisa_sweet_pos/features/kasir/presentation/pages/kasir_home_page.dart';
@@ -46,6 +49,7 @@ class AppRouter {
   static const String inputTransaksi = '/admin/transaksi';
   static const String laporan        = '/admin/laporan';
   static const String transaksiPending = '/admin/transaksi-pending';
+  static const String stokHistory   = '/admin/stok-history';
 
   // Kasir routes
   static const String kasirHome      = '/kasir/home';
@@ -59,7 +63,7 @@ class AppRouter {
         register:       (_) => const RegisterPage(),
 
         // ── Admin ──────────────────────────────────────────
-        adminHome:      (_) => const AdminHomePage(),
+        adminHome:      (_) => const AdminMainPage(),
         dashboard:      (_) => const AdminHomePage(), // legacy
         kelolaProduk:   (_) => const KelolaProdukPage(),
         kelolaKategori: (_) => const KelolaKategoriPage(),
@@ -68,6 +72,8 @@ class AppRouter {
         inputTransaksi: (_) => const InputTransaksiPage(),
         laporan:        (_) => const LaporanTransaksiPage(),
         transaksiPending: (_) => const TransaksiPendingPage(),
+        //stokHistory:      (_) => const StokHistoryPage(),
+        
 
         // ── Kasir ──────────────────────────────────────────
         kasirHome:      (_) => const KasirHomePage(),
@@ -91,6 +97,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => UserProvider()),
         ChangeNotifierProvider(create: (_) => TransaksiProvider()),
         ChangeNotifierProvider(create: (_) => LaporanProvider()),
+        ChangeNotifierProvider(create: (_) => DashboardProvider()),
       ],
       child: MaterialApp(
         title: 'Dannisa Sweet POS',
