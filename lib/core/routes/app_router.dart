@@ -31,6 +31,7 @@ import 'package:dannisa_sweet_pos/features/admin/presentation/providers/user_pro
 import 'package:dannisa_sweet_pos/features/admin/presentation/providers/transaksi_provider.dart';
 import 'package:dannisa_sweet_pos/features/admin/presentation/providers/laporan_provider.dart';
 import 'package:dannisa_sweet_pos/features/dashboard/presentation/providers/product_provider.dart';
+import 'package:dannisa_sweet_pos/features/admin/presentation/providers/stok_history_provider.dart';
 
 // ══════════════════════════════════════════════════════════
 //  AppRouter
@@ -49,7 +50,7 @@ class AppRouter {
   static const String inputTransaksi = '/admin/transaksi';
   static const String laporan        = '/admin/laporan';
   static const String transaksiPending = '/admin/transaksi-pending';
-  static const String stokHistory   = '/admin/stok-history';
+  static const String stokHistory   = '/stok-history';
 
   // Kasir routes
   static const String kasirHome      = '/kasir/home';
@@ -72,7 +73,7 @@ class AppRouter {
         inputTransaksi: (_) => const InputTransaksiPage(),
         laporan:        (_) => const LaporanTransaksiPage(),
         transaksiPending: (_) => const TransaksiPendingPage(),
-        //stokHistory:      (_) => const StokHistoryPage(),
+        stokHistory:      (_) => const StokHistoryPage(),
         
 
         // ── Kasir ──────────────────────────────────────────
@@ -98,6 +99,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => TransaksiProvider()),
         ChangeNotifierProvider(create: (_) => LaporanProvider()),
         ChangeNotifierProvider(create: (_) => DashboardProvider()),
+        ChangeNotifierProvider(create: (_) => StokHistoryProvider()),
       ],
       child: MaterialApp(
         title: 'Dannisa Sweet POS',

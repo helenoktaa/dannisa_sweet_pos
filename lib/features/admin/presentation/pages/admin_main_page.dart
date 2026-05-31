@@ -7,7 +7,7 @@ import 'package:dannisa_sweet_pos/features/auth/presentation/providers/auth_prov
 import 'package:dannisa_sweet_pos/features/admin/presentation/pages/dashboard_page.dart';
 import 'package:dannisa_sweet_pos/features/admin/presentation/pages/transaksi_tab_page.dart';
 import 'package:dannisa_sweet_pos/features/admin/presentation/pages/kelola_tab_page.dart';
-//import 'package:dannisa_sweet_pos/features/admin/presentation/pages/profil_page.dart';
+import 'package:dannisa_sweet_pos/features/admin/presentation/pages/profil_page.dart';
 
 const _primary = Color(0xFFE91E8C);
 const _primaryDark = Color(0xFFC2185B);
@@ -27,7 +27,7 @@ class _AdminMainPageState extends State<AdminMainPage> {
     DashboardPage(),
     TransaksiTabPage(),
     KelolaTabPage(),
-    //ProfilPage(),
+    ProfilPage(),
   ];
 
   @override

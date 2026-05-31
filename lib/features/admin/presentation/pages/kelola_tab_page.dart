@@ -92,14 +92,13 @@ class KelolaTabPage extends StatelessWidget {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(16, 20, 16, 24),
               children: [
-                // ── Grid menu 2 kolom ──────────────────────
                 GridView.count(
                   crossAxisCount: 2,
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   mainAxisSpacing: 12,
                   crossAxisSpacing: 12,
-                  childAspectRatio: 1.2,
+                  childAspectRatio: 1.4,
                   children: [
                     _GridCard(
                       icon: Icons.cake_outlined,
@@ -120,7 +119,7 @@ class KelolaTabPage extends StatelessWidget {
                     _GridCard(
                       icon: Icons.people_outline,
                       label: 'Kelola User',
-                      description: 'Manajemen akun admin & kasir',
+                      description: 'Manajemen akun',
                       color: const Color(0xFF8B5CF6),
                       onTap: () => Navigator.pushNamed(
                           context, AppRouter.kelolaUser),

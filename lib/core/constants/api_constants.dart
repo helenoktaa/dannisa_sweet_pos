@@ -30,6 +30,8 @@ class ApiConstants {
   //Main dashboard admin
   static const String dashboard = '/dashboard';
 
+  static const String stokHistory = '/stok-history';
+
   // Timeout
   static const int connectTimeout = 15000;
   static const int receiveTimeout = 15000;
