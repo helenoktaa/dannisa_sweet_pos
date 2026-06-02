@@ -15,6 +15,7 @@ class StokHistoryModel {
   final int stokSebelum;
   final int stokSesudah;
   final String keterangan;
+  final double nilaiRugi;
   final DateTime tanggal;
 
   const StokHistoryModel({
@@ -28,6 +29,7 @@ class StokHistoryModel {
     required this.stokSebelum,
     required this.stokSesudah,
     required this.keterangan,
+    required this.nilaiRugi,
     required this.tanggal,
   });
 
@@ -52,6 +54,7 @@ class StokHistoryModel {
       stokSebelum: safeInt(json['stok_sebelum']),
       stokSesudah: safeInt(json['stok_sesudah']),
       keterangan:  json['keterangan']?.toString() ?? '',
+      nilaiRugi:   (json['nilai_rugi'] as num?)?.toDouble() ?? 0.0,
       tanggal:     DateTime.tryParse(json['tanggal']?.toString() ?? '') ??
           DateTime.now(),
     );

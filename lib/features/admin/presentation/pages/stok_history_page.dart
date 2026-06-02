@@ -26,6 +26,17 @@ class _StokHistoryPageState extends State<StokHistoryPage>
   late TabController _tabController;
   String _filterJenis = 'Semua';
 
+  String _formatRupiah(double value) {
+    if (value == 0) return 'Rp 0';
+    final formatted = value
+        .toStringAsFixed(0)
+        .replaceAllMapped(
+          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+          (m) => '${m[1]}.',
+        );
+    return 'Rp $formatted';
+  }
+
   @override
   void initState() {
     super.initState();
@@ -52,6 +63,11 @@ class _StokHistoryPageState extends State<StokHistoryPage>
       return h.jenis == _filterJenis;
     }).toList();
 
+    final totalRugi = provider.histories.fold<double>(
+      0,
+      (sum, h) => sum + h.nilaiRugi,
+    );
+
     return Scaffold(
       backgroundColor: _surface,
       body: NestedScrollView(
@@ -76,9 +92,11 @@ class _StokHistoryPageState extends State<StokHistoryPage>
                 child: Stack(
                   children: [
                     Positioned(
-                      right: -30, top: -20,
+                      right: -30,
+                      top: -20,
                       child: Container(
-                        width: 140, height: 140,
+                        width: 140,
+                        height: 140,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: Colors.white.withOpacity(0.07),
@@ -86,7 +104,8 @@ class _StokHistoryPageState extends State<StokHistoryPage>
                       ),
                     ),
                     Positioned(
-                      left: 20, bottom: 16,
+                      left: 20,
+                      bottom: 16,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
@@ -148,16 +167,30 @@ class _StokHistoryPageState extends State<StokHistoryPage>
                     const SizedBox(width: 10),
                     _StatCard(
                       label: 'Penambahan',
-                      value: '${provider.histories.where((h) => h.jenis == 'penambahan').length}',
+                      value:
+                          '${provider.histories.where((h) => h.jenis == 'penambahan').length}',
                       icon: Icons.add_box_outlined,
                       color: _success,
                     ),
                     const SizedBox(width: 10),
-                    _StatCard(
-                      label: 'Pengurangan',
-                      value: '${provider.histories.where((h) => h.jenis == 'pengurangan').length}',
-                      icon: Icons.indeterminate_check_box_outlined,
-                      color: _danger,
+
+                    Row(
+                      children: [
+                        _StatCard(
+                          label: 'Pengurangan',
+                          value:
+                              '${provider.histories.where((h) => h.jenis == 'pengurangan').length}',
+                          icon: Icons.indeterminate_check_box_outlined,
+                          color: _danger,
+                        ),
+                        const SizedBox(width: 10),
+                        _StatCard(
+                          label: 'Total Rugi',
+                          value: _formatRupiah(totalRugi),
+                          icon: Icons.trending_down_outlined,
+                          color: _danger,
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -212,8 +245,10 @@ class _StokHistoryPageState extends State<StokHistoryPage>
                   children: [
                     const Icon(Icons.cloud_off, size: 56, color: _primary),
                     const SizedBox(height: 12),
-                    Text(provider.error ?? 'Gagal memuat data',
-                        style: const TextStyle(color: _textSecondary)),
+                    Text(
+                      provider.error ?? 'Gagal memuat data',
+                      style: const TextStyle(color: _textSecondary),
+                    ),
                     const SizedBox(height: 16),
                     ElevatedButton.icon(
                       onPressed: () => provider.fetchAll(),
@@ -233,12 +268,16 @@ class _StokHistoryPageState extends State<StokHistoryPage>
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.history_outlined,
-                          size: 56, color: Colors.grey.shade300),
+                      Icon(
+                        Icons.history_outlined,
+                        size: 56,
+                        color: Colors.grey.shade300,
+                      ),
                       const SizedBox(height: 12),
-                      const Text('Belum ada riwayat stok',
-                          style: TextStyle(
-                              color: _textSecondary, fontSize: 14)),
+                      const Text(
+                        'Belum ada riwayat stok',
+                        style: TextStyle(color: _textSecondary, fontSize: 14),
+                      ),
                       const SizedBox(height: 16),
                       ElevatedButton.icon(
                         onPressed: () => _showFormSheet(context),
@@ -274,8 +313,10 @@ class _StokHistoryPageState extends State<StokHistoryPage>
         foregroundColor: Colors.white,
         elevation: 6,
         icon: const Icon(Icons.edit_note_outlined),
-        label: const Text('Catat Stok',
-            style: TextStyle(fontWeight: FontWeight.w600)),
+        label: const Text(
+          'Catat Stok',
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
       ),
     );
   }
@@ -340,9 +381,10 @@ class _StatCard extends StatelessWidget {
                 color: color,
               ),
             ),
-            Text(label,
-                style: const TextStyle(
-                    fontSize: 11, color: _textSecondary)),
+            Text(
+              label,
+              style: const TextStyle(fontSize: 11, color: _textSecondary),
+            ),
           ],
         ),
       ),
@@ -370,21 +412,18 @@ class _FilterChip extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
         decoration: BoxDecoration(
           color: isSelected ? color : _cardBg,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isSelected ? color : Colors.grey.shade200,
-          ),
+          border: Border.all(color: isSelected ? color : Colors.grey.shade200),
           boxShadow: isSelected
               ? [
                   BoxShadow(
                     color: color.withOpacity(0.3),
                     blurRadius: 8,
                     offset: const Offset(0, 3),
-                  )
+                  ),
                 ]
               : [],
         ),
@@ -393,8 +432,7 @@ class _FilterChip extends StatelessWidget {
           style: TextStyle(
             color: isSelected ? Colors.white : _textSecondary,
             fontSize: 12,
-            fontWeight:
-                isSelected ? FontWeight.w600 : FontWeight.normal,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
           ),
         ),
       ),
@@ -412,8 +450,19 @@ class _HistoryCard extends StatelessWidget {
 
   String _formatTanggal(DateTime tanggal) {
     final months = [
-      '', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
-      'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'
+      '',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'Mei',
+      'Jun',
+      'Jul',
+      'Agu',
+      'Sep',
+      'Okt',
+      'Nov',
+      'Des',
     ];
     return '${tanggal.day} ${months[tanggal.month]} ${tanggal.year} '
         '${tanggal.hour.toString().padLeft(2, '0')}:'
@@ -448,7 +497,8 @@ class _HistoryCard extends StatelessWidget {
           children: [
             // Icon jenis
             Container(
-              width: 44, height: 44,
+              width: 44,
+              height: 44,
               decoration: BoxDecoration(
                 color: color.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
@@ -479,15 +529,18 @@ class _HistoryCard extends StatelessWidget {
                       // Badge jenis
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 3),
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
                           color: color.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(6),
-                          border:
-                              Border.all(color: color.withOpacity(0.3)),
+                          border: Border.all(color: color.withOpacity(0.3)),
                         ),
                         child: Text(
-                          _isPenambahan ? '+ ${history.jumlah}' : '- ${history.jumlah}',
+                          _isPenambahan
+                              ? '+ ${history.jumlah}'
+                              : '- ${history.jumlah}',
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
@@ -505,15 +558,22 @@ class _HistoryCard extends StatelessWidget {
                       Text(
                         'Stok: ',
                         style: const TextStyle(
-                            fontSize: 12, color: _textSecondary),
+                          fontSize: 12,
+                          color: _textSecondary,
+                        ),
                       ),
                       Text(
                         '${history.stokSebelum}',
                         style: const TextStyle(
-                            fontSize: 12, color: _textSecondary),
+                          fontSize: 12,
+                          color: _textSecondary,
+                        ),
                       ),
-                      const Icon(Icons.arrow_forward,
-                          size: 12, color: _textSecondary),
+                      const Icon(
+                        Icons.arrow_forward,
+                        size: 12,
+                        color: _textSecondary,
+                      ),
                       Text(
                         '${history.stokSesudah}',
                         style: TextStyle(
@@ -544,22 +604,32 @@ class _HistoryCard extends StatelessWidget {
                   // Footer: user & tanggal
                   Row(
                     children: [
-                      const Icon(Icons.person_outline,
-                          size: 12, color: _textSecondary),
+                      const Icon(
+                        Icons.person_outline,
+                        size: 12,
+                        color: _textSecondary,
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         history.namaUser,
                         style: const TextStyle(
-                            fontSize: 11, color: _textSecondary),
+                          fontSize: 11,
+                          color: _textSecondary,
+                        ),
                       ),
                       const Spacer(),
-                      const Icon(Icons.access_time,
-                          size: 12, color: _textSecondary),
+                      const Icon(
+                        Icons.access_time,
+                        size: 12,
+                        color: _textSecondary,
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         _formatTanggal(history.tanggal),
                         style: const TextStyle(
-                            fontSize: 11, color: _textSecondary),
+                          fontSize: 11,
+                          color: _textSecondary,
+                        ),
                       ),
                     ],
                   ),
@@ -611,11 +681,11 @@ class _StokFormSheetState extends State<_StokFormSheet> {
     setState(() => _isLoading = true);
 
     final ok = await context.read<StokHistoryProvider>().create(
-          idProduk: _selectedProdukId!,
-          jenis: _selectedJenis,
-          jumlah: int.parse(_jumlahCtrl.text),
-          keterangan: _keteranganCtrl.text.trim(),
-        );
+      idProduk: _selectedProdukId!,
+      jenis: _selectedJenis,
+      jumlah: int.parse(_jumlahCtrl.text),
+      keterangan: _keteranganCtrl.text.trim(),
+    );
 
     setState(() => _isLoading = false);
     if (!mounted) return;
@@ -623,13 +693,12 @@ class _StokFormSheetState extends State<_StokFormSheet> {
     Navigator.pop(context);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(ok
-            ? 'Stok berhasil diperbarui ✓'
-            : 'Gagal memperbarui stok'),
+        content: Text(
+          ok ? 'Stok berhasil diperbarui ✓' : 'Gagal memperbarui stok',
+        ),
         backgroundColor: ok ? _success : _danger,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
     );
   }
@@ -660,7 +729,8 @@ class _StokFormSheetState extends State<_StokFormSheet> {
           Center(
             child: Container(
               margin: const EdgeInsets.only(top: 12, bottom: 16),
-              width: 40, height: 4,
+              width: 40,
+              height: 4,
               decoration: BoxDecoration(
                 color: Colors.grey.shade300,
                 borderRadius: BorderRadius.circular(2),
@@ -677,8 +747,11 @@ class _StokFormSheetState extends State<_StokFormSheet> {
                   color: _primary.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(Icons.edit_note_outlined,
-                    color: _primary, size: 20),
+                child: const Icon(
+                  Icons.edit_note_outlined,
+                  color: _primary,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 12),
               const Text(
@@ -709,8 +782,8 @@ class _StokFormSheetState extends State<_StokFormSheet> {
                             icon: Icons.add_circle_outline,
                             color: _success,
                             isSelected: _selectedJenis == 'penambahan',
-                            onTap: () => setState(
-                                () => _selectedJenis = 'penambahan'),
+                            onTap: () =>
+                                setState(() => _selectedJenis = 'penambahan'),
                           ),
                         ),
                         const SizedBox(width: 10),
@@ -720,8 +793,8 @@ class _StokFormSheetState extends State<_StokFormSheet> {
                             icon: Icons.remove_circle_outline,
                             color: _danger,
                             isSelected: _selectedJenis == 'pengurangan',
-                            onTap: () => setState(
-                                () => _selectedJenis = 'pengurangan'),
+                            onTap: () =>
+                                setState(() => _selectedJenis = 'pengurangan'),
                           ),
                         ),
                       ],
@@ -733,42 +806,47 @@ class _StokFormSheetState extends State<_StokFormSheet> {
                       value: _selectedProdukId,
                       decoration: InputDecoration(
                         labelText: 'Pilih Produk',
-                        prefixIcon: const Icon(Icons.cake_outlined,
-                            color: _primary, size: 20),
+                        prefixIcon: const Icon(
+                          Icons.cake_outlined,
+                          color: _primary,
+                          size: 20,
+                        ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide:
-                              BorderSide(color: Colors.grey.shade300),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide:
-                              BorderSide(color: Colors.grey.shade300),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: const BorderSide(
-                              color: _primary, width: 1.5),
+                            color: _primary,
+                            width: 1.5,
+                          ),
                         ),
                         filled: true,
                         fillColor: Colors.grey.shade50,
                         contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 14),
+                          horizontal: 12,
+                          vertical: 14,
+                        ),
                       ),
                       items: produks
-                          .map((p) => DropdownMenuItem(
-                                value: p.idProduk,
-                                child: Text(
-                                  '${p.namaProduk} (Stok: ${p.stok})',
-                                  style: const TextStyle(fontSize: 13),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ))
+                          .map(
+                            (p) => DropdownMenuItem(
+                              value: p.idProduk,
+                              child: Text(
+                                '${p.namaProduk} (Stok: ${p.stok})',
+                                style: const TextStyle(fontSize: 13),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          )
                           .toList(),
-                      onChanged: (v) =>
-                          setState(() => _selectedProdukId = v),
-                      validator: (v) =>
-                          v == null ? 'Pilih produk' : null,
+                      onChanged: (v) => setState(() => _selectedProdukId = v),
+                      validator: (v) => v == null ? 'Pilih produk' : null,
                     ),
 
                     // Preview stok saat ini
@@ -776,22 +854,28 @@ class _StokFormSheetState extends State<_StokFormSheet> {
                       const SizedBox(height: 8),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 8),
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
                         decoration: BoxDecoration(
                           color: _primary.withOpacity(0.05),
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                              color: _primary.withOpacity(0.2)),
+                          border: Border.all(color: _primary.withOpacity(0.2)),
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.inventory_2_outlined,
-                                color: _primary, size: 16),
+                            const Icon(
+                              Icons.inventory_2_outlined,
+                              color: _primary,
+                              size: 16,
+                            ),
                             const SizedBox(width: 8),
                             Text(
                               'Stok saat ini: ',
                               style: const TextStyle(
-                                  fontSize: 12, color: _textSecondary),
+                                fontSize: 12,
+                                color: _textSecondary,
+                              ),
                             ),
                             Text(
                               '${selectedProduk.stok}',
@@ -811,9 +895,7 @@ class _StokFormSheetState extends State<_StokFormSheet> {
                     TextFormField(
                       controller: _jumlahCtrl,
                       keyboardType: TextInputType.number,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly
-                      ],
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                       style: const TextStyle(fontSize: 14),
                       decoration: InputDecoration(
                         labelText: 'Jumlah',
@@ -829,23 +911,25 @@ class _StokFormSheetState extends State<_StokFormSheet> {
                         ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide:
-                              BorderSide(color: Colors.grey.shade300),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide:
-                              BorderSide(color: Colors.grey.shade300),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: const BorderSide(
-                              color: _primary, width: 1.5),
+                            color: _primary,
+                            width: 1.5,
+                          ),
                         ),
                         filled: true,
                         fillColor: Colors.grey.shade50,
                         contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 14),
+                          horizontal: 12,
+                          vertical: 14,
+                        ),
                       ),
                       validator: (v) {
                         if (v?.isEmpty ?? true) return 'Wajib diisi';
@@ -873,27 +957,32 @@ class _StokFormSheetState extends State<_StokFormSheet> {
                         hintText: _selectedJenis == 'penambahan'
                             ? 'Contoh: Restock dari supplier'
                             : 'Contoh: Produk rusak, expired...',
-                        prefixIcon: const Icon(Icons.notes_outlined,
-                            color: _primary, size: 20),
+                        prefixIcon: const Icon(
+                          Icons.notes_outlined,
+                          color: _primary,
+                          size: 20,
+                        ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide:
-                              BorderSide(color: Colors.grey.shade300),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide:
-                              BorderSide(color: Colors.grey.shade300),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: const BorderSide(
-                              color: _primary, width: 1.5),
+                            color: _primary,
+                            width: 1.5,
+                          ),
                         ),
                         filled: true,
                         fillColor: Colors.grey.shade50,
                         contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 14),
+                          horizontal: 12,
+                          vertical: 14,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -911,18 +1000,20 @@ class _StokFormSheetState extends State<_StokFormSheet> {
                           foregroundColor: Colors.white,
                           elevation: 0,
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14)),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
                         ),
                         child: _isLoading
                             ? const SizedBox(
-                                width: 22, height: 22,
+                                width: 22,
+                                height: 22,
                                 child: CircularProgressIndicator(
-                                    strokeWidth: 2.5,
-                                    color: Colors.white),
+                                  strokeWidth: 2.5,
+                                  color: Colors.white,
+                                ),
                               )
                             : Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.center,
+                                mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Icon(
                                     _selectedJenis == 'penambahan'
@@ -989,19 +1080,18 @@ class _JenisButton extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon,
-                color: isSelected ? Colors.white : Colors.grey.shade400,
-                size: 18),
+            Icon(
+              icon,
+              color: isSelected ? Colors.white : Colors.grey.shade400,
+              size: 18,
+            ),
             const SizedBox(width: 6),
             Text(
               label,
               style: TextStyle(
-                color:
-                    isSelected ? Colors.white : Colors.grey.shade500,
+                color: isSelected ? Colors.white : Colors.grey.shade500,
                 fontSize: 13,
-                fontWeight: isSelected
-                    ? FontWeight.w700
-                    : FontWeight.normal,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.normal,
               ),
             ),
           ],
