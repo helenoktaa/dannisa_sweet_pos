@@ -608,7 +608,6 @@ Color _expiredColor(DateTime? exp) {
   return _textSecondary;
 }
 
-
 // ══════════════════════════════════════════════════════════
 //  Produk Card — detail lengkap
 // ══════════════════════════════════════════════════════════
@@ -645,8 +644,15 @@ class _ProdukCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isInCart = qty > 0;
     final canAdd = isPreOrder || produk.stok > qty;
-    final expColor = _expiredColor(produk.expiredDate);
     final expired = _isExpired(produk.expiredDate);
+    final expColor = _expiredColor(produk.expiredDate);
+    final stokColor = isPreOrder
+        ? Colors.orange
+        : produk.stok == 0
+        ? _danger
+        : produk.stok <= 5
+        ? _warning
+        : _success;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
@@ -736,7 +742,7 @@ class _ProdukCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                // Badge status kanan atas
+                // Badge Pre Order / Ready Stock
                 Positioned(
                   top: 7,
                   right: 7,
@@ -748,11 +754,11 @@ class _ProdukCard extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: isPreOrder
                           ? Colors.orange.shade600
-                          : Colors.black.withOpacity(0.35),
+                          : Colors.black.withOpacity(0.3),
                       borderRadius: BorderRadius.circular(7),
                     ),
                     child: Text(
-                      isPreOrder ? 'Pre Order' : 'Stok: ${produk.stok}',
+                      isPreOrder ? 'Pre Order' : 'Ready',
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 9,
@@ -785,31 +791,29 @@ class _ProdukCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 5),
 
-                  // Badge status produk
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 7,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isPreOrder
-                          ? Colors.orange.withOpacity(0.12)
-                          : _success.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      isPreOrder ? 'Pre Order' : 'Ready Stock',
-                      style: TextStyle(
-                        fontSize: 9,
-                        fontWeight: FontWeight.w600,
-                        color: isPreOrder ? Colors.orange.shade700 : _success,
+                  // Stok / By Order
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.inventory_2_outlined,
+                        size: 11,
+                        color: stokColor,
                       ),
-                    ),
+                      const SizedBox(width: 3),
+                      Text(
+                        isPreOrder ? 'By Order' : 'Stok: ${produk.stok}',
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: stokColor,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 5),
 
                   // Expired date (hanya ready stock)
-                  if (!isPreOrder && produk.expiredDate != null)
+                  if (!isPreOrder && produk.expiredDate != null) ...[
+                    const SizedBox(height: 3),
                     Row(
                       children: [
                         Icon(Icons.schedule, size: 10, color: expColor),
@@ -824,6 +828,7 @@ class _ProdukCard extends StatelessWidget {
                         ),
                       ],
                     ),
+                  ],
 
                   const Spacer(),
 
@@ -845,7 +850,6 @@ class _ProdukCard extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.fromLTRB(8, 5, 8, 9),
             child: expired
-                // Produk expired — nonaktifkan
                 ? Container(
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(vertical: 8),
