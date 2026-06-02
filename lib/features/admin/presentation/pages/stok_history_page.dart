@@ -156,24 +156,27 @@ class _StokHistoryPageState extends State<StokHistoryPage>
                   ),
                 ),
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                child: Row(
+                child: Column(
                   children: [
-                    _StatCard(
-                      label: 'Total Catatan',
-                      value: '${provider.histories.length}',
-                      icon: Icons.history_outlined,
-                      color: _primary,
+                    Row(
+                      children: [
+                        _StatCard(
+                          label: 'Total Catatan',
+                          value: '${provider.histories.length}',
+                          icon: Icons.history_outlined,
+                          color: _primary,
+                        ),
+                        const SizedBox(width: 10),
+                        _StatCard(
+                          label: 'Penambahan',
+                          value:
+                              '${provider.histories.where((h) => h.jenis == 'penambahan').length}',
+                          icon: Icons.add_box_outlined,
+                          color: _success,
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 10),
-                    _StatCard(
-                      label: 'Penambahan',
-                      value:
-                          '${provider.histories.where((h) => h.jenis == 'penambahan').length}',
-                      icon: Icons.add_box_outlined,
-                      color: _success,
-                    ),
-                    const SizedBox(width: 10),
-
+                    const SizedBox(height: 10),
                     Row(
                       children: [
                         _StatCard(
@@ -181,7 +184,7 @@ class _StokHistoryPageState extends State<StokHistoryPage>
                           value:
                               '${provider.histories.where((h) => h.jenis == 'pengurangan').length}',
                           icon: Icons.indeterminate_check_box_outlined,
-                          color: _danger,
+                          color: _warning,
                         ),
                         const SizedBox(width: 10),
                         _StatCard(
@@ -447,6 +450,16 @@ class _HistoryCard extends StatelessWidget {
   const _HistoryCard({required this.history});
 
   bool get _isPenambahan => history.jenis == 'penambahan';
+  
+  String _formatRupiah(double value) {
+    final formatted = value
+        .toStringAsFixed(0)
+        .replaceAllMapped(
+          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+          (m) => '${m[1]}.',
+        );
+    return 'Rp $formatted';
+  }
 
   String _formatTanggal(DateTime tanggal) {
     final months = [
@@ -551,6 +564,41 @@ class _HistoryCard extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 4),
+
+                  // Setelah row stok sebelum → sesudah
+                  if (!_isPenambahan && history.nilaiRugi > 0) ...[
+                    const SizedBox(height: 4),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: _danger.withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: _danger.withOpacity(0.2)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.trending_down,
+                            size: 12,
+                            color: _danger,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Rugi: ${_formatRupiah(history.nilaiRugi)}',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: _danger,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
 
                   // Stok sebelum → sesudah
                   Row(

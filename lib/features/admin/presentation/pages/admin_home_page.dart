@@ -346,8 +346,8 @@ class _AdminHomePageState extends State<AdminHomePage> {
                   const SizedBox(height: 10),
                   _PrimaryMenuCard(
                     icon: Icons.bar_chart_outlined,
-                    label: 'Laporan Transaksi',
-                    description: 'Lihat rekap penjualan & laba',
+                    label: 'Laporan Keuangan',
+                    description: 'Lihat rekap penjualan',
                     color: const Color(0xFFF59E0B),
                     onTap: () =>
                         Navigator.pushNamed(context, AppRouter.laporan),

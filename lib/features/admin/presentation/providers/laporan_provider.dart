@@ -3,6 +3,43 @@ import 'package:dio/dio.dart';
 import 'package:dannisa_sweet_pos/core/constants/api_constants.dart';
 import 'package:dannisa_sweet_pos/core/services/dio_client.dart';
 
+
+// ── Model Rugi Stok ────────────────────────────────────────
+class RugiStokItem {
+  final String namaProduk;
+  final int jumlah;
+  final double nilaiRugi;
+  final String keterangan;
+  final DateTime tanggal;
+
+  const RugiStokItem({
+    required this.namaProduk,
+    required this.jumlah,
+    required this.nilaiRugi,
+    required this.keterangan,
+    required this.tanggal,
+  });
+
+  factory RugiStokItem.fromJson(Map<String, dynamic> json) => RugiStokItem(
+        namaProduk: json['nama_produk']?.toString() ?? '',
+        jumlah: (json['jumlah'] as num?)?.toInt() ?? 0,
+        nilaiRugi: (json['nilai_rugi'] as num?)?.toDouble() ?? 0,
+        keterangan: json['keterangan']?.toString() ?? '',
+        tanggal: DateTime.tryParse(json['tanggal']?.toString() ?? '') ?? DateTime.now(),
+      );
+}
+
+class RugiStokData {
+  final double totalRugi;
+  final int totalItem;
+  final List<RugiStokItem> items;
+
+  const RugiStokData({
+    required this.totalRugi,
+    required this.totalItem,
+    required this.items,
+  });
+}
 // ─────────────────────────────────────────────────────────────
 //  Model: ProdukDetail (nested di dalam detail transaksi)
 // ─────────────────────────────────────────────────────────────
@@ -38,7 +75,6 @@ class ProdukDetail {
 
 // ─────────────────────────────────────────────────────────────
 //  Model: DetailLaporan
-//  Sesuai response: detail_transaksi dengan nested produk
 // ─────────────────────────────────────────────────────────────
 class DetailLaporan {
   final String idTransaksi;
@@ -73,7 +109,6 @@ class DetailLaporan {
 
 // ─────────────────────────────────────────────────────────────
 //  Model: TransaksiLaporan
-//  Sesuai response: key 'detail' bukan 'details'/'items'
 // ─────────────────────────────────────────────────────────────
 class TransaksiLaporan {
   final String idTransaksi;
@@ -125,7 +160,6 @@ class TransaksiLaporan {
 
 // ─────────────────────────────────────────────────────────────
 //  Model: LaporanData
-//  Sesuai response: key 'transaksis', 'total_penjualan', dll
 // ─────────────────────────────────────────────────────────────
 class LaporanData {
   final String tanggalMulai;
@@ -175,37 +209,32 @@ enum LaporanStatus { initial, loading, loaded, error }
 class LaporanProvider extends ChangeNotifier {
   LaporanStatus _status = LaporanStatus.initial;
   LaporanData? _laporan;
+  RugiStokData? _rugiStok;
   String? _error;
 
   LaporanStatus get status => _status;
   LaporanData? get laporan => _laporan;
+  RugiStokData? get rugiStok => _rugiStok;
   String? get error => _error;
   bool get isLoading => _status == LaporanStatus.loading;
 
-  // ── Helper format tanggal → YYYY-MM-DD ─────────────────────
   String _fmt(DateTime d) =>
       '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
-  // ── Laporan Harian ──────────────────────────────────────────
-  // Kirim tanggal yang sama untuk mulai & akhir
   Future<void> fetchHarian(DateTime tanggal) async {
     await _fetch(mulai: tanggal, akhir: tanggal);
   }
 
-  // ── Laporan Bulanan ─────────────────────────────────────────
-  // Kirim hari pertama & hari terakhir bulan
   Future<void> fetchBulanan(DateTime bulan) async {
     final mulai = DateTime(bulan.year, bulan.month, 1);
-    final akhir = DateTime(bulan.year, bulan.month + 1, 0); // hari terakhir
+    final akhir = DateTime(bulan.year, bulan.month + 1, 0);
     await _fetch(mulai: mulai, akhir: akhir);
   }
 
-  // ── Laporan Rentang Tanggal ─────────────────────────────────
   Future<void> fetchRentang(DateTime dari, DateTime sampai) async {
     await _fetch(mulai: dari, akhir: sampai);
   }
 
-  // ── Internal fetch ──────────────────────────────────────────
   Future<void> _fetch({
     required DateTime mulai,
     required DateTime akhir,
@@ -214,22 +243,43 @@ class LaporanProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final response = await DioClient.instance.get(
-        ApiConstants.laporan,
-        queryParameters: {
-          'tanggal_mulai': _fmt(mulai), // sesuai backend Go
-          'tanggal_akhir': _fmt(akhir), // sesuai backend Go
-        },
+      // Fetch paralel
+      final results = await Future.wait([
+        DioClient.instance.get(
+          ApiConstants.laporan,
+          queryParameters: {
+            'tanggal_mulai': _fmt(mulai),
+            'tanggal_akhir': _fmt(akhir),
+          },
+        ),
+        DioClient.instance.get(
+          ApiConstants.stokHistory,
+          queryParameters: {
+            'jenis': 'pengurangan',
+            'tanggal_mulai': _fmt(mulai),
+            'tanggal_akhir': _fmt(akhir),
+          },
+        ),
+      ]);
+
+      // Parse laporan transaksi
+      final raw = results[0].data['data'] as Map<String, dynamic>;
+      _laporan = LaporanData.fromJson(raw);
+
+      // Parse rugi stok
+      final rawStok = results[1].data['data'] as List<dynamic>? ?? [];
+      final items = rawStok
+          .map((e) => RugiStokItem.fromJson(e as Map<String, dynamic>))
+          .toList();
+      _rugiStok = RugiStokData(
+        totalRugi: items.fold(0, (sum, e) => sum + e.nilaiRugi),
+        totalItem: items.length,
+        items: items,
       );
 
-      debugPrint('=== RESPONSE LAPORAN: ${response.data} ===');
-
-      final raw = response.data['data'] as Map<String, dynamic>;
-      _laporan = LaporanData.fromJson(raw);
       _status = LaporanStatus.loaded;
     } on DioException catch (e) {
       debugPrint('=== ERROR LAPORAN: ${e.response?.data} ===');
-      debugPrint('=== STATUS CODE: ${e.response?.statusCode} ===');
       _error = e.response?.data['message'] ?? 'Gagal memuat laporan';
       _status = LaporanStatus.error;
     }
