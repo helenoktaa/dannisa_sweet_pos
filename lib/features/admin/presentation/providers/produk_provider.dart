@@ -55,6 +55,7 @@ class ProdukProvider extends ChangeNotifier {
       await DioClient.instance.post(
         ApiConstants.produk,
         data: {
+          'id_produk': idProduk,
           'nama_produk': namaProduk,
           'harga_modal': hargaModal,
           'harga_jual': hargaJual,
@@ -137,5 +138,19 @@ class ProdukProvider extends ChangeNotifier {
       expiredDate: p.expiredDate,
     );
     notifyListeners();
+  }
+
+  String generateIdProduk() {
+    if (_produks.isEmpty) return 'DS001';
+
+    final numbers = _produks
+        .map(
+          (p) =>
+              int.tryParse(p.idProduk.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0,
+        )
+        .toList();
+
+    final maxNumber = numbers.reduce((a, b) => a > b ? a : b);
+    return 'DS${(maxNumber + 1).toString().padLeft(3, '0')}';
   }
 }

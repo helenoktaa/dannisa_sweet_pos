@@ -1017,7 +1017,9 @@ class _ProdukFormSheetState extends State<_ProdukFormSheet> {
   void initState() {
     super.initState();
     final p = widget.produk;
-    _idCtrl = TextEditingController(text: p?.idProduk ?? '');
+    _idCtrl = TextEditingController(
+      text: p?.idProduk ?? context.read<ProdukProvider>().generateIdProduk(),
+    );
     _namaCtrl = TextEditingController(text: p?.namaProduk ?? '');
     _hargaModalCtrl = TextEditingController(
       text: p?.hargaModal.toStringAsFixed(0) ?? '',
@@ -1190,10 +1192,8 @@ class _ProdukFormSheetState extends State<_ProdukFormSheet> {
                             controller: _idCtrl,
                             label: 'ID Produk',
                             hint: 'DS031',
-                            enabled: !_isEdit,
+                            enabled: false,
                             prefixIcon: Icons.tag,
-                            validator: (v) =>
-                                (v?.isEmpty ?? true) ? 'Wajib diisi' : null,
                           ),
                         ),
                         const SizedBox(width: 10),
