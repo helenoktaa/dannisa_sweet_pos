@@ -20,6 +20,7 @@ import 'package:dannisa_sweet_pos/features/admin/presentation/pages/transaksi_pe
 import 'package:dannisa_sweet_pos/features/admin/presentation/providers/dashboard_provider.dart';
 import 'package:dannisa_sweet_pos/features/admin/presentation/pages/admin_main_page.dart';
 import 'package:dannisa_sweet_pos/features/admin/presentation/pages/stok_history_page.dart';
+import 'package:dannisa_sweet_pos/features/admin/presentation/pages/pilih_transaksi_page.dart';
 
 // ── Kasir Pages ────────────────────────────────────────────
 import 'package:dannisa_sweet_pos/features/kasir/presentation/pages/kasir_home_page.dart';
@@ -70,7 +71,7 @@ class AppRouter {
         kelolaKategori: (_) => const KelolaKategoriPage(),
         kelolaUser:     (_) => const KelolaUserPage(),
         daftarProduk:   (_) => const DaftarProdukPage(),
-        inputTransaksi: (_) => const InputTransaksiPage(),
+        inputTransaksi: (_) => const PilihTransaksiPage(),
         laporan:        (_) => const LaporanTransaksiPage(),
         transaksiPending: (_) => const TransaksiPendingPage(),
         stokHistory:      (_) => const StokHistoryPage(),

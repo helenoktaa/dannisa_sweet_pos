@@ -42,8 +42,28 @@ class ProductProvider extends ChangeNotifier {
     required double hargaJual,
     required int stok,
     required String idKategori,
+    required String statusProduk,
+String? expiredDate,
   }) async {
     try {
+      final payload = {
+  'id_produk': idProduk,
+  'nama_produk': namaProduk,
+  'harga_modal': hargaModal,
+  'harga_jual': hargaJual,
+  'stok': stok,
+  'id_kategori': idKategori,
+  'status_produk': statusProduk,
+  'expired_date': expiredDate,
+};
+
+print("PAYLOAD:");
+print(payload);
+
+await DioClient.instance.post(
+  ApiConstants.produk,
+  data: payload,
+);
       await DioClient.instance.post(
         ApiConstants.produk,
         data: {
@@ -53,6 +73,8 @@ class ProductProvider extends ChangeNotifier {
           'harga_jual': hargaJual,
           'stok': stok,
           'id_kategori': idKategori,
+          'status_produk': statusProduk,
+'expired_date': expiredDate,
         },
       );
       await fetchProducts(); // refresh list
@@ -72,6 +94,8 @@ class ProductProvider extends ChangeNotifier {
     required double hargaJual,
     required int stok,
     required String idKategori,
+    required String statusProduk,
+String? expiredDate,
   }) async {
     try {
       await DioClient.instance.put(
@@ -82,6 +106,8 @@ class ProductProvider extends ChangeNotifier {
           'harga_jual': hargaJual,
           'stok': stok,
           'id_kategori': idKategori,
+          'status_produk': statusProduk,
+'expired_date': expiredDate,
         },
       );
       await fetchProducts(); // refresh list

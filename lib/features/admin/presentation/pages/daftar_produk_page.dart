@@ -55,17 +55,18 @@ class _DaftarProdukPageState extends State<DaftarProdukPage>
     final kategoriProvider = context.watch<KategoriProvider>();
 
     final filtered = produkProvider.produks.where((p) {
-      final matchSearch =
-          p.namaProduk.toLowerCase().contains(_searchQuery.toLowerCase());
+      final matchSearch = p.namaProduk.toLowerCase().contains(
+        _searchQuery.toLowerCase(),
+      );
       final matchKategori =
           _filterKategoriId == 'Semua' || p.idKategori == _filterKategoriId;
       return matchSearch && matchKategori;
     }).toList();
 
-    final stokHabis =
-        produkProvider.produks.where((p) => p.stok == 0).length;
-    final stokMenipis =
-        produkProvider.produks.where((p) => p.stok > 0 && p.stok <= 5).length;
+    final stokHabis = produkProvider.produks.where((p) => p.stok == 0).length;
+    final stokMenipis = produkProvider.produks
+        .where((p) => p.stok > 0 && p.stok <= 5)
+        .length;
 
     return Scaffold(
       backgroundColor: _surface,
@@ -217,21 +218,30 @@ class _DaftarProdukPageState extends State<DaftarProdukPage>
                         style: const TextStyle(fontSize: 14),
                         decoration: InputDecoration(
                           hintText: 'Cari produk...',
-                          hintStyle:
-                              TextStyle(color: _textSecondary, fontSize: 14),
-                          prefixIcon: const Icon(Icons.search,
-                              color: _primary, size: 20),
+                          hintStyle: TextStyle(
+                            color: _textSecondary,
+                            fontSize: 14,
+                          ),
+                          prefixIcon: const Icon(
+                            Icons.search,
+                            color: _primary,
+                            size: 20,
+                          ),
                           suffixIcon: _searchQuery.isNotEmpty
                               ? IconButton(
-                                  icon: const Icon(Icons.close,
-                                      size: 18, color: _textSecondary),
+                                  icon: const Icon(
+                                    Icons.close,
+                                    size: 18,
+                                    color: _textSecondary,
+                                  ),
                                   onPressed: () =>
                                       setState(() => _searchQuery = ''),
                                 )
                               : null,
                           border: InputBorder.none,
-                          contentPadding:
-                              const EdgeInsets.symmetric(vertical: 14),
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 14,
+                          ),
                         ),
                       ),
                     ),
@@ -244,8 +254,10 @@ class _DaftarProdukPageState extends State<DaftarProdukPage>
                         scrollDirection: Axis.horizontal,
                         children: [
                           _buildFilterChip('Semua', 'Semua'),
-                          ...kategoriProvider.kategoris.map((k) =>
-                              _buildFilterChip(k.idKategori, k.namaKategori)),
+                          ...kategoriProvider.kategoris.map(
+                            (k) =>
+                                _buildFilterChip(k.idKategori, k.namaKategori),
+                          ),
                         ],
                       ),
                     ),
@@ -260,70 +272,72 @@ class _DaftarProdukPageState extends State<DaftarProdukPage>
         // ── Body ─────────────────────────────────────────────
         body: switch (produkProvider.status) {
           ProdukStatus.loading || ProdukStatus.initial => const Center(
-              child: CircularProgressIndicator(color: _primary),
-            ),
+            child: CircularProgressIndicator(color: _primary),
+          ),
           ProdukStatus.error => Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.cloud_off, size: 56, color: _primary),
-                  const SizedBox(height: 12),
-                  Text(produkProvider.error ?? 'Terjadi kesalahan',
-                      style: const TextStyle(color: _textSecondary)),
-                  const SizedBox(height: 16),
-                  ElevatedButton.icon(
-                    onPressed: () => produkProvider.fetchProduks(),
-                    icon: const Icon(Icons.refresh),
-                    label: const Text('Coba Lagi'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _primary,
-                      foregroundColor: Colors.white,
-                    ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.cloud_off, size: 56, color: _primary),
+                const SizedBox(height: 12),
+                Text(
+                  produkProvider.error ?? 'Terjadi kesalahan',
+                  style: const TextStyle(color: _textSecondary),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton.icon(
+                  onPressed: () => produkProvider.fetchProduks(),
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('Coba Lagi'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _primary,
+                    foregroundColor: Colors.white,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ProdukStatus.loaded => filtered.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.inventory_2_outlined,
-                          size: 64, color: Colors.grey.shade300),
-                      const SizedBox(height: 12),
-                      Text(
-                        _searchQuery.isNotEmpty
-                            ? 'Produk "$_searchQuery" tidak ditemukan'
-                            : 'Belum ada produk',
-                        style: TextStyle(color: _textSecondary, fontSize: 14),
-                      ),
-                    ],
-                  ),
-                )
-              : _isGridView
-                  ? GridView.builder(
-                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        childAspectRatio: 0.78,
-                        crossAxisSpacing: 12,
-                        mainAxisSpacing: 12,
-                      ),
-                      itemCount: filtered.length,
-                      itemBuilder: (context, i) => _ProdukGridCard(
-                        produk: filtered[i],
-                        index: i,
-                      ),
-                    )
-                  : ListView.builder(
-                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
-                      itemCount: filtered.length,
-                      itemBuilder: (context, i) => _ProdukListCard(
-                        produk: filtered[i],
-                        index: i,
-                      ),
+          ),
+          ProdukStatus.loaded =>
+            filtered.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.inventory_2_outlined,
+                          size: 64,
+                          color: Colors.grey.shade300,
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          _searchQuery.isNotEmpty
+                              ? 'Produk "$_searchQuery" tidak ditemukan'
+                              : 'Belum ada produk',
+                          style: TextStyle(color: _textSecondary, fontSize: 14),
+                        ),
+                      ],
                     ),
+                  )
+                : _isGridView
+                ? GridView.builder(
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          childAspectRatio: 0.70,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                        ),
+                    itemCount: filtered.length,
+                    itemBuilder: (context, i) =>
+                        _ProdukGridCard(produk: filtered[i], index: i),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+                    itemCount: filtered.length,
+                    itemBuilder: (context, i) =>
+                        _ProdukListCard(produk: filtered[i], index: i),
+                  ),
         },
       ),
     );
@@ -340,16 +354,14 @@ class _DaftarProdukPageState extends State<DaftarProdukPage>
         decoration: BoxDecoration(
           color: isActive ? _primary : _cardBg,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isActive ? _primary : Colors.grey.shade300,
-          ),
+          border: Border.all(color: isActive ? _primary : Colors.grey.shade300),
           boxShadow: isActive
               ? [
                   BoxShadow(
                     color: _primary.withOpacity(0.3),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
-                  )
+                  ),
                 ]
               : [],
         ),
@@ -419,9 +431,10 @@ class _StatCard extends StatelessWidget {
                       color: color,
                     ),
                   ),
-                  Text(label,
-                      style: const TextStyle(
-                          fontSize: 10, color: _textSecondary)),
+                  Text(
+                    label,
+                    style: const TextStyle(fontSize: 10, color: _textSecondary),
+                  ),
                 ],
               ),
             ),
@@ -458,6 +471,36 @@ String _stokLabel(int stok) {
   return 'Tersedia';
 }
 
+bool _isExpired(DateTime? exp) {
+  if (exp == null) return false;
+
+  return exp.isBefore(DateTime.now());
+}
+
+bool _isExpiringSoon(DateTime? exp) {
+  if (exp == null) return false;
+
+  final days = exp.difference(DateTime.now()).inDays;
+
+  return days <= 7 && days >= 0;
+}
+
+String _expiredLabel(DateTime? exp) {
+  if (exp == null) {
+    return "-";
+  }
+
+  if (_isExpired(exp)) {
+    return "Expired";
+  }
+
+  if (_isExpiringSoon(exp)) {
+    return "Mendekati expired";
+  }
+
+  return "${exp.day}/${exp.month}/${exp.year}";
+}
+
 // ── Produk Grid Card ───────────────────────────────────────
 class _ProdukGridCard extends StatelessWidget {
   final ProdukModel produk;
@@ -479,8 +522,13 @@ class _ProdukGridCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final stokColor = _stokColor(produk.stok);
-    final stokLabel = _stokLabel(produk.stok);
+    final stokColor = produk.statusProduk == "preorder"
+        ? Colors.orange
+        : _stokColor(produk.stok);
+
+    final stokLabel = produk.statusProduk == "preorder"
+        ? "Pre Order"
+        : _stokLabel(produk.stok);
 
     return Container(
       decoration: BoxDecoration(
@@ -517,11 +565,17 @@ class _ProdukGridCard extends StatelessWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.cake_outlined,
-                          color: Colors.white, size: 36),
-                      const SizedBox(height: 4),
+                      const Icon(
+                        Icons.cake_outlined,
+                        color: Colors.white,
+                        size: 36,
+                      ),
+
+                      const SizedBox(height: 6),
+
                       Text(
                         produk.namaKategori ?? '',
+
                         style: TextStyle(
                           color: Colors.white.withOpacity(0.9),
                           fontSize: 10,
@@ -537,7 +591,9 @@ class _ProdukGridCard extends StatelessWidget {
                   right: 8,
                   child: Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 4),
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: stokColor,
                       borderRadius: BorderRadius.circular(8),
@@ -570,10 +626,73 @@ class _ProdukGridCard extends StatelessWidget {
                       fontSize: 13,
                       color: _textPrimary,
                     ),
+
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const Spacer(),
+                  const SizedBox(height: 4),
+
+                  Wrap(
+                    spacing: 4,
+                    runSpacing: 3,
+
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+
+                        decoration: BoxDecoration(
+                          color: produk.statusProduk == "preorder"
+                              ? Colors.orange.withOpacity(0.1)
+                              : Colors.green.withOpacity(0.1),
+
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+
+                        child: Text(
+                          produk.statusProduk == "preorder"
+                              ? "Pre Order"
+                              : "Ready Stock",
+
+                          style: TextStyle(
+                            fontSize: 10,
+
+                            color: produk.statusProduk == "preorder"
+                                ? Colors.orange
+                                : Colors.green,
+                          ),
+                        ),
+                      ),
+
+                      if (produk.statusProduk != "preorder" &&
+                          produk.expiredDate != null)
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+
+                          children: [
+                            Icon(
+                              Icons.schedule,
+                              size: 11,
+
+                              color: _isExpired(produk.expiredDate)
+                                  ? Colors.red
+                                  : Colors.orange,
+                            ),
+
+                            const SizedBox(width: 3),
+
+                            Text(
+                              _expiredLabel(produk.expiredDate),
+
+                              style: const TextStyle(fontSize: 10),
+                            ),
+                          ],
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
                   Text(
                     _formatRupiah(produk.hargaJual),
                     style: const TextStyle(
@@ -585,11 +704,16 @@ class _ProdukGridCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      Icon(Icons.inventory_2_outlined,
-                          size: 11, color: stokColor),
+                      Icon(
+                        Icons.inventory_2_outlined,
+                        size: 11,
+                        color: stokColor,
+                      ),
                       const SizedBox(width: 3),
                       Text(
-                        'Stok: ${produk.stok}',
+                        produk.statusProduk == "preorder"
+                            ? "By Order"
+                            : "Stok: ${produk.stok}",
                         style: TextStyle(
                           fontSize: 11,
                           color: stokColor,
@@ -681,8 +805,7 @@ class _ProdukListCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     produk.namaKategori ?? '-',
-                    style: const TextStyle(
-                        fontSize: 12, color: _textSecondary),
+                    style: const TextStyle(fontSize: 12, color: _textSecondary),
                   ),
                   const SizedBox(height: 6),
                   Row(
@@ -698,7 +821,9 @@ class _ProdukListCard extends StatelessWidget {
                       const Spacer(),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 3),
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
                           color: stokColor.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(8),
@@ -706,11 +831,16 @@ class _ProdukListCard extends StatelessWidget {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.inventory_2_outlined,
-                                size: 11, color: stokColor),
+                            Icon(
+                              Icons.inventory_2_outlined,
+                              size: 11,
+                              color: stokColor,
+                            ),
                             const SizedBox(width: 4),
                             Text(
-                              '$stokLabel (${produk.stok})',
+                              produk.statusProduk == "preorder"
+                                  ? "By Order"
+                                  : "$stokLabel (${produk.stok})",
                               style: TextStyle(
                                 fontSize: 11,
                                 color: stokColor,

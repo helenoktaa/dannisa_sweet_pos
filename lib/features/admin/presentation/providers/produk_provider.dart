@@ -26,6 +26,12 @@ class ProdukProvider extends ChangeNotifier {
       final List<dynamic> data = response.data['data'];
       _produks = data.map((e) => ProdukModel.fromJson(e)).toList();
       _status = ProdukStatus.loaded;
+
+      debugPrint('=== DATA PRODUK (${_produks.length} item) ===');
+      for (final p in _produks) {
+        debugPrint('  ${p.namaProduk} → [${p.statusProduk}] stok: ${p.stok}');
+      }
+      debugPrint('============================================');
     } on DioException catch (e) {
       _error = e.response?.data['message'] ?? 'Gagal memuat produk';
       _status = ProdukStatus.error;
@@ -36,11 +42,14 @@ class ProdukProvider extends ChangeNotifier {
 
   // ── CREATE ─────────────────────────────────────────────────
   Future<bool> createProduk({
+    required String idProduk,
     required String namaProduk,
     required double hargaModal,
     required double hargaJual,
     required int stok,
     required String idKategori,
+    required String statusProduk,
+    String? expiredDate,
   }) async {
     try {
       await DioClient.instance.post(
@@ -51,6 +60,8 @@ class ProdukProvider extends ChangeNotifier {
           'harga_jual': hargaJual,
           'stok': stok,
           'id_kategori': idKategori,
+          'status_produk': statusProduk,
+          'expired_date': expiredDate,
         },
       );
       await fetchProduks();
@@ -70,6 +81,8 @@ class ProdukProvider extends ChangeNotifier {
     required double hargaJual,
     required int stok,
     required String idKategori,
+    required String statusProduk,
+    String? expiredDate,
   }) async {
     try {
       await DioClient.instance.put(
@@ -80,6 +93,8 @@ class ProdukProvider extends ChangeNotifier {
           'harga_jual': hargaJual,
           'stok': stok,
           'id_kategori': idKategori,
+          'status_produk': statusProduk,
+          'expired_date': expiredDate,
         },
       );
       await fetchProduks();
@@ -118,6 +133,8 @@ class ProdukProvider extends ChangeNotifier {
       stok: (p.stok - selisih).clamp(0, 999999),
       idKategori: p.idKategori,
       namaKategori: p.namaKategori,
+      statusProduk: p.statusProduk,
+      expiredDate: p.expiredDate,
     );
     notifyListeners();
   }

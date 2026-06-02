@@ -163,7 +163,6 @@ class _TransaksiPendingPageState extends State<TransaksiPendingPage> {
     });
 
     try {
-      // GET /v1/transaksi?status=Pending
       final response = await DioClient.instance.get(
         ApiConstants.transaksi,
         queryParameters: {'status': 'Pending'},
@@ -171,9 +170,9 @@ class _TransaksiPendingPageState extends State<TransaksiPendingPage> {
 
       debugPrint('=== RESPONSE PENDING: ${response.data} ===');
 
-      // Response: { data: { data: [...], total: N }, success: true }
-      final outer = response.data['data'] as Map<String, dynamic>;
-      final List<dynamic> rawList = outer['data'] as List<dynamic>? ?? [];
+      // Hapus baris outer, langsung cast ke List
+      final List<dynamic> rawList =
+          response.data['data'] as List<dynamic>? ?? [];
 
       setState(() {
         _transaksis = rawList

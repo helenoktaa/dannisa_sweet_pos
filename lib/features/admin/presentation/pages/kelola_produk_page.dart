@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:dannisa_sweet_pos/features/dashboard/data/models/product_model.dart';
-import 'package:dannisa_sweet_pos/features/dashboard/presentation/providers/product_provider.dart';
+import 'package:dannisa_sweet_pos/features/admin/data/models/produk_model.dart';
+import 'package:dannisa_sweet_pos/features/admin/presentation/providers/produk_provider.dart';
 import 'package:dannisa_sweet_pos/features/admin/presentation/providers/kategori_provider.dart';
 
 // ── Warna tema Dannisa Sweet ───────────────────────────────
-const _primary = Color(0xFFE91E8C); // Pink magenta
-const _primaryDark = Color(0xFFC2185B); // Pink gelap
-const _accent = Color(0xFFFF6B9D); // Pink muda
-const _surface = Color(0xFFFFF0F7); // Background pink sangat muda
+const _primary = Color(0xFFE91E8C);
+const _primaryDark = Color(0xFFC2185B);
+const _accent = Color(0xFFFF6B9D);
+const _surface = Color(0xFFFFF0F7);
 const _cardBg = Colors.white;
 const _textPrimary = Color(0xFF1A1A2E);
 const _textSecondary = Color(0xFF6B7280);
@@ -38,7 +38,7 @@ class _KelolaProdukPageState extends State<KelolaProdukPage>
       duration: const Duration(milliseconds: 300),
     )..forward();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ProductProvider>().fetchProducts();
+      context.read<ProdukProvider>().fetchProduks();
       context.read<KategoriProvider>().fetchKategoris();
     });
   }
@@ -49,7 +49,7 @@ class _KelolaProdukPageState extends State<KelolaProdukPage>
     super.dispose();
   }
 
-  List<ProductModel> _getFiltered(List<ProductModel> products) {
+  List<ProdukModel> _getFiltered(List<ProdukModel> products) {
     return products.where((p) {
       final matchSearch = p.namaProduk.toLowerCase().contains(
         _searchQuery.toLowerCase(),
@@ -63,9 +63,9 @@ class _KelolaProdukPageState extends State<KelolaProdukPage>
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.watch<ProductProvider>();
+    final provider = context.watch<ProdukProvider>();
     final kategoriProvider = context.watch<KategoriProvider>();
-    final filtered = _getFiltered(provider.products);
+    final filtered = _getFiltered(provider.produks);
 
     // Daftar kategori untuk filter chip
     final kategoriList = [
@@ -74,9 +74,9 @@ class _KelolaProdukPageState extends State<KelolaProdukPage>
     ];
 
     // Summary stats
-    final totalProduk = provider.products.length;
-    final stokHabis = provider.products.where((p) => p.stok == 0).length;
-    final stokMenipis = provider.products
+    final totalProduk = provider.produks.length;
+    final stokHabis = provider.produks.where((p) => p.stok == 0).length;
+    final stokMenipis = provider.produks
         .where((p) => p.stok > 0 && p.stok <= 5)
         .length;
 
@@ -306,10 +306,10 @@ class _KelolaProdukPageState extends State<KelolaProdukPage>
 
         // ── List Produk ──────────────────────────────────────
         body: switch (provider.status) {
-          ProductStatus.loading || ProductStatus.initial => const Center(
+          ProdukStatus.loading || ProdukStatus.initial => const Center(
             child: CircularProgressIndicator(color: _primary),
           ),
-          ProductStatus.error => Center(
+          ProdukStatus.error => Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -321,7 +321,7 @@ class _KelolaProdukPageState extends State<KelolaProdukPage>
                 ),
                 const SizedBox(height: 16),
                 ElevatedButton.icon(
-                  onPressed: () => provider.fetchProducts(),
+                  onPressed: () => provider.fetchProduks(),
                   icon: const Icon(Icons.refresh),
                   label: const Text('Coba Lagi'),
                   style: ElevatedButton.styleFrom(
@@ -332,7 +332,7 @@ class _KelolaProdukPageState extends State<KelolaProdukPage>
               ],
             ),
           ),
-          ProductStatus.loaded =>
+          ProdukStatus.loaded =>
             filtered.isEmpty
                 ? Center(
                     child: Column(
@@ -402,7 +402,7 @@ class _KelolaProdukPageState extends State<KelolaProdukPage>
     );
   }
 
-  void _showFormDialog(BuildContext context, {ProductModel? produk}) {
+  void _showFormDialog(BuildContext context, {ProdukModel? produk}) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -411,7 +411,7 @@ class _KelolaProdukPageState extends State<KelolaProdukPage>
     );
   }
 
-  void _confirmDelete(BuildContext context, ProductModel produk) {
+  void _confirmDelete(BuildContext context, ProdukModel produk) {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
@@ -473,7 +473,7 @@ class _KelolaProdukPageState extends State<KelolaProdukPage>
             ),
             onPressed: () async {
               Navigator.pop(context);
-              final ok = await context.read<ProductProvider>().deleteProduct(
+              final ok = await context.read<ProdukProvider>().deleteProduk(
                 produk.idProduk,
               );
               if (!context.mounted) return;
@@ -563,7 +563,7 @@ class _StatCard extends StatelessWidget {
 
 // ── Produk Card ────────────────────────────────────────────
 class _ProdukCard extends StatelessWidget {
-  final ProductModel produk;
+  final ProdukModel produk;
   final int index;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
@@ -585,6 +585,42 @@ class _ProdukCard extends StatelessWidget {
     if (produk.stok == 0) return 'Habis';
     if (produk.stok <= 5) return 'Menipis';
     return 'Tersedia';
+  }
+
+  bool get _isExpired {
+    if (produk.expiredDate == null) {
+      return false;
+    }
+
+    return produk.expiredDate!.isBefore(DateTime.now());
+  }
+
+  bool get _isExpiringSoon {
+    if (produk.expiredDate == null) {
+      return false;
+    }
+
+    final diff = produk.expiredDate!.difference(DateTime.now()).inDays;
+
+    return diff <= 7 && diff >= 0;
+  }
+
+  String get _expiredLabel {
+    if (produk.expiredDate == null) {
+      return "-";
+    }
+
+    if (_isExpired) {
+      return "Expired";
+    }
+
+    if (_isExpiringSoon) {
+      return "Mendekati expired";
+    }
+
+    final d = produk.expiredDate!;
+
+    return "${d.day}/${d.month}/${d.year}";
   }
 
   double get _laba => produk.hargaJual - produk.hargaModal;
@@ -694,36 +730,98 @@ class _ProdukCard extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 4),
-                      Row(
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 6,
+
                         children: [
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 7,
                               vertical: 2,
                             ),
+
                             decoration: BoxDecoration(
                               color: _primary.withOpacity(0.08),
+
                               borderRadius: BorderRadius.circular(6),
                             ),
+
                             child: Text(
-                              produk.kategori?.namaKategori ?? '-',
+                              produk.kategori?.namaKategori ?? "-",
+
                               style: const TextStyle(
                                 fontSize: 11,
                                 color: _primary,
-                                fontWeight: FontWeight.w500,
                               ),
                             ),
                           ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'ID: ${produk.idProduk}',
-                            style: const TextStyle(
-                              fontSize: 11,
-                              color: _textSecondary,
+
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
                             ),
+
+                            decoration: BoxDecoration(
+                              color: produk.statusProduk == "preorder"
+                                  ? Colors.orange.withOpacity(0.12)
+                                  : Colors.green.withOpacity(0.12),
+
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+
+                            child: Text(
+                              produk.statusProduk == "preorder"
+                                  ? "Pre Order"
+                                  : "Ready Stock",
+
+                              style: TextStyle(
+                                fontSize: 11,
+
+                                color: produk.statusProduk == "preorder"
+                                    ? Colors.orange
+                                    : Colors.green,
+                              ),
+                            ),
+                          ),
+
+                          Text(
+                            "ID: ${produk.idProduk}",
+                            style: const TextStyle(fontSize: 11),
                           ),
                         ],
                       ),
+                      const SizedBox(height: 4),
+                      if (produk.statusProduk != "preorder")
+                        Padding(
+                          padding: const EdgeInsets.only(top: 6),
+
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.schedule,
+                                size: 14,
+
+                                color: _isExpired ? Colors.red : Colors.orange,
+                              ),
+
+                              const SizedBox(width: 4),
+
+                              Text(
+                                _expiredLabel,
+
+                                style: TextStyle(
+                                  fontSize: 11,
+
+                                  color: _isExpired
+                                      ? Colors.red
+                                      : Colors.orange,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                     ],
                   ),
                 ),
@@ -760,7 +858,9 @@ class _ProdukCard extends StatelessWidget {
                 _dividerV(),
                 _InfoItem(
                   label: 'Stok',
-                  value: '${produk.stok}',
+                  value: produk.statusProduk == "preorder"
+                      ? "By Order"
+                      : "${produk.stok}",
                   valueColor: _stokColor,
                 ),
               ],
@@ -884,7 +984,7 @@ class _InfoItem extends StatelessWidget {
 
 // ── Bottom Sheet Form Tambah/Edit ──────────────────────────
 class _ProdukFormSheet extends StatefulWidget {
-  final ProductModel? produk;
+  final ProdukModel? produk;
   const _ProdukFormSheet({this.produk});
 
   @override
@@ -900,6 +1000,9 @@ class _ProdukFormSheetState extends State<_ProdukFormSheet> {
   late final TextEditingController _stokCtrl;
   String? _selectedKategoriId;
   bool _isLoading = false;
+  late final TextEditingController _expiredCtrl;
+
+  String _statusProduk = "ready";
 
   bool get _isEdit => widget.produk != null;
 
@@ -924,6 +1027,13 @@ class _ProdukFormSheetState extends State<_ProdukFormSheet> {
     );
     _stokCtrl = TextEditingController(text: p?.stok.toString() ?? '');
     _selectedKategoriId = p?.idKategori;
+    _statusProduk = p?.statusProduk ?? "ready";
+
+    _expiredCtrl = TextEditingController(
+      text: p?.expiredDate != null
+          ? p!.expiredDate!.toIso8601String().split("T")[0]
+          : "",
+    );
 
     // Rebuild saat harga berubah untuk preview laba
     _hargaModalCtrl.addListener(() => setState(() {}));
@@ -937,6 +1047,7 @@ class _ProdukFormSheetState extends State<_ProdukFormSheet> {
     _hargaModalCtrl.dispose();
     _hargaJualCtrl.dispose();
     _stokCtrl.dispose();
+    _expiredCtrl.dispose();
     super.dispose();
   }
 
@@ -953,26 +1064,32 @@ class _ProdukFormSheetState extends State<_ProdukFormSheet> {
     }
 
     setState(() => _isLoading = true);
-    final provider = context.read<ProductProvider>();
+    final provider = context.read<ProdukProvider>();
 
     bool ok;
     if (_isEdit) {
-      ok = await provider.updateProduct(
+      ok = await provider.updateProduk(
         idProduk: _idCtrl.text.trim(),
         namaProduk: _namaCtrl.text.trim(),
         hargaModal: double.parse(_hargaModalCtrl.text),
         hargaJual: double.parse(_hargaJualCtrl.text),
-        stok: int.parse(_stokCtrl.text),
+        stok: _statusProduk == "preorder" ? 0 : int.parse(_stokCtrl.text),
         idKategori: _selectedKategoriId!,
+        statusProduk: _statusProduk,
+
+        expiredDate: _expiredCtrl.text.isEmpty ? null : _expiredCtrl.text,
       );
     } else {
-      ok = await provider.createProduct(
+      ok = await provider.createProduk(
         idProduk: _idCtrl.text.trim(),
         namaProduk: _namaCtrl.text.trim(),
         hargaModal: double.parse(_hargaModalCtrl.text),
         hargaJual: double.parse(_hargaJualCtrl.text),
-        stok: int.parse(_stokCtrl.text),
+        stok: _statusProduk == "preorder" ? 0 : int.parse(_stokCtrl.text),
         idKategori: _selectedKategoriId!,
+        statusProduk: _statusProduk,
+
+        expiredDate: _expiredCtrl.text.isEmpty ? null : _expiredCtrl.text,
       );
     }
 
@@ -1203,6 +1320,7 @@ class _ProdukFormSheetState extends State<_ProdukFormSheet> {
                           flex: 2,
                           child: _FormField(
                             controller: _stokCtrl,
+                            enabled: _statusProduk == "ready",
                             label: 'Stok',
                             hint: '0',
                             prefixIcon: Icons.inventory_2_outlined,
@@ -1269,6 +1387,88 @@ class _ProdukFormSheetState extends State<_ProdukFormSheet> {
                       ],
                     ),
                     const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: DropdownButtonFormField<String>(
+                            value: _statusProduk,
+
+                            decoration: InputDecoration(
+                              labelText: "Status",
+
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+
+                            items: const [
+                              DropdownMenuItem(
+                                value: "ready",
+                                child: Text("Ready Stock"),
+                              ),
+
+                              DropdownMenuItem(
+                                value: "preorder",
+                                child: Text("Pre Order"),
+                              ),
+                            ],
+
+                            onChanged: (v) {
+                              setState(() {
+                                _statusProduk = v!;
+
+                                if (_statusProduk == "preorder") {
+                                  _expiredCtrl.clear();
+                                  _stokCtrl.text = "0";
+                                }
+                              });
+                            },
+                          ),
+                        ),
+
+                        const SizedBox(width: 10),
+
+                        Expanded(
+                          child: TextFormField(
+                            controller: _expiredCtrl,
+
+                            enabled: _statusProduk == "ready",
+
+                            readOnly: true,
+
+                            decoration: InputDecoration(
+                              labelText: "Expired Date",
+
+                              prefixIcon: const Icon(Icons.calendar_today),
+
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+
+                            onTap: () async {
+                              if (_statusProduk == "preorder") return;
+
+                              final picked = await showDatePicker(
+                                context: context,
+
+                                initialDate: DateTime.now(),
+
+                                firstDate: DateTime.now(),
+
+                                lastDate: DateTime(2035),
+                              );
+
+                              if (picked != null) {
+                                _expiredCtrl.text = picked
+                                    .toIso8601String()
+                                    .split("T")[0];
+                              }
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
 
                     // Tombol submit
                     SizedBox(
@@ -1282,8 +1482,7 @@ class _ProdukFormSheetState extends State<_ProdukFormSheet> {
                           backgroundColor: _primary,
                           foregroundColor: Colors.white,
                           elevation: 0,
-                          disabledBackgroundColor:
-                              Colors.grey.shade300,
+                          disabledBackgroundColor: Colors.grey.shade300,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14),
                           ),
