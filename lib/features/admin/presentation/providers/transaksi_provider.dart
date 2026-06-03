@@ -14,7 +14,7 @@ class CartItem {
 
   CartItem({required this.produk, this.qty = 1});
 
-  double get subtotal => produk.hargaJual * qty;
+  double get subtotal => produk.hargaTampil * qty;
 }
 
 // ─────────────────────────────────────────────────────────────

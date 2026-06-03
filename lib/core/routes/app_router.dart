@@ -21,6 +21,7 @@ import 'package:dannisa_sweet_pos/features/admin/presentation/providers/dashboar
 import 'package:dannisa_sweet_pos/features/admin/presentation/pages/admin_main_page.dart';
 import 'package:dannisa_sweet_pos/features/admin/presentation/pages/stok_history_page.dart';
 import 'package:dannisa_sweet_pos/features/admin/presentation/pages/pilih_transaksi_page.dart';
+import 'package:dannisa_sweet_pos/features/admin/presentation/pages/markdown_pricing_page.dart';
 
 // ── Kasir Pages ────────────────────────────────────────────
 import 'package:dannisa_sweet_pos/features/kasir/presentation/pages/kasir_home_page.dart';
@@ -59,6 +60,10 @@ class AppRouter {
   // Legacy
   static const String dashboard      = '/dashboard';
 
+  //markdown pricing
+  static const String markdownPricing = '/admin/markdown-pricing';
+
+
   static Map<String, WidgetBuilder> get routes => {
         splash:         (_) => const SplashPage(),
         login:          (_) => const LoginPage(),
@@ -75,6 +80,7 @@ class AppRouter {
         laporan:        (_) => const LaporanTransaksiPage(),
         transaksiPending: (_) => const TransaksiPendingPage(),
         stokHistory:      (_) => const StokHistoryPage(),
+        markdownPricing: (_) => const MarkdownPricingPage(),
         
 
         // ── Kasir ──────────────────────────────────────────

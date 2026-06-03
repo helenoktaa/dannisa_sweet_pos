@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:dannisa_sweet_pos/features/admin/data/models/produk_model.dart';
 import 'package:dannisa_sweet_pos/features/admin/presentation/providers/produk_provider.dart';
 import 'package:dannisa_sweet_pos/features/admin/presentation/providers/kategori_provider.dart';
+import 'package:dannisa_sweet_pos/core/routes/app_router.dart';
 
 // ── Warna tema Dannisa Sweet ───────────────────────────────
 const _primary = Color(0xFFE91E8C);
@@ -160,6 +161,13 @@ class _KelolaProdukPageState extends State<KelolaProdukPage>
               ),
             ),
             actions: [
+              IconButton(
+                // ← tambah ini
+                icon: const Icon(Icons.discount_outlined, color: Colors.white),
+                tooltip: 'Kelola Diskon',
+                onPressed: () =>
+                    Navigator.pushNamed(context, AppRouter.markdownPricing),
+              ),
               IconButton(
                 icon: const Icon(Icons.add_circle_outline, color: Colors.white),
                 tooltip: 'Tambah Produk',
@@ -561,7 +569,6 @@ class _StatCard extends StatelessWidget {
   }
 }
 
-// ── Produk Card ────────────────────────────────────────────
 class _ProdukCard extends StatelessWidget {
   final ProdukModel produk;
   final int index;
@@ -588,39 +595,22 @@ class _ProdukCard extends StatelessWidget {
   }
 
   bool get _isExpired {
-    if (produk.expiredDate == null) {
-      return false;
-    }
-
+    if (produk.expiredDate == null) return false;
     return produk.expiredDate!.isBefore(DateTime.now());
   }
 
   bool get _isExpiringSoon {
-    if (produk.expiredDate == null) {
-      return false;
-    }
-
+    if (produk.expiredDate == null) return false;
     final diff = produk.expiredDate!.difference(DateTime.now()).inDays;
-
     return diff <= 7 && diff >= 0;
   }
 
   String get _expiredLabel {
-    if (produk.expiredDate == null) {
-      return "-";
-    }
-
-    if (_isExpired) {
-      return "Expired";
-    }
-
-    if (_isExpiringSoon) {
-      return "Mendekati expired";
-    }
-
+    if (produk.expiredDate == null) return '-';
+    if (_isExpired) return 'Expired';
+    if (_isExpiringSoon) return 'Mendekati expired';
     final d = produk.expiredDate!;
-
-    return "${d.day}/${d.month}/${d.year}";
+    return '${d.day}/${d.month}/${d.year}';
   }
 
   double get _laba => produk.hargaJual - produk.hargaModal;
@@ -644,12 +634,12 @@ class _ProdukCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // Header card
+          // ── Header card ──────────────────────────────────
           Container(
             padding: const EdgeInsets.all(14),
             child: Row(
               children: [
-                // Avatar produk
+                // Avatar
                 Container(
                   width: 52,
                   height: 52,
@@ -684,6 +674,7 @@ class _ProdukCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Nama + badge diskon + badge stok
                       Row(
                         children: [
                           Expanded(
@@ -698,7 +689,27 @@ class _ProdukCard extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          // Badge stok
+                          if (produk.adaDiskon) ...[
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 7,
+                                vertical: 3,
+                              ),
+                              decoration: BoxDecoration(
+                                color: _danger,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                '-${produk.porsenDiskon?.toStringAsFixed(0)}%',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                          ],
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 8,
@@ -733,87 +744,68 @@ class _ProdukCard extends StatelessWidget {
                       Wrap(
                         spacing: 8,
                         runSpacing: 6,
-
                         children: [
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 7,
                               vertical: 2,
                             ),
-
                             decoration: BoxDecoration(
                               color: _primary.withOpacity(0.08),
-
                               borderRadius: BorderRadius.circular(6),
                             ),
-
                             child: Text(
-                              produk.kategori?.namaKategori ?? "-",
-
+                              produk.kategori?.namaKategori ?? '-',
                               style: const TextStyle(
                                 fontSize: 11,
                                 color: _primary,
                               ),
                             ),
                           ),
-
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 8,
                               vertical: 2,
                             ),
-
                             decoration: BoxDecoration(
-                              color: produk.statusProduk == "preorder"
+                              color: produk.statusProduk == 'preorder'
                                   ? Colors.orange.withOpacity(0.12)
                                   : Colors.green.withOpacity(0.12),
-
                               borderRadius: BorderRadius.circular(20),
                             ),
-
                             child: Text(
-                              produk.statusProduk == "preorder"
-                                  ? "Pre Order"
-                                  : "Ready Stock",
-
+                              produk.statusProduk == 'preorder'
+                                  ? 'Pre Order'
+                                  : 'Ready Stock',
                               style: TextStyle(
                                 fontSize: 11,
-
-                                color: produk.statusProduk == "preorder"
+                                color: produk.statusProduk == 'preorder'
                                     ? Colors.orange
                                     : Colors.green,
                               ),
                             ),
                           ),
-
                           Text(
-                            "ID: ${produk.idProduk}",
+                            'ID: ${produk.idProduk}',
                             style: const TextStyle(fontSize: 11),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 4),
-                      if (produk.statusProduk != "preorder")
+                      if (produk.statusProduk != 'preorder')
                         Padding(
                           padding: const EdgeInsets.only(top: 6),
-
                           child: Row(
                             children: [
                               Icon(
                                 Icons.schedule,
                                 size: 14,
-
                                 color: _isExpired ? Colors.red : Colors.orange,
                               ),
-
                               const SizedBox(width: 4),
-
                               Text(
                                 _expiredLabel,
-
                                 style: TextStyle(
                                   fontSize: 11,
-
                                   color: _isExpired
                                       ? Colors.red
                                       : Colors.orange,
@@ -829,18 +821,48 @@ class _ProdukCard extends StatelessWidget {
             ),
           ),
 
-          // Divider
           Divider(height: 1, color: Colors.grey.shade100),
 
-          // Info harga & stok
+          // ── Info harga & stok ────────────────────────────
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             child: Row(
               children: [
-                _InfoItem(
-                  label: 'Harga Jual',
-                  value: 'Rp ${_formatRupiah(produk.hargaJual)}',
-                  valueColor: _primary,
+                // Harga jual / diskon
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        produk.adaDiskon ? 'Harga Diskon' : 'Harga Jual',
+                        style: const TextStyle(
+                          fontSize: 10,
+                          color: _textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Rp ${_formatRupiah(produk.hargaTampil)}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: produk.adaDiskon ? _danger : _primary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (produk.adaDiskon)
+                        Text(
+                          'Rp ${_formatRupiah(produk.hargaJual)}',
+                          style: const TextStyle(
+                            fontSize: 10,
+                            color: _textSecondary,
+                            decoration: TextDecoration.lineThrough,
+                            decorationColor: _textSecondary,
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
                 _dividerV(),
                 _InfoItem(
@@ -858,16 +880,16 @@ class _ProdukCard extends StatelessWidget {
                 _dividerV(),
                 _InfoItem(
                   label: 'Stok',
-                  value: produk.statusProduk == "preorder"
-                      ? "By Order"
-                      : "${produk.stok}",
+                  value: produk.statusProduk == 'preorder'
+                      ? 'By Order'
+                      : '${produk.stok}',
                   valueColor: _stokColor,
                 ),
               ],
             ),
           ),
 
-          // Action buttons
+          // ── Action buttons ───────────────────────────────
           Container(
             decoration: BoxDecoration(
               color: Colors.grey.shade50,

@@ -608,6 +608,31 @@ class _ProdukGridCard extends StatelessWidget {
                     ),
                   ),
                 ),
+                // Diskon badge di pojok kiri atas
+                if (produk.adaDiskon)
+                  Positioned(
+                    top: 8,
+                    left: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 7,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: _danger,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        'DISKON',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 9,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
@@ -693,14 +718,53 @@ class _ProdukGridCard extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 6),
-                  Text(
-                    _formatRupiah(produk.hargaJual),
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 14,
-                      color: _primary,
+                  // Badge diskon
+                  if (produk.adaDiskon) ...[
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: _danger,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        '-${produk.porsenDiskon?.toStringAsFixed(0)}%',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
-                  ),
+                    const SizedBox(height: 2),
+                    Text(
+                      _formatRupiah(produk.hargaJual),
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: _textSecondary,
+                        decoration: TextDecoration.lineThrough,
+                        decorationColor: _textSecondary,
+                      ),
+                    ),
+                    Text(
+                      _formatRupiah(produk.hargaTampil),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 14,
+                        color: _danger,
+                      ),
+                    ),
+                  ] else
+                    Text(
+                      _formatRupiah(produk.hargaJual),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 14,
+                        color: _primary,
+                      ),
+                    ),
                   const SizedBox(height: 4),
                   Row(
                     children: [
@@ -810,14 +874,57 @@ class _ProdukListCard extends StatelessWidget {
                   const SizedBox(height: 6),
                   Row(
                     children: [
-                      Text(
-                        _formatRupiah(produk.hargaJual),
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w800,
-                          fontSize: 14,
-                          color: _primary,
+                      if (produk.adaDiskon)
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: _danger,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                '-${produk.porsenDiskon?.toStringAsFixed(0)}%',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              _formatRupiah(produk.hargaJual),
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: _textSecondary,
+                                decoration: TextDecoration.lineThrough,
+                                decorationColor: _textSecondary,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              _formatRupiah(produk.hargaTampil),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w800,
+                                fontSize: 14,
+                                color: _danger,
+                              ),
+                            ),
+                          ],
+                        )
+                      else
+                        Text(
+                          _formatRupiah(produk.hargaJual),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 14,
+                            color: _primary,
+                          ),
                         ),
-                      ),
                       const Spacer(),
                       Container(
                         padding: const EdgeInsets.symmetric(

@@ -774,9 +774,10 @@ class _ProdukCard extends StatelessWidget {
           // ── Info ──────────────────────────────────────────
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(10, 8, 10, 0),
+              padding: const EdgeInsets.fromLTRB(10, 6, 10, 4),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min, // ← tambah ini
                 children: [
                   // Nama produk
                   Text(
@@ -786,17 +787,17 @@ class _ProdukCard extends StatelessWidget {
                       fontSize: 12,
                       color: _textPrimary,
                     ),
-                    maxLines: 2,
+                    maxLines: 1, // ← 2 → 1 biar tidak makan 2 baris
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 5),
+                  const SizedBox(height: 2),
 
-                  // Stok / By Order
+                  // Stok
                   Row(
                     children: [
                       Icon(
                         Icons.inventory_2_outlined,
-                        size: 11,
+                        size: 10,
                         color: stokColor,
                       ),
                       const SizedBox(width: 3),
@@ -811,19 +812,22 @@ class _ProdukCard extends StatelessWidget {
                     ],
                   ),
 
-                  // Expired date (hanya ready stock)
+                  // Expired date
                   if (!isPreOrder && produk.expiredDate != null) ...[
-                    const SizedBox(height: 3),
+                    const SizedBox(height: 2),
                     Row(
                       children: [
                         Icon(Icons.schedule, size: 10, color: expColor),
                         const SizedBox(width: 3),
-                        Text(
-                          _expiredLabel(produk.expiredDate),
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: expColor,
-                            fontWeight: FontWeight.w500,
+                        Flexible(
+                          child: Text(
+                            _expiredLabel(produk.expiredDate),
+                            style: TextStyle(
+                              fontSize: 9,
+                              color: expColor,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],
@@ -833,14 +837,33 @@ class _ProdukCard extends StatelessWidget {
                   const Spacer(),
 
                   // Harga
-                  Text(
-                    _formatRupiah(produk.hargaJual),
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 13,
-                      color: _primary,
+                  if (produk.adaDiskon) ...[
+                    Text(
+                      _formatRupiah(produk.hargaJual),
+                      style: const TextStyle(
+                        fontSize: 9,
+                        color: _textSecondary,
+                        decoration: TextDecoration.lineThrough,
+                        decorationColor: _textSecondary,
+                      ),
                     ),
-                  ),
+                    Text(
+                      _formatRupiah(produk.hargaTampil),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 12,
+                        color: _danger,
+                      ),
+                    ),
+                  ] else
+                    Text(
+                      _formatRupiah(produk.hargaJual),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 12,
+                        color: _primary,
+                      ),
+                    ),
                 ],
               ),
             ),
