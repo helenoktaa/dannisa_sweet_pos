@@ -245,7 +245,7 @@ class _DashboardPageState extends State<DashboardPage> {
                     ),
                     DashboardStatus.loaded => _DashboardContent(
                       data: dashboard.data!,
-                      harian: dashboard.harian!, 
+                      harian: dashboard.harian!,
                     ),
                   },
                 ),
@@ -322,7 +322,7 @@ class _DashboardContent extends StatelessWidget {
 
           // 5. Transaksi terbaru
           if (harian.transaksiTerbaru.isNotEmpty) ...[
-            const _SectionTitle(title: 'Transaksi Terbaru (3 Hari)'),
+            const _SectionTitle(title: 'Transaksi Terbaru'),
             const SizedBox(height: 10),
             ...harian.transaksiTerbaru.map(
               (t) => _TransaksiTerbaruCard(transaksi: t),
@@ -532,9 +532,15 @@ class _KeuntunganCard extends StatelessWidget {
   const _KeuntunganCard({required this.harian});
 
   String _fmt(double v) {
-    if (v >= 1000000) return 'Rp ${(v / 1000000).toStringAsFixed(1)}jt';
-    if (v >= 1000) return 'Rp ${(v / 1000).toStringAsFixed(0)}rb';
-    return 'Rp ${v.toStringAsFixed(0)}';
+    final str = v.toStringAsFixed(0);
+    final buffer = StringBuffer();
+    int count = 0;
+    for (int i = str.length - 1; i >= 0; i--) {
+      if (count > 0 && count % 3 == 0) buffer.write('.');
+      buffer.write(str[i]);
+      count++;
+    }
+    return 'Rp ${buffer.toString().split('').reversed.join()}';
   }
 
   @override
@@ -660,9 +666,15 @@ class _TransaksiTerbaruCard extends StatelessWidget {
   const _TransaksiTerbaruCard({required this.transaksi});
 
   String _fmt(double v) {
-    if (v >= 1000000) return 'Rp ${(v / 1000000).toStringAsFixed(1)}jt';
-    if (v >= 1000) return 'Rp ${(v / 1000).toStringAsFixed(0)}rb';
-    return 'Rp ${v.toStringAsFixed(0)}';
+    final str = v.toStringAsFixed(0);
+    final buffer = StringBuffer();
+    int count = 0;
+    for (int i = str.length - 1; i >= 0; i--) {
+      if (count > 0 && count % 3 == 0) buffer.write('.');
+      buffer.write(str[i]);
+      count++;
+    }
+    return 'Rp ${buffer.toString().split('').reversed.join()}';
   }
 
   @override
