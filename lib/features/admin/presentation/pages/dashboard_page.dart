@@ -47,10 +47,10 @@ class _DashboardPageState extends State<DashboardPage> {
     final greeting = now.hour < 11
         ? 'Selamat Pagi'
         : now.hour < 15
-            ? 'Selamat Siang'
-            : now.hour < 18
-                ? 'Selamat Sore'
-                : 'Selamat Malam';
+        ? 'Selamat Siang'
+        : now.hour < 18
+        ? 'Selamat Sore'
+        : 'Selamat Malam';
 
     return Scaffold(
       backgroundColor: _surface,
@@ -80,9 +80,11 @@ class _DashboardPageState extends State<DashboardPage> {
                   child: Stack(
                     children: [
                       Positioned(
-                        right: -40, top: -40,
+                        right: -40,
+                        top: -40,
                         child: Container(
-                          width: 180, height: 180,
+                          width: 180,
+                          height: 180,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: Colors.white.withOpacity(0.07),
@@ -90,9 +92,11 @@ class _DashboardPageState extends State<DashboardPage> {
                         ),
                       ),
                       Positioned(
-                        right: 40, top: 40,
+                        right: 40,
+                        top: 40,
                         child: Container(
-                          width: 90, height: 90,
+                          width: 90,
+                          height: 90,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: Colors.white.withOpacity(0.05),
@@ -116,8 +120,9 @@ class _DashboardPageState extends State<DashboardPage> {
                                         Text(
                                           '$greeting,',
                                           style: TextStyle(
-                                            color: Colors.white
-                                                .withOpacity(0.85),
+                                            color: Colors.white.withOpacity(
+                                              0.85,
+                                            ),
                                             fontSize: 14,
                                           ),
                                         ),
@@ -136,7 +141,8 @@ class _DashboardPageState extends State<DashboardPage> {
                                   ),
                                   // Avatar
                                   Container(
-                                    width: 48, height: 48,
+                                    width: 48,
+                                    height: 48,
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
                                       color: Colors.white.withOpacity(0.2),
@@ -199,45 +205,48 @@ class _DashboardPageState extends State<DashboardPage> {
                   ),
                   child: switch (dashboard.status) {
                     DashboardStatus.loading ||
-                    DashboardStatus.initial =>
-                      const SizedBox(
-                        height: 300,
-                        child: Center(
-                          child: CircularProgressIndicator(color: _primary),
-                        ),
+                    DashboardStatus.initial => const SizedBox(
+                      height: 300,
+                      child: Center(
+                        child: CircularProgressIndicator(color: _primary),
                       ),
+                    ),
                     DashboardStatus.error => SizedBox(
-                        height: 300,
-                        child: Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(Icons.cloud_off,
-                                  size: 48, color: _primary),
-                              const SizedBox(height: 12),
-                              Text(
-                                dashboard.error ?? 'Gagal memuat dashboard',
-                                style: const TextStyle(
-                                    color: _textSecondary),
+                      height: 300,
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              Icons.cloud_off,
+                              size: 48,
+                              color: _primary,
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              dashboard.error ?? 'Gagal memuat dashboard',
+                              style: const TextStyle(color: _textSecondary),
+                            ),
+                            const SizedBox(height: 16),
+                            ElevatedButton.icon(
+                              onPressed: () => context
+                                  .read<DashboardProvider>()
+                                  .fetchDashboard(),
+                              icon: const Icon(Icons.refresh),
+                              label: const Text('Coba Lagi'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: _primary,
+                                foregroundColor: Colors.white,
                               ),
-                              const SizedBox(height: 16),
-                              ElevatedButton.icon(
-                                onPressed: () => context
-                                    .read<DashboardProvider>()
-                                    .fetchDashboard(),
-                                icon: const Icon(Icons.refresh),
-                                label: const Text('Coba Lagi'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: _primary,
-                                  foregroundColor: Colors.white,
-                                ),
-                              ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ),
-                    DashboardStatus.loaded =>
-                      _DashboardContent(data: dashboard.data!),
+                    ),
+                    DashboardStatus.loaded => _DashboardContent(
+                      data: dashboard.data!,
+                      harian: dashboard.harian!, 
+                    ),
                   },
                 ),
               ),
@@ -252,9 +261,11 @@ class _DashboardPageState extends State<DashboardPage> {
 // ══════════════════════════════════════════════════════════
 //  Dashboard Content
 // ══════════════════════════════════════════════════════════
+// ── Dashboard Content ──────────────────────────────────────
 class _DashboardContent extends StatelessWidget {
   final DashboardModel data;
-  const _DashboardContent({required this.data});
+  final DashboardHarianModel harian;
+  const _DashboardContent({required this.data, required this.harian});
 
   @override
   Widget build(BuildContext context) {
@@ -263,11 +274,23 @@ class _DashboardContent extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Section title ────────────────────────────────
-          const _SectionTitle(title: 'Ringkasan Hari Ini'),
+          // 1. Notif pending > 3 hari
+          if (harian.totalPendingLewat3Hari > 0) ...[
+            _NotifPendingBanner(total: harian.totalPendingLewat3Hari),
+            const SizedBox(height: 16),
+          ],
+
+          // 2. Lunas hari ini
+          _LunasHariIniCard(total: harian.totalLunasHariIni),
           const SizedBox(height: 12),
 
-          // ── 3 Stat Cards ─────────────────────────────────
+          // 3. Keuntungan bersih
+          _KeuntunganCard(harian: harian),
+          const SizedBox(height: 24),
+
+          // 4. Ringkasan hari ini
+          const _SectionTitle(title: 'Ringkasan Hari Ini'),
+          const SizedBox(height: 12),
           Row(
             children: [
               _StatCard(
@@ -297,44 +320,54 @@ class _DashboardContent extends StatelessWidget {
           ),
           const SizedBox(height: 24),
 
-          // ── Transaksi Pending List ────────────────────────
+          // 5. Transaksi terbaru
+          if (harian.transaksiTerbaru.isNotEmpty) ...[
+            const _SectionTitle(title: 'Transaksi Terbaru (3 Hari)'),
+            const SizedBox(height: 10),
+            ...harian.transaksiTerbaru.map(
+              (t) => _TransaksiTerbaruCard(transaksi: t),
+            ),
+            const SizedBox(height: 24),
+          ],
+
+          // 6. Transaksi pending
           if (data.transaksiPending.isNotEmpty) ...[
             _SectionTitle(
               title: 'Transaksi Pending',
               trailing: TextButton(
-                onPressed: () => Navigator.pushNamed(
-                    context, AppRouter.transaksiPending),
-                child: const Text('Lihat Semua',
-                    style: TextStyle(color: _primary, fontSize: 13)),
+                onPressed: () =>
+                    Navigator.pushNamed(context, AppRouter.transaksiPending),
+                child: const Text(
+                  'Lihat Semua',
+                  style: TextStyle(color: _primary, fontSize: 13),
+                ),
               ),
             ),
             const SizedBox(height: 10),
-            ...data.transaksiPending.take(3).map(
-                  (t) => _PendingCard(transaksi: t),
-                ),
+            ...data.transaksiPending
+                .take(3)
+                .map((t) => _PendingCard(transaksi: t)),
             const SizedBox(height: 24),
           ],
 
-          // ── Produk Mendekati Expired ──────────────────────
+          // 7. Produk mendekati expired
           if (data.produkMendekatiExpired.isNotEmpty) ...[
             const _SectionTitle(title: 'Produk Mendekati Expired'),
             const SizedBox(height: 10),
-            ...data.produkMendekatiExpired.take(3).map(
-                  (p) => _ExpiredCard(produk: p),
-                ),
+            ...data.produkMendekatiExpired
+                .take(3)
+                .map((p) => _ExpiredCard(produk: p)),
             const SizedBox(height: 24),
           ],
 
-          // ── Stok Menipis ──────────────────────────────────
+          // 8. Stok menipis
           if (data.produkStokMenipis.isNotEmpty) ...[
             const _SectionTitle(title: 'Stok Menipis'),
             const SizedBox(height: 10),
-            ...data.produkStokMenipis.take(3).map(
-                  (p) => _StokCard(produk: p),
-                ),
+            ...data.produkStokMenipis.take(3).map((p) => _StokCard(produk: p)),
           ],
 
-          // ── Empty state ───────────────────────────────────
+          // 9. Empty state
           if (data.totalPending == 0 &&
               data.totalMendekatiExpired == 0 &&
               data.totalStokMenipis == 0)
@@ -343,8 +376,11 @@ class _DashboardContent extends StatelessWidget {
                 padding: const EdgeInsets.all(32),
                 child: Column(
                   children: [
-                    Icon(Icons.check_circle_outline,
-                        size: 64, color: _success.withOpacity(0.5)),
+                    Icon(
+                      Icons.check_circle_outline,
+                      size: 64,
+                      color: _success.withOpacity(0.5),
+                    ),
                     const SizedBox(height: 12),
                     const Text(
                       'Semua berjalan lancar! 🎉',
@@ -358,13 +394,416 @@ class _DashboardContent extends StatelessWidget {
                     const Text(
                       'Tidak ada transaksi pending,\nproduk expired, atau stok menipis.',
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                          fontSize: 13, color: _textSecondary),
+                      style: TextStyle(fontSize: 13, color: _textSecondary),
                     ),
                   ],
                 ),
               ),
             ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Notif Banner ───────────────────────────────────────────
+class _NotifPendingBanner extends StatelessWidget {
+  final int total;
+  const _NotifPendingBanner({required this.total});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: _danger.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _danger.withOpacity(0.4), width: 1.5),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: _danger.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Icon(
+              Icons.warning_amber_rounded,
+              color: _danger,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: RichText(
+              text: TextSpan(
+                style: const TextStyle(fontSize: 13, color: _textPrimary),
+                children: [
+                  TextSpan(
+                    text: '$total transaksi pending ',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: _danger,
+                    ),
+                  ),
+                  const TextSpan(
+                    text: 'sudah lebih dari 3 hari. Segera konfirmasi!',
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Lunas Hari Ini Card ────────────────────────────────────
+class _LunasHariIniCard extends StatelessWidget {
+  final int total;
+  const _LunasHariIniCard({required this.total});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [_success, Color(0xFF059669)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: _success.withOpacity(0.3),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(
+              Icons.check_circle_outline,
+              color: Colors.white,
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Transaksi Lunas Hari Ini',
+                  style: TextStyle(color: Colors.white70, fontSize: 12),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '$total transaksi',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Icon(Icons.arrow_forward_ios, color: Colors.white54, size: 16),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Keuntungan Card ────────────────────────────────────────
+class _KeuntunganCard extends StatelessWidget {
+  final DashboardHarianModel harian;
+  const _KeuntunganCard({required this.harian});
+
+  String _fmt(double v) {
+    if (v >= 1000000) return 'Rp ${(v / 1000000).toStringAsFixed(1)}jt';
+    if (v >= 1000) return 'Rp ${(v / 1000).toStringAsFixed(0)}rb';
+    return 'Rp ${v.toStringAsFixed(0)}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: _cardBg,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: _primary.withOpacity(0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(7),
+                decoration: BoxDecoration(
+                  color: _primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.trending_up, color: _primary, size: 18),
+              ),
+              const SizedBox(width: 10),
+              const Text(
+                'Keuntungan Bersih Hari Ini',
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                  color: _textPrimary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Text(
+            _fmt(harian.keuntunganBersih),
+            style: const TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.w800,
+              color: _primary,
+            ),
+          ),
+          const SizedBox(height: 12),
+          const Divider(height: 1),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              _InfoChip(
+                label: 'Transaksi',
+                value: '${harian.totalTransaksi}x',
+                color: _info,
+              ),
+              const SizedBox(width: 8),
+              _InfoChip(
+                label: 'Omzet',
+                value: _fmt(harian.totalOmzet),
+                color: _success,
+              ),
+              const SizedBox(width: 8),
+              _InfoChip(
+                label: 'Modal',
+                value: _fmt(harian.totalModal),
+                color: _warning,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InfoChip extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color color;
+  const _InfoChip({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(label, style: TextStyle(fontSize: 10, color: color)),
+            const SizedBox(height: 2),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: color,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Transaksi Terbaru Card ─────────────────────────────────
+class _TransaksiTerbaruCard extends StatelessWidget {
+  final TransaksiTerbaruModel transaksi;
+  const _TransaksiTerbaruCard({required this.transaksi});
+
+  String _fmt(double v) {
+    if (v >= 1000000) return 'Rp ${(v / 1000000).toStringAsFixed(1)}jt';
+    if (v >= 1000) return 'Rp ${(v / 1000).toStringAsFixed(0)}rb';
+    return 'Rp ${v.toStringAsFixed(0)}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isLunas = transaksi.statusPembayaran == 'Lunas';
+    final statusColor = isLunas ? _success : _warning;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: _cardBg,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade100),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: statusColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Center(
+              child: Icon(
+                isLunas ? Icons.check_circle_outline : Icons.pending_outlined,
+                color: statusColor,
+                size: 20,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  transaksi.namaCustomer,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                    color: _textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.calendar_today_outlined,
+                      size: 10,
+                      color: _textSecondary,
+                    ),
+                    const SizedBox(width: 3),
+                    Text(
+                      transaksi.tanggalTransaksi,
+                      style: const TextStyle(
+                        fontSize: 10,
+                        color: _textSecondary,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Icon(
+                      Icons.shopping_bag_outlined,
+                      size: 10,
+                      color: _textSecondary,
+                    ),
+                    const SizedBox(width: 3),
+                    Text(
+                      '${transaksi.totalItem} item',
+                      style: const TextStyle(
+                        fontSize: 10,
+                        color: _textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                _fmt(transaksi.jumlahBayar),
+                style: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 13,
+                  color: _textPrimary,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade100,
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                    child: Text(
+                      transaksi.metodePembayaran,
+                      style: const TextStyle(
+                        fontSize: 9,
+                        color: _textSecondary,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: statusColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                    child: Text(
+                      transaksi.statusPembayaran,
+                      style: TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w700,
+                        color: statusColor,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -450,16 +889,16 @@ class _StatCard extends StatelessWidget {
             ),
             Text(
               suffix,
-              style: const TextStyle(
-                  fontSize: 10, color: _textSecondary),
+              style: const TextStyle(fontSize: 10, color: _textSecondary),
             ),
             const SizedBox(height: 2),
             Text(
               label,
               style: const TextStyle(
-                  fontSize: 10,
-                  color: _textSecondary,
-                  fontWeight: FontWeight.w500),
+                fontSize: 10,
+                color: _textSecondary,
+                fontWeight: FontWeight.w500,
+              ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
@@ -485,9 +924,7 @@ class _PendingCard extends StatelessWidget {
         color: _cardBg,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isLewat
-              ? _danger.withOpacity(0.4)
-              : _warning.withOpacity(0.3),
+          color: isLewat ? _danger.withOpacity(0.4) : _warning.withOpacity(0.3),
           width: 1.5,
         ),
         boxShadow: [
@@ -501,7 +938,8 @@ class _PendingCard extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 40, height: 40,
+            width: 40,
+            height: 40,
             decoration: BoxDecoration(
               color: isLewat
                   ? _danger.withOpacity(0.1)
@@ -510,9 +948,7 @@ class _PendingCard extends StatelessWidget {
             ),
             child: Center(
               child: Icon(
-                isLewat
-                    ? Icons.warning_amber_outlined
-                    : Icons.pending_outlined,
+                isLewat ? Icons.warning_amber_outlined : Icons.pending_outlined,
                 color: isLewat ? _danger : _warning,
                 size: 20,
               ),
@@ -533,8 +969,7 @@ class _PendingCard extends StatelessWidget {
                 ),
                 Text(
                   '${transaksi.idTransaksi} • ${transaksi.metodePembayaran}',
-                  style: const TextStyle(
-                      fontSize: 11, color: _textSecondary),
+                  style: const TextStyle(fontSize: 11, color: _textSecondary),
                 ),
               ],
             ),
@@ -543,8 +978,7 @@ class _PendingCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 8, vertical: 3),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: isLewat
                       ? _danger.withOpacity(0.1)
@@ -565,8 +999,7 @@ class _PendingCard extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 transaksi.tanggalTransaksi,
-                style: const TextStyle(
-                    fontSize: 10, color: _textSecondary),
+                style: const TextStyle(fontSize: 10, color: _textSecondary),
               ),
             ],
           ),
@@ -601,14 +1034,14 @@ class _ExpiredCard extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 40, height: 40,
+            width: 40,
+            height: 40,
             decoration: BoxDecoration(
               color: _danger.withOpacity(0.1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: const Center(
-              child: Icon(Icons.event_busy_outlined,
-                  color: _danger, size: 20),
+              child: Icon(Icons.event_busy_outlined, color: _danger, size: 20),
             ),
           ),
           const SizedBox(width: 12),
@@ -616,20 +1049,23 @@ class _ExpiredCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(produk.namaProduk,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 14,
-                        color: _textPrimary)),
-                Text('Stok: ${produk.stok} • Expired: ${produk.expiredDate}',
-                    style: const TextStyle(
-                        fontSize: 11, color: _textSecondary)),
+                Text(
+                  produk.namaProduk,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                    color: _textPrimary,
+                  ),
+                ),
+                Text(
+                  'Stok: ${produk.stok} • Expired: ${produk.expiredDate}',
+                  style: const TextStyle(fontSize: 11, color: _textSecondary),
+                ),
               ],
             ),
           ),
           Container(
-            padding: const EdgeInsets.symmetric(
-                horizontal: 8, vertical: 3),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
               color: _danger.withOpacity(0.1),
               borderRadius: BorderRadius.circular(6),
@@ -674,14 +1110,14 @@ class _StokCard extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 40, height: 40,
+            width: 40,
+            height: 40,
             decoration: BoxDecoration(
               color: _info.withOpacity(0.1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: const Center(
-              child: Icon(Icons.inventory_2_outlined,
-                  color: _info, size: 20),
+              child: Icon(Icons.inventory_2_outlined, color: _info, size: 20),
             ),
           ),
           const SizedBox(width: 12),
@@ -689,20 +1125,23 @@ class _StokCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(produk.namaProduk,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 14,
-                        color: _textPrimary)),
-                Text('Status: ${produk.statusProduk}',
-                    style: const TextStyle(
-                        fontSize: 11, color: _textSecondary)),
+                Text(
+                  produk.namaProduk,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                    color: _textPrimary,
+                  ),
+                ),
+                Text(
+                  'Status: ${produk.statusProduk}',
+                  style: const TextStyle(fontSize: 11, color: _textSecondary),
+                ),
               ],
             ),
           ),
           Container(
-            padding: const EdgeInsets.symmetric(
-                horizontal: 8, vertical: 3),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
               color: _info.withOpacity(0.1),
               borderRadius: BorderRadius.circular(6),
@@ -742,11 +1181,14 @@ class _Badge extends StatelessWidget {
         children: [
           Icon(icon, color: Colors.white, size: 14),
           const SizedBox(width: 5),
-          Text(label,
-              style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600)),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ],
       ),
     );

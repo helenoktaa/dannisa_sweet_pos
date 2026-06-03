@@ -32,6 +32,8 @@ class ApiConstants {
 
   static const String stokHistory = '/stok-history';
 
+  static const String dashboardHarian = '/dashboard/harian';
+
   // Timeout
   static const int connectTimeout = 15000;
   static const int receiveTimeout = 15000;
