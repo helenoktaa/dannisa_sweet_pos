@@ -184,6 +184,7 @@ class PreOrderItem {
   final String namaCustomer;
   final String metodePembayaran;
   final String statusPembayaran;
+  final double jumlahDp;
   final String statusOrder;
   final String catatan;
   final double totalPenjualan;
@@ -196,6 +197,7 @@ class PreOrderItem {
     required this.namaCustomer,
     required this.metodePembayaran,
     required this.statusPembayaran,
+    required this.jumlahDp,
     required this.statusOrder,
     required this.catatan,
     required this.totalPenjualan,
@@ -211,6 +213,7 @@ class PreOrderItem {
       namaCustomer: json['nama_customer'] as String? ?? '',
       metodePembayaran: json['metode_pembayaran'] as String? ?? '',
       statusPembayaran: json['status_pembayaran'] as String? ?? '',
+      jumlahDp: (json['jumlah_dp'] as num?)?.toDouble() ?? 0,
       statusOrder: json['status_order'] as String? ?? '',
       catatan: json['catatan'] as String? ?? '',
       totalPenjualan: (json['total_penjualan'] as num?)?.toDouble() ?? 0,
@@ -423,6 +426,52 @@ class TransaksiProvider extends ChangeNotifier {
     } on DioException catch (e) {
       debugPrint('Error update status order: ${e.response?.data}');
       _error = e.response?.data['message'] ?? 'Gagal update status';
+      notifyListeners();
+      return false;
+    }
+  }
+
+  // Tambah di TransaksiProvider
+
+  Future<bool> bayarDp({
+    required String idTransaksi,
+    required double jumlahDp,
+  }) async {
+    try {
+      await DioClient.instance.put(
+        '${ApiConstants.transaksi}/$idTransaksi/status',
+        data: {
+          'status_pembayaran': 'DP',
+          'jumlah_dp': jumlahDp,
+          'jumlah_bayar': 0,
+        },
+      );
+      return true;
+    } on DioException catch (e) {
+      debugPrint('Error bayar DP: ${e.response?.data}');
+      _error = e.response?.data['message'] ?? 'Gagal bayar DP';
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> lunasi({
+    required String idTransaksi,
+    required double jumlahBayar,
+  }) async {
+    try {
+      await DioClient.instance.put(
+        '${ApiConstants.transaksi}/$idTransaksi/status',
+        data: {
+          'status_pembayaran': 'Lunas',
+          'jumlah_bayar': jumlahBayar,
+          'jumlah_dp': 0,
+        },
+      );
+      return true;
+    } on DioException catch (e) {
+      debugPrint('Error lunasi: ${e.response?.data}');
+      _error = e.response?.data['message'] ?? 'Gagal melunasi';
       notifyListeners();
       return false;
     }

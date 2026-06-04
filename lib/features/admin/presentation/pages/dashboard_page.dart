@@ -299,6 +299,8 @@ class _DashboardContent extends StatelessWidget {
                 icon: Icons.pending_actions_outlined,
                 color: _warning,
                 suffix: 'transaksi',
+                onTap: () =>
+                    Navigator.pushNamed(context, AppRouter.transaksiPending),
               ),
               const SizedBox(width: 10),
               _StatCard(
@@ -307,6 +309,10 @@ class _DashboardContent extends StatelessWidget {
                 icon: Icons.event_busy_outlined,
                 color: _danger,
                 suffix: 'produk',
+                onTap: () => Navigator.pushNamed(
+                  context,
+                  AppRouter.kelolaProduk,
+                ), // ← pakai kelolaProduk
               ),
               const SizedBox(width: 10),
               _StatCard(
@@ -315,28 +321,22 @@ class _DashboardContent extends StatelessWidget {
                 icon: Icons.inventory_2_outlined,
                 color: _info,
                 suffix: 'produk',
+                onTap: () => Navigator.pushNamed(
+                  context,
+                  AppRouter.kelolaProduk,
+                ), // ← pakai kelolaProduk
               ),
             ],
           ),
           const SizedBox(height: 24),
 
-          // 5. Transaksi terbaru
+          // 5. Transaksi terbaru (maks 3)
           if (harian.transaksiTerbaru.isNotEmpty) ...[
-            const _SectionTitle(title: 'Transaksi Terbaru'),
-            const SizedBox(height: 10),
-            ...harian.transaksiTerbaru.map(
-              (t) => _TransaksiTerbaruCard(transaksi: t),
-            ),
-            const SizedBox(height: 24),
-          ],
-
-          // 6. Transaksi pending
-          if (data.transaksiPending.isNotEmpty) ...[
             _SectionTitle(
-              title: 'Transaksi Pending',
+              title: 'Transaksi Terbaru',
               trailing: TextButton(
                 onPressed: () =>
-                    Navigator.pushNamed(context, AppRouter.transaksiPending),
+                    Navigator.pushNamed(context, AppRouter.laporan),
                 child: const Text(
                   'Lihat Semua',
                   style: TextStyle(color: _primary, fontSize: 13),
@@ -344,30 +344,13 @@ class _DashboardContent extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 10),
-            ...data.transaksiPending
+            ...harian.transaksiTerbaru
                 .take(3)
-                .map((t) => _PendingCard(transaksi: t)),
+                .map((t) => _TransaksiTerbaruCard(transaksi: t)),
             const SizedBox(height: 24),
           ],
 
-          // 7. Produk mendekati expired
-          if (data.produkMendekatiExpired.isNotEmpty) ...[
-            const _SectionTitle(title: 'Produk Mendekati Expired'),
-            const SizedBox(height: 10),
-            ...data.produkMendekatiExpired
-                .take(3)
-                .map((p) => _ExpiredCard(produk: p)),
-            const SizedBox(height: 24),
-          ],
-
-          // 8. Stok menipis
-          if (data.produkStokMenipis.isNotEmpty) ...[
-            const _SectionTitle(title: 'Stok Menipis'),
-            const SizedBox(height: 10),
-            ...data.produkStokMenipis.take(3).map((p) => _StokCard(produk: p)),
-          ],
-
-          // 9. Empty state
+          // 6. Empty state
           if (data.totalPending == 0 &&
               data.totalMendekatiExpired == 0 &&
               data.totalStokMenipis == 0)
@@ -854,6 +837,7 @@ class _StatCard extends StatelessWidget {
   final IconData icon;
   final Color color;
   final String suffix;
+  final VoidCallback? onTap; // ← tambah ini
 
   const _StatCard({
     required this.label,
@@ -861,60 +845,65 @@ class _StatCard extends StatelessWidget {
     required this.icon,
     required this.color,
     required this.suffix,
+    this.onTap, // ← tambah ini
   });
 
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: _cardBg,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: color.withOpacity(0.12),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(7),
-              decoration: BoxDecoration(
+      child: GestureDetector(
+        // ← wrap dengan ini
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: _cardBg,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
                 color: color.withOpacity(0.12),
-                borderRadius: BorderRadius.circular(10),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
-              child: Icon(icon, color: color, size: 16),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w800,
-                color: color,
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(7),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: color, size: 16),
               ),
-            ),
-            Text(
-              suffix,
-              style: const TextStyle(fontSize: 10, color: _textSecondary),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 10,
-                color: _textSecondary,
-                fontWeight: FontWeight.w500,
+              const SizedBox(height: 10),
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: color,
+                ),
               ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
+              Text(
+                suffix,
+                style: const TextStyle(fontSize: 10, color: _textSecondary),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 10,
+                  color: _textSecondary,
+                  fontWeight: FontWeight.w500,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
         ),
       ),
     );

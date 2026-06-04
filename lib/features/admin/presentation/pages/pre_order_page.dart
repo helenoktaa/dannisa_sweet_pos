@@ -27,9 +27,23 @@ String _formatRupiah(double amount) {
 String _formatTanggal(String raw) {
   try {
     final dt = DateTime.parse(raw).toLocal();
-    const bulan = ['','Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+    const bulan = [
+      '',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'Mei',
+      'Jun',
+      'Jul',
+      'Agu',
+      'Sep',
+      'Okt',
+      'Nov',
+      'Des',
+    ];
     return '${dt.day} ${bulan[dt.month]} ${dt.year}  '
-        '${dt.hour.toString().padLeft(2,'0')}:${dt.minute.toString().padLeft(2,'0')}';
+        '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
   } catch (_) {
     return raw;
   }
@@ -37,12 +51,36 @@ String _formatTanggal(String raw) {
 
 // ── Status order config ────────────────────────────────────
 const _statusConfig = {
-  'menunggu_diproses': {'label': 'Menunggu Diproses', 'color': 0xFFF59E0B, 'icon': Icons.hourglass_empty},
-  'sedang_dibuat':     {'label': 'Sedang Dibuat',     'color': 0xFF0EA5E9, 'icon': Icons.bakery_dining},
-  'sedang_diantar':    {'label': 'Sedang Diantar',    'color': 0xFF8B5CF6, 'icon': Icons.delivery_dining},
-  'pesanan_diterima':  {'label': 'Pesanan Diterima',  'color': 0xFF10B981, 'icon': Icons.check_circle_outline},
-  'selesai':           {'label': 'Selesai',           'color': 0xFF10B981, 'icon': Icons.check_circle},
-  'dibatalkan':        {'label': 'Dibatalkan',        'color': 0xFFEF4444, 'icon': Icons.cancel_outlined},
+  'menunggu_diproses': {
+    'label': 'Menunggu Diproses',
+    'color': 0xFFF59E0B,
+    'icon': Icons.hourglass_empty,
+  },
+  'sedang_dibuat': {
+    'label': 'Sedang Dibuat',
+    'color': 0xFF0EA5E9,
+    'icon': Icons.bakery_dining,
+  },
+  'sedang_diantar': {
+    'label': 'Sedang Diantar',
+    'color': 0xFF8B5CF6,
+    'icon': Icons.delivery_dining,
+  },
+  'pesanan_diterima': {
+    'label': 'Pesanan Diterima',
+    'color': 0xFF10B981,
+    'icon': Icons.check_circle_outline,
+  },
+  'selesai': {
+    'label': 'Selesai',
+    'color': 0xFF10B981,
+    'icon': Icons.check_circle,
+  },
+  'dibatalkan': {
+    'label': 'Dibatalkan',
+    'color': 0xFFEF4444,
+    'icon': Icons.cancel_outlined,
+  },
 };
 
 const _urutanStatus = [
@@ -91,7 +129,11 @@ class _PreOrderPageState extends State<PreOrderPage> {
         systemOverlayStyle: SystemUiOverlayStyle.light,
         title: const Text(
           'Pre Order Aktif',
-          style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w800),
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.w800,
+          ),
         ),
         actions: [
           IconButton(
@@ -117,14 +159,21 @@ class _PreOrderPageState extends State<PreOrderPage> {
               child: Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.orange.shade100,
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.access_time, size: 14, color: Colors.orange.shade700),
+                        Icon(
+                          Icons.access_time,
+                          size: 14,
+                          color: Colors.orange.shade700,
+                        ),
                         const SizedBox(width: 6),
                         Text(
                           '${provider.preOrders.length} pesanan aktif',
@@ -145,42 +194,50 @@ class _PreOrderPageState extends State<PreOrderPage> {
           // List
           Expanded(
             child: provider.isLoadingPreOrder
-                ? const Center(child: CircularProgressIndicator(color: _primary))
+                ? const Center(
+                    child: CircularProgressIndicator(color: _primary),
+                  )
                 : provider.preOrders.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.inbox_outlined, size: 56, color: Colors.grey.shade300),
-                            const SizedBox(height: 12),
-                            Text('Tidak ada pre order aktif',
-                                style: TextStyle(color: _textSecondary)),
-                          ],
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.inbox_outlined,
+                          size: 56,
+                          color: Colors.grey.shade300,
                         ),
-                      )
-                    : RefreshIndicator(
-                        color: _primary,
-                        onRefresh: () => provider.fetchPreOrderAktif(),
-                        child: ListView.builder(
-                          padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
-                          itemCount: provider.preOrders.length,
-                          itemBuilder: (ctx, i) {
-                            final po = provider.preOrders[i];
-                            return _PreOrderCard(
-                              preOrder: po,
-                              onTap: () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => ChangeNotifierProvider.value(
-                                    value: provider,
-                                    child: PreOrderDetailPage(preOrder: po),
-                                  ),
-                                ),
-                              ).then((_) => provider.fetchPreOrderAktif()),
-                            );
-                          },
+                        const SizedBox(height: 12),
+                        Text(
+                          'Tidak ada pre order aktif',
+                          style: TextStyle(color: _textSecondary),
                         ),
-                      ),
+                      ],
+                    ),
+                  )
+                : RefreshIndicator(
+                    color: _primary,
+                    onRefresh: () => provider.fetchPreOrderAktif(),
+                    child: ListView.builder(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
+                      itemCount: provider.preOrders.length,
+                      itemBuilder: (ctx, i) {
+                        final po = provider.preOrders[i];
+                        return _PreOrderCard(
+                          preOrder: po,
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => ChangeNotifierProvider.value(
+                                value: provider,
+                                child: PreOrderDetailPage(preOrder: po),
+                              ),
+                            ),
+                          ).then((_) => provider.fetchPreOrderAktif()),
+                        );
+                      },
+                    ),
+                  ),
           ),
         ],
       ),
@@ -197,7 +254,9 @@ class _PreOrderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cfg = _statusConfig[preOrder.statusOrder] ?? _statusConfig['menunggu_diproses']!;
+    final cfg =
+        _statusConfig[preOrder.statusOrder] ??
+        _statusConfig['menunggu_diproses']!;
     final color = Color(cfg['color'] as int);
     final icon = cfg['icon'] as IconData;
     final label = cfg['label'] as String;
@@ -238,14 +297,20 @@ class _PreOrderCard extends StatelessWidget {
                       ),
                       Text(
                         _formatTanggal(preOrder.tanggalTransaksi),
-                        style: const TextStyle(fontSize: 11, color: _textSecondary),
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: _textSecondary,
+                        ),
                       ),
                     ],
                   ),
                 ),
                 // Badge status
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
                   decoration: BoxDecoration(
                     color: color.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(20),
@@ -276,12 +341,19 @@ class _PreOrderCard extends StatelessWidget {
             // Customer & total
             Row(
               children: [
-                const Icon(Icons.person_outline, size: 14, color: _textSecondary),
+                const Icon(
+                  Icons.person_outline,
+                  size: 14,
+                  color: _textSecondary,
+                ),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
                     preOrder.namaCustomer,
-                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
                 Text(
@@ -298,7 +370,9 @@ class _PreOrderCard extends StatelessWidget {
 
             // Item list ringkas
             Text(
-              preOrder.detail.map((d) => '${d.namaProduk} x${d.qty}').join(', '),
+              preOrder.detail
+                  .map((d) => '${d.namaProduk} x${d.qty}')
+                  .join(', '),
               style: const TextStyle(fontSize: 12, color: _textSecondary),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -313,7 +387,10 @@ class _PreOrderCard extends StatelessWidget {
                   Expanded(
                     child: Text(
                       preOrder.catatan,
-                      style: TextStyle(fontSize: 12, color: Colors.orange.shade700),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.orange.shade700,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -328,8 +405,10 @@ class _PreOrderCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                Text('Lihat detail & update status',
-                    style: TextStyle(fontSize: 11, color: _primary)),
+                Text(
+                  'Lihat detail & update status',
+                  style: TextStyle(fontSize: 11, color: _primary),
+                ),
                 const SizedBox(width: 4),
                 const Icon(Icons.arrow_forward_ios, size: 11, color: _primary),
               ],
@@ -373,7 +452,9 @@ class _PreOrderDetailPageState extends State<PreOrderDetailPage> {
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
               backgroundColor: _primary,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
             child: const Text('Ya, Update'),
           ),
@@ -394,7 +475,9 @@ class _PreOrderDetailPageState extends State<PreOrderDetailPage> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(ok ? 'Status berhasil diupdate ✓' : 'Gagal update status'),
+        content: Text(
+          ok ? 'Status berhasil diupdate ✓' : 'Gagal update status',
+        ),
         backgroundColor: ok ? _success : _danger,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -410,7 +493,9 @@ class _PreOrderDetailPageState extends State<PreOrderDetailPage> {
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Batalkan Pre Order?'),
-        content: const Text('Pesanan ini akan dibatalkan dan tidak bisa dikembalikan.'),
+        content: const Text(
+          'Pesanan ini akan dibatalkan dan tidak bisa dikembalikan.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -420,7 +505,9 @@ class _PreOrderDetailPageState extends State<PreOrderDetailPage> {
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
               backgroundColor: _danger,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
             child: const Text('Ya, Batalkan'),
           ),
@@ -442,13 +529,245 @@ class _PreOrderDetailPageState extends State<PreOrderDetailPage> {
     if (ok) Navigator.pop(context);
   }
 
+  // Tambah di _PreOrderDetailPageState
+
+  Future<void> _bayarDp() async {
+    final dp50 = widget.preOrder.totalPenjualan * 0.5;
+    final controller = TextEditingController(text: dp50.toStringAsFixed(0));
+
+    final confirm = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Bayar DP',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Minimal 50% = ${_formatRupiah(dp50)}',
+                style: const TextStyle(fontSize: 13, color: _textSecondary),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: controller,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: 'Jumlah DP',
+                  prefixText: 'Rp ',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: _primary, width: 2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      style: OutlinedButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text('Batal'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _primary,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text('Konfirmasi DP'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (confirm != true) return;
+
+    final jumlahDp = double.tryParse(controller.text) ?? 0;
+    if (jumlahDp < dp50) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('DP minimal ${_formatRupiah(dp50)}'),
+          backgroundColor: _danger,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isUpdating = true);
+    final ok = await context.read<TransaksiProvider>().bayarDp(
+      idTransaksi: widget.preOrder.idTransaksi,
+      jumlahDp: jumlahDp,
+    );
+    setState(() => _isUpdating = false);
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(ok ? 'DP berhasil dicatat ✓' : 'Gagal mencatat DP'),
+        backgroundColor: ok ? _success : _danger,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
+    if (ok) Navigator.pop(context);
+  }
+
+  Future<void> _lunasi() async {
+    final sisaBayar = widget.preOrder.totalPenjualan - widget.preOrder.jumlahDp;
+    final controller = TextEditingController(
+      text: sisaBayar.toStringAsFixed(0),
+    );
+
+    final confirm = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Lunasi Pembayaran',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Sisa: ${_formatRupiah(sisaBayar)}',
+                style: const TextStyle(fontSize: 13, color: _textSecondary),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: controller,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: 'Jumlah Bayar',
+                  prefixText: 'Rp ',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: _primary, width: 2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      style: OutlinedButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text('Batal'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _success,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text('Lunasi'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (confirm != true) return;
+
+    final jumlahBayar = double.tryParse(controller.text) ?? 0;
+
+    setState(() => _isUpdating = true);
+    final ok = await context.read<TransaksiProvider>().lunasi(
+      idTransaksi: widget.preOrder.idTransaksi,
+      jumlahBayar: jumlahBayar,
+    );
+    setState(() => _isUpdating = false);
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(ok ? 'Pembayaran lunas ✓' : 'Gagal melunasi'),
+        backgroundColor: ok ? _success : _danger,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
+    if (ok) Navigator.pop(context);
+  }
+
   @override
   Widget build(BuildContext context) {
     final po = widget.preOrder;
-    final cfg = _statusConfig[po.statusOrder] ?? _statusConfig['menunggu_diproses']!;
+    final cfg =
+        _statusConfig[po.statusOrder] ?? _statusConfig['menunggu_diproses']!;
     final statusColor = Color(cfg['color'] as int);
     final nextStatus = _nextStatus(po.statusOrder);
-    final sudahSelesai = po.statusOrder == 'selesai' || po.statusOrder == 'dibatalkan';
+    final sudahSelesai =
+        po.statusOrder == 'selesai' || po.statusOrder == 'dibatalkan';
 
     return Scaffold(
       backgroundColor: _surface,
@@ -458,7 +777,11 @@ class _PreOrderDetailPageState extends State<PreOrderDetailPage> {
         systemOverlayStyle: SystemUiOverlayStyle.light,
         title: Text(
           po.idTransaksi,
-          style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w800),
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.w800,
+          ),
         ),
       ),
       body: SingleChildScrollView(
@@ -474,14 +797,24 @@ class _PreOrderDetailPageState extends State<PreOrderDetailPage> {
                 color: _cardBg,
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
-                  BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
                 ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Status Pesanan',
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: _textPrimary)),
+                  const Text(
+                    'Status Pesanan',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: _textPrimary,
+                    ),
+                  ),
                   const SizedBox(height: 16),
                   // Progress tracker
                   _StatusTracker(currentStatus: po.statusOrder),
@@ -497,22 +830,33 @@ class _PreOrderDetailPageState extends State<PreOrderDetailPage> {
                 color: _cardBg,
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
-                  BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
                 ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Info Pesanan',
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+                  const Text(
+                    'Info Pesanan',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+                  ),
                   const SizedBox(height: 12),
                   _InfoRow(label: 'Customer', value: po.namaCustomer),
-                  _InfoRow(label: 'Tanggal', value: _formatTanggal(po.tanggalTransaksi)),
+                  _InfoRow(
+                    label: 'Tanggal',
+                    value: _formatTanggal(po.tanggalTransaksi),
+                  ),
                   _InfoRow(label: 'Metode Bayar', value: po.metodePembayaran),
                   _InfoRow(
                     label: 'Status Bayar',
                     value: po.statusPembayaran,
-                    valueColor: po.statusPembayaran == 'Lunas' ? _success : _warning,
+                    valueColor: po.statusPembayaran == 'Lunas'
+                        ? _success
+                        : _warning,
                   ),
                   if (po.catatan.isNotEmpty)
                     _InfoRow(label: 'Catatan', value: po.catatan),
@@ -528,48 +872,88 @@ class _PreOrderDetailPageState extends State<PreOrderDetailPage> {
                 color: _cardBg,
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
-                  BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
                 ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Detail Produk',
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+                  const Text(
+                    'Detail Produk',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+                  ),
                   const SizedBox(height: 12),
-                  ...po.detail.map((d) => Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 32,
-                          height: 32,
-                          decoration: BoxDecoration(
-                            color: _primary.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
+                  ...po.detail.map(
+                    (d) => Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              color: _primary.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(
+                              Icons.cake_outlined,
+                              size: 16,
+                              color: _primary,
+                            ),
                           ),
-                          child: const Icon(Icons.cake_outlined, size: 16, color: _primary),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(d.namaProduk,
-                              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-                        ),
-                        Text('x${d.qty}',
-                            style: const TextStyle(fontSize: 13, color: _textSecondary)),
-                        const SizedBox(width: 12),
-                        Text(_formatRupiah(d.subTotal),
-                            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: _primary)),
-                      ],
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              d.namaProduk,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          Text(
+                            'x${d.qty}',
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: _textSecondary,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            _formatRupiah(d.subTotal),
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: _primary,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  )),
+                  ),
                   const Divider(height: 20),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Total', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
-                      Text(_formatRupiah(po.totalPenjualan),
-                          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: _primary)),
+                      const Text(
+                        'Total',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                        ),
+                      ),
+                      Text(
+                        _formatRupiah(po.totalPenjualan),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 16,
+                          color: _primary,
+                        ),
+                      ),
                     ],
                   ),
                 ],
@@ -577,32 +961,132 @@ class _PreOrderDetailPageState extends State<PreOrderDetailPage> {
             ),
             const SizedBox(height: 24),
 
-            // ── Tombol aksi ───────────────────────────────
+            // ── Tombol aksi ───────────────────────────────────
             if (!sudahSelesai) ...[
-              // Tombol update ke status berikutnya
-              if (nextStatus != null)
+              // Tombol pembayaran DP
+              if (po.statusPembayaran == 'Pending') ...[
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton.icon(
+                    onPressed: _isUpdating ? null : _bayarDp,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _warning,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    icon: const Icon(Icons.payments_outlined, size: 18),
+                    label: const Text(
+                      'Bayar DP 50%',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+              ],
+
+              // Info DP + tombol lunasi
+              if (po.statusPembayaran == 'DP') ...[
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  margin: const EdgeInsets.only(bottom: 8),
+                  decoration: BoxDecoration(
+                    color: _warning.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: _warning.withOpacity(0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.info_outline, size: 16, color: _warning),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'DP terbayar: ${_formatRupiah(po.jumlahDp)}  •  Sisa: ${_formatRupiah(po.totalPenjualan - po.jumlahDp)}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: _warning,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton.icon(
+                    onPressed: _isUpdating ? null : _lunasi,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _success,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    icon: const Icon(Icons.check_circle_outline, size: 18),
+                    label: const Text(
+                      'Lunasi Pembayaran',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+              ],
+
+              // Tombol update status order
+              if (nextStatus != null) ...[
                 SizedBox(
                   width: double.infinity,
                   height: 52,
                   child: ElevatedButton.icon(
-                    onPressed: _isUpdating ? null : () => _updateStatus(nextStatus),
+                    onPressed: _isUpdating
+                        ? null
+                        : () => _updateStatus(nextStatus),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: _primary,
                       foregroundColor: Colors.white,
                       elevation: 0,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
                     ),
                     icon: _isUpdating
-                        ? const SizedBox(width: 20, height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                        : Icon(_statusConfig[nextStatus]?['icon'] as IconData? ?? Icons.arrow_forward, size: 20),
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : Icon(
+                            _statusConfig[nextStatus]?['icon'] as IconData? ??
+                                Icons.arrow_forward,
+                            size: 20,
+                          ),
                     label: Text(
                       'Update ke "${_statusConfig[nextStatus]?['label']}"',
-                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                 ),
-              const SizedBox(height: 10),
+                const SizedBox(height: 10),
+              ],
 
               // Tombol batalkan
               SizedBox(
@@ -612,11 +1096,22 @@ class _PreOrderDetailPageState extends State<PreOrderDetailPage> {
                   onPressed: _isUpdating ? null : _batalkan,
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: _danger),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                   ),
-                  icon: const Icon(Icons.cancel_outlined, color: _danger, size: 18),
-                  label: const Text('Batalkan Pesanan',
-                      style: TextStyle(color: _danger, fontWeight: FontWeight.w700)),
+                  icon: const Icon(
+                    Icons.cancel_outlined,
+                    color: _danger,
+                    size: 18,
+                  ),
+                  label: const Text(
+                    'Batalkan Pesanan',
+                    style: TextStyle(
+                      color: _danger,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                 ),
               ),
             ] else
@@ -639,12 +1134,16 @@ class _PreOrderDetailPageState extends State<PreOrderDetailPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
-                      po.statusOrder == 'selesai' ? Icons.check_circle : Icons.cancel,
+                      po.statusOrder == 'selesai'
+                          ? Icons.check_circle
+                          : Icons.cancel,
                       color: po.statusOrder == 'selesai' ? _success : _danger,
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      po.statusOrder == 'selesai' ? 'Pesanan Selesai' : 'Pesanan Dibatalkan',
+                      po.statusOrder == 'selesai'
+                          ? 'Pesanan Selesai'
+                          : 'Pesanan Dibatalkan',
                       style: TextStyle(
                         fontWeight: FontWeight.w700,
                         color: po.statusOrder == 'selesai' ? _success : _danger,
@@ -694,8 +1193,8 @@ class _StatusTracker extends StatelessWidget {
                     color: isDone
                         ? _success
                         : isCurrent
-                            ? color
-                            : Colors.grey.shade200,
+                        ? color
+                        : Colors.grey.shade200,
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
@@ -708,7 +1207,9 @@ class _StatusTracker extends StatelessWidget {
                   Container(
                     width: 2,
                     height: 28,
-                    color: isDone ? _success.withOpacity(0.4) : Colors.grey.shade200,
+                    color: isDone
+                        ? _success.withOpacity(0.4)
+                        : Colors.grey.shade200,
                   ),
               ],
             ),
@@ -727,8 +1228,10 @@ class _StatusTracker extends StatelessWidget {
                     ),
                   ),
                   if (isCurrent)
-                    Text('Status saat ini',
-                        style: TextStyle(fontSize: 11, color: color)),
+                    Text(
+                      'Status saat ini',
+                      style: TextStyle(fontSize: 11, color: color),
+                    ),
                 ],
               ),
             ),
@@ -756,8 +1259,10 @@ class _InfoRow extends StatelessWidget {
         children: [
           SizedBox(
             width: 100,
-            child: Text(label,
-                style: const TextStyle(fontSize: 13, color: _textSecondary)),
+            child: Text(
+              label,
+              style: const TextStyle(fontSize: 13, color: _textSecondary),
+            ),
           ),
           const Text(': ', style: TextStyle(color: _textSecondary)),
           Expanded(
