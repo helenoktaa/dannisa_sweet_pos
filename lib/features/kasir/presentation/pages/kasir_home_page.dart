@@ -12,6 +12,13 @@ const _surface = Color(0xFFFFF0F7);
 const _textPrimary = Color(0xFF1A1A2E);
 const _textSecondary = Color(0xFF6B7280);
 
+// ── Menu key constants (sama dengan backend) ───────────────
+const _keyDashboard = 'dashboard';
+const _keyTransaksi = 'transaksi';
+const _keyProduk = 'produk';
+const _keyLaporan = 'laporan';
+const _keyKelolaUser = 'kelola_user';
+
 class KasirHomePage extends StatefulWidget {
   const KasirHomePage({super.key});
 
@@ -23,17 +30,123 @@ class _KasirHomePageState extends State<KasirHomePage> {
   @override
   void initState() {
     super.initState();
-    // Set idUser ke TransaksiProvider — sama seperti AdminHomePage
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final idUser = context.read<AuthProvider>().user?.idUser ?? '';
       context.read<TransaksiProvider>().setIdUser(idUser);
     });
   }
 
+  // Bangun daftar menu card berdasarkan menu_keys user
+  List<Widget> _buildMenuCards(List<String> menuKeys, BuildContext context) {
+    final List<Widget> cards = [];
+
+    // ── Dashboard ──────────────────────────────────────────
+    if (menuKeys.contains(_keyDashboard)) {
+      cards.add(
+        _MenuCard(
+          icon: Icons.dashboard_outlined,
+          label: 'Dashboard',
+          description: 'Ringkasan stok & transaksi pending',
+          color: const Color(0xFFE91E8C),
+          onTap: () => Navigator.pushNamed(context, AppRouter.adminHome),
+        ),
+      );
+    }
+
+    // ── Transaksi ──────────────────────────────────────────
+    if (menuKeys.contains(_keyTransaksi)) {
+      if (cards.isNotEmpty) cards.add(const SizedBox(height: 12));
+      cards.add(
+        _MenuCard(
+          icon: Icons.point_of_sale,
+          label: 'Input Transaksi',
+          description: 'Catat penjualan baru',
+          color: const Color(0xFF10B981),
+          onTap: () => Navigator.pushNamed(context, AppRouter.inputTransaksi),
+        ),
+      );
+      cards.add(const SizedBox(height: 12));
+      cards.add(
+        _MenuCard(
+          icon: Icons.pending_actions_outlined,
+          label: 'Transaksi Pending',
+          description: 'Follow up pembayaran customer',
+          color: const Color(0xFFF59E0B),
+          onTap: () => Navigator.pushNamed(context, AppRouter.transaksiPending),
+        ),
+      );
+    }
+
+    // ── Produk ─────────────────────────────────────────────
+    if (menuKeys.contains(_keyProduk)) {
+      if (cards.isNotEmpty) cards.add(const SizedBox(height: 12));
+      cards.add(
+        _MenuCard(
+          icon: Icons.inventory_2_outlined,
+          label: 'Daftar Produk',
+          description: 'Lihat katalog produk & stok',
+          color: const Color(0xFF0EA5E9),
+          onTap: () => Navigator.pushNamed(context, AppRouter.daftarProduk),
+        ),
+      );
+    }
+
+    // ── Laporan ────────────────────────────────────────────
+    if (menuKeys.contains(_keyLaporan)) {
+      if (cards.isNotEmpty) cards.add(const SizedBox(height: 12));
+      cards.add(
+        _MenuCard(
+          icon: Icons.bar_chart_outlined,
+          label: 'Laporan',
+          description: 'Lihat laporan transaksi',
+          color: const Color(0xFF8B5CF6),
+          onTap: () => Navigator.pushNamed(context, AppRouter.laporan),
+        ),
+      );
+    }
+
+    // ── Kelola User ────────────────────────────────────────
+    if (menuKeys.contains(_keyKelolaUser)) {
+      if (cards.isNotEmpty) cards.add(const SizedBox(height: 12));
+      cards.add(
+        _MenuCard(
+          icon: Icons.people_outline,
+          label: 'Kelola User',
+          description: 'Manajemen akun pengguna',
+          color: const Color(0xFFEC4899),
+          onTap: () => Navigator.pushNamed(context, AppRouter.kelolaUser),
+        ),
+      );
+    }
+
+    // Fallback kalau menu_keys kosong
+    if (cards.isEmpty) {
+      cards.add(
+        Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: const Center(
+            child: Text(
+              'Belum ada menu yang diberikan.\nHubungi Admin.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: _textSecondary, fontSize: 14),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return cards;
+  }
+
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
     final namaUser = auth.user?.namaUser ?? 'Kasir';
+    final menuKeys = auth.user?.menuKeys ?? [];
     final now = DateTime.now();
     final greeting = now.hour < 11
         ? 'Selamat Pagi'
@@ -113,7 +226,7 @@ class _KasirHomePageState extends State<KasirHomePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── Hero Header ──────────────────────────────────
+            // ── Hero Header ────────────────────────────────
             Container(
               width: double.infinity,
               decoration: const BoxDecoration(
@@ -230,12 +343,13 @@ class _KasirHomePageState extends State<KasirHomePage> {
                           ),
                           const SizedBox(height: 16),
 
-                          // Badge kasir & toko
+                          // Badge jabatan & toko
                           Row(
                             children: [
                               _Badge(
                                 icon: Icons.point_of_sale_outlined,
-                                label: 'Kasir',
+                                label:
+                                    auth.user?.jabatan.namaJabatan ?? 'Kasir',
                               ),
                               const SizedBox(width: 8),
                               _Badge(
@@ -252,7 +366,7 @@ class _KasirHomePageState extends State<KasirHomePage> {
               ),
             ),
 
-            // ── Body ─────────────────────────────────────────
+            // ── Body ───────────────────────────────────────
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 24, 16, 24),
               child: Column(
@@ -287,40 +401,10 @@ class _KasirHomePageState extends State<KasirHomePage> {
                   ),
                   const SizedBox(height: 16),
 
-                  // ── Input Transaksi ─────────────────────────
-                  _MenuCard(
-                    icon: Icons.point_of_sale,
-                    label: 'Input Transaksi',
-                    description: 'Catat penjualan baru',
-                    color: const Color(0xFF10B981),
-                    onTap: () =>
-                        Navigator.pushNamed(context, AppRouter.inputTransaksi),
-                  ),
-                  const SizedBox(height: 12),
+                  // ── Menu Cards dinamis ──────────────────────
+                  ..._buildMenuCards(menuKeys, context),
 
-                  _MenuCard(
-                    icon: Icons.pending_actions_outlined,
-                    label: 'Transaksi Pending',
-                    description: 'Follow up pembayaran customer',
-                    color: const Color(0xFFF59E0B), 
-                    onTap: () => Navigator.pushNamed(
-                      context,
-                      AppRouter.transaksiPending,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-
-                  // ── Daftar Produk ───────────────────────────
-                  _MenuCard(
-                    icon: Icons.inventory_2_outlined,
-                    label: 'Daftar Produk',
-                    description: 'Lihat katalog produk & stok',
-                    color: const Color(0xFF0EA5E9),
-                    onTap: () =>
-                        Navigator.pushNamed(context, AppRouter.daftarProduk),
-                  ),
-
-                  const SizedBox(height: 100),
+                  const SizedBox(height: 32),
 
                   // ── Info toko ───────────────────────────────
                   Container(

@@ -10,10 +10,10 @@ class JabatanModel {
   });
 
   factory JabatanModel.fromJson(Map<String, dynamic> json) => JabatanModel(
-        idJabatan: json['id_jabatan'] as String,
-        namaJabatan: json['nama_jabatan'] as String,
-        gaji: (json['gaji'] as num).toDouble(),
-      );
+    idJabatan: json['id_jabatan'] as String,
+    namaJabatan: json['nama_jabatan'] as String,
+    gaji: (json['gaji'] as num).toDouble(),
+  );
 }
 
 class UserModel {
@@ -23,6 +23,7 @@ class UserModel {
   final String rekPembayaran;
   final String whatsapp;
   final JabatanModel jabatan;
+  final List<String> menuKeys;
 
   const UserModel({
     required this.idUser,
@@ -31,18 +32,22 @@ class UserModel {
     required this.rekPembayaran,
     required this.whatsapp,
     required this.jabatan,
+    this.menuKeys = const [],
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
-        idUser: json['id_user'] as String,
-        namaUser: json['nama_user'] as String,
-        email: json['email'] as String,
-        rekPembayaran: json['rek_pembayaran'] as String? ?? '',
-        whatsapp: json['whatsapp'] as String? ?? '',
-        jabatan: JabatanModel.fromJson(
-          json['jabatan'] as Map<String, dynamic>,
-        ),
-      );
+    idUser: json['id_user'] as String,
+    namaUser: json['nama_user'] as String,
+    email: json['email'] as String,
+    rekPembayaran: json['rek_pembayaran'] as String? ?? '',
+    whatsapp: json['whatsapp'] as String? ?? '',
+    jabatan: JabatanModel.fromJson(json['jabatan'] as Map<String, dynamic>),
+    menuKeys:
+        (json['menu_keys'] as List<dynamic>?) // ← parse ini
+            ?.map((e) => e as String)
+            .toList() ??
+        [],
+  );
 }
 
 class AuthResponseModel {

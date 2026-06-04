@@ -798,6 +798,31 @@ class _UserFormSheet extends StatefulWidget {
   State<_UserFormSheet> createState() => _UserFormSheetState();
 }
 
+// ── Konstanta menu (sama dengan backend) ──────────────────
+class MenuConfig {
+  static const dashboard = 'dashboard';
+  static const transaksi = 'transaksi';
+  static const produk = 'produk';
+  static const laporan = 'laporan';
+  static const kelolaUser = 'kelola_user';
+
+  static const List<_MenuOption> all = [
+    _MenuOption(key: dashboard, label: 'Dashboard', icon: Icons.dashboard_outlined),
+    _MenuOption(key: transaksi, label: 'Transaksi', icon: Icons.receipt_long_outlined),
+    _MenuOption(key: produk, label: 'Produk', icon: Icons.inventory_2_outlined),
+    _MenuOption(key: laporan, label: 'Laporan', icon: Icons.bar_chart_outlined),
+    _MenuOption(key: kelolaUser, label: 'Kelola User', icon: Icons.manage_accounts_outlined),
+  ];
+}
+
+class _MenuOption {
+  final String key;
+  final String label;
+  final IconData icon;
+  const _MenuOption({required this.key, required this.label, required this.icon});
+}
+
+// ── Form State ─────────────────────────────────────────────
 class _UserFormSheetState extends State<_UserFormSheet> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _namaCtrl;
@@ -808,22 +833,28 @@ class _UserFormSheetState extends State<_UserFormSheet> {
   String? _selectedJabatanId;
   bool _isLoading = false;
   bool _obscurePass = true;
+  int _currentStep = 0; // ← 0 = data user, 1 = pilih menu
+
+  // ── State menu permissions ─────────────────────────────
+  late final Map<String, bool> _menuState;
 
   bool get _isEdit => widget.user != null;
 
   @override
   void initState() {
     super.initState();
-    _namaCtrl =
-        TextEditingController(text: widget.user?.namaUser ?? '');
-    _emailCtrl =
-        TextEditingController(text: widget.user?.email ?? '');
+    _namaCtrl = TextEditingController(text: widget.user?.namaUser ?? '');
+    _emailCtrl = TextEditingController(text: widget.user?.email ?? '');
     _passCtrl = TextEditingController();
-    _rekCtrl =
-        TextEditingController(text: widget.user?.rekPembayaran ?? '');
-    _waCtrl =
-        TextEditingController(text: widget.user?.whatsapp ?? '');
+    _rekCtrl = TextEditingController(text: widget.user?.rekPembayaran ?? '');
+    _waCtrl = TextEditingController(text: widget.user?.whatsapp ?? '');
     _selectedJabatanId = widget.user?.idJabatan;
+
+    // Init menu state dari data user (edit) atau semua false (create)
+    _menuState = {
+      for (final m in MenuConfig.all)
+        m.key: widget.user?.menuKeys.contains(m.key) ?? false,
+    };
   }
 
   @override
@@ -836,10 +867,16 @@ class _UserFormSheetState extends State<_UserFormSheet> {
     super.dispose();
   }
 
-  Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
-    setState(() => _isLoading = true);
+  List<String> get _selectedMenuKeys =>
+      _menuState.entries.where((e) => e.value).map((e) => e.key).toList();
 
+  void _nextStep() {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() => _currentStep = 1);
+  }
+
+  Future<void> _submit() async {
+    setState(() => _isLoading = true);
     final provider = context.read<UserProvider>();
     bool ok;
 
@@ -852,6 +889,7 @@ class _UserFormSheetState extends State<_UserFormSheet> {
         idJabatan: _selectedJabatanId!,
         rekPembayaran: _rekCtrl.text.trim(),
         whatsapp: _waCtrl.text.trim(),
+        menuKeys: _selectedMenuKeys, // ← kirim menu
       );
     } else {
       ok = await provider.createUser(
@@ -861,6 +899,7 @@ class _UserFormSheetState extends State<_UserFormSheet> {
         idJabatan: _selectedJabatanId!,
         rekPembayaran: _rekCtrl.text.trim(),
         whatsapp: _waCtrl.text.trim(),
+        menuKeys: _selectedMenuKeys, // ← kirim menu
       );
     }
 
@@ -871,14 +910,11 @@ class _UserFormSheetState extends State<_UserFormSheet> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(ok
-            ? _isEdit
-                ? 'User berhasil diupdate ✓'
-                : 'User berhasil ditambahkan ✓'
+            ? _isEdit ? 'User berhasil diupdate ✓' : 'User berhasil ditambahkan ✓'
             : 'Gagal menyimpan user'),
         backgroundColor: ok ? _success : _danger,
         behavior: SnackBarBehavior.floating,
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
     );
   }
@@ -912,8 +948,7 @@ class _UserFormSheetState extends State<_UserFormSheet> {
       ),
       filled: true,
       fillColor: Colors.grey.shade50,
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
     );
   }
 
@@ -945,7 +980,32 @@ class _UserFormSheetState extends State<_UserFormSheet> {
               ),
             ),
 
-            // Title
+            // ── Step Indicator ───────────────────────────
+            Row(
+              children: [
+                _StepIndicator(
+                  number: 1,
+                  label: 'Data User',
+                  isActive: _currentStep == 0,
+                  isDone: _currentStep > 0,
+                ),
+                Expanded(
+                  child: Container(
+                    height: 2,
+                    color: _currentStep > 0 ? _primary : Colors.grey.shade200,
+                  ),
+                ),
+                _StepIndicator(
+                  number: 2,
+                  label: 'Akses Menu',
+                  isActive: _currentStep == 1,
+                  isDone: false,
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+
+            // ── Title ────────────────────────────────────
             Row(
               children: [
                 Container(
@@ -955,157 +1015,267 @@ class _UserFormSheetState extends State<_UserFormSheet> {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(
-                    _isEdit
-                        ? Icons.edit_outlined
-                        : Icons.person_add_outlined,
+                    _currentStep == 0
+                        ? (_isEdit ? Icons.edit_outlined : Icons.person_add_outlined)
+                        : Icons.menu_open_outlined,
                     color: _primary,
                     size: 20,
                   ),
                 ),
                 const SizedBox(width: 12),
-                Text(
-                  _isEdit ? 'Edit User' : 'Tambah User Baru',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                    color: _textPrimary,
-                  ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _currentStep == 0
+                          ? (_isEdit ? 'Edit User' : 'Tambah User Baru')
+                          : 'Atur Akses Menu',
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: _textPrimary,
+                      ),
+                    ),
+                    Text(
+                      _currentStep == 0
+                          ? 'Lengkapi data user di bawah ini'
+                          : 'Pilih menu yang dapat diakses',
+                      style: const TextStyle(fontSize: 12, color: _textSecondary),
+                    ),
+                  ],
                 ),
               ],
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
 
-            Form(
-              key: _formKey,
-              child: Column(
-                children: [
-                  // Nama User
-                  TextFormField(
-                    controller: _namaCtrl,
-                    autofocus: true,
-                    textCapitalization: TextCapitalization.words,
-                    decoration: _inputDecoration(
-                      label: 'Nama Lengkap',
-                      hint: 'Contoh: Anisa Dian Utami',
-                      prefixIcon: Icons.person_outline,
+            // ── STEP 1: Form Data ────────────────────────
+            if (_currentStep == 0)
+              Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    TextFormField(
+                      controller: _namaCtrl,
+                      autofocus: true,
+                      textCapitalization: TextCapitalization.words,
+                      decoration: _inputDecoration(
+                        label: 'Nama Lengkap',
+                        hint: 'Contoh: Anisa Dian Utami',
+                        prefixIcon: Icons.person_outline,
+                      ),
+                      validator: (v) {
+                        if (v?.isEmpty ?? true) return 'Nama wajib diisi';
+                        if (v!.length < 2) return 'Minimal 2 karakter';
+                        return null;
+                      },
                     ),
-                    validator: (v) {
-                      if (v?.isEmpty ?? true) return 'Nama wajib diisi';
-                      if (v!.length < 2) return 'Minimal 2 karakter';
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 14),
-
-                  // Email
-                  TextFormField(
-                    controller: _emailCtrl,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: _inputDecoration(
-                      label: 'Email',
-                      hint: 'contoh@email.com',
-                      prefixIcon: Icons.email_outlined,
+                    const SizedBox(height: 14),
+                    TextFormField(
+                      controller: _emailCtrl,
+                      keyboardType: TextInputType.emailAddress,
+                      decoration: _inputDecoration(
+                        label: 'Email',
+                        hint: 'contoh@email.com',
+                        prefixIcon: Icons.email_outlined,
+                      ),
+                      validator: (v) {
+                        if (v?.isEmpty ?? true) return 'Email wajib diisi';
+                        if (!v!.contains('@')) return 'Format email tidak valid';
+                        return null;
+                      },
                     ),
-                    validator: (v) {
-                      if (v?.isEmpty ?? true) return 'Email wajib diisi';
-                      if (!v!.contains('@')) return 'Format email tidak valid';
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 14),
-
-                  // Password
-                  TextFormField(
-                    controller: _passCtrl,
-                    obscureText: _obscurePass,
-                    decoration: _inputDecoration(
-                      label: _isEdit
-                          ? 'Password Baru (opsional)'
-                          : 'Password',
-                      hint: _isEdit
-                          ? 'Kosongkan jika tidak ingin diubah'
-                          : 'Min. 6 karakter',
-                      prefixIcon: Icons.lock_outline,
-                      suffix: IconButton(
-                        icon: Icon(
-                          _obscurePass
-                              ? Icons.visibility_outlined
-                              : Icons.visibility_off_outlined,
-                          color: _textSecondary,
-                          size: 20,
+                    const SizedBox(height: 14),
+                    TextFormField(
+                      controller: _passCtrl,
+                      obscureText: _obscurePass,
+                      decoration: _inputDecoration(
+                        label: _isEdit ? 'Password Baru (opsional)' : 'Password',
+                        hint: _isEdit ? 'Kosongkan jika tidak ingin diubah' : 'Min. 6 karakter',
+                        prefixIcon: Icons.lock_outline,
+                        suffix: IconButton(
+                          icon: Icon(
+                            _obscurePass ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                            color: _textSecondary,
+                            size: 20,
+                          ),
+                          onPressed: () => setState(() => _obscurePass = !_obscurePass),
                         ),
-                        onPressed: () =>
-                            setState(() => _obscurePass = !_obscurePass),
+                      ),
+                      validator: (v) {
+                        if (!_isEdit && (v?.isEmpty ?? true)) return 'Password wajib diisi';
+                        if (v != null && v.isNotEmpty && v.length < 6) return 'Minimal 6 karakter';
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 14),
+                    DropdownButtonFormField<String>(
+                      value: _selectedJabatanId,
+                      decoration: _inputDecoration(
+                        label: 'Jabatan',
+                        hint: 'Pilih jabatan',
+                        prefixIcon: Icons.work_outline,
+                      ),
+                      items: provider.jabatans.map((j) {
+                        return DropdownMenuItem(
+                          value: j.idJabatan,
+                          child: Text(j.namaJabatan),
+                        );
+                      }).toList(),
+                      onChanged: (v) => setState(() => _selectedJabatanId = v),
+                      validator: (v) => v == null ? 'Jabatan wajib dipilih' : null,
+                    ),
+                    const SizedBox(height: 14),
+                    TextFormField(
+                      controller: _rekCtrl,
+                      decoration: _inputDecoration(
+                        label: 'Rekening Pembayaran (opsional)',
+                        hint: 'Contoh: BCA 8880587898',
+                        prefixIcon: Icons.account_balance_outlined,
                       ),
                     ),
-                    validator: (v) {
-                      if (!_isEdit && (v?.isEmpty ?? true)) {
-                        return 'Password wajib diisi';
-                      }
-                      if (v != null &&
-                          v.isNotEmpty &&
-                          v.length < 6) {
-                        return 'Minimal 6 karakter';
-                      }
-                      return null;
+                    const SizedBox(height: 14),
+                    TextFormField(
+                      controller: _waCtrl,
+                      keyboardType: TextInputType.phone,
+                      decoration: _inputDecoration(
+                        label: 'WhatsApp (opsional)',
+                        hint: 'Contoh: 08512345678',
+                        prefixIcon: Icons.phone_outlined,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: ElevatedButton.icon(
+                        onPressed: _nextStep,
+                        icon: const Icon(Icons.arrow_forward_rounded),
+                        label: const Text(
+                          'Lanjut: Atur Akses Menu',
+                          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _primary,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+            // ── STEP 2: Pilih Menu ───────────────────────
+            if (_currentStep == 1) ...[
+              // Header count + select all
+              Row(
+                children: [
+                  Text(
+                    '${_selectedMenuKeys.length} dari ${MenuConfig.all.length} menu dipilih',
+                    style: const TextStyle(fontSize: 13, color: _textSecondary),
+                  ),
+                  const Spacer(),
+                  TextButton(
+                    onPressed: () {
+                      final allSelected = _menuState.values.every((v) => v);
+                      setState(() {
+                        for (final key in _menuState.keys) {
+                          _menuState[key] = !allSelected;
+                        }
+                      });
                     },
-                  ),
-                  const SizedBox(height: 14),
-
-                  // Dropdown Jabatan
-                  DropdownButtonFormField<String>(
-                    value: _selectedJabatanId,
-                    decoration: _inputDecoration(
-                      label: 'Jabatan',
-                      hint: 'Pilih jabatan',
-                      prefixIcon: Icons.work_outline,
-                    ),
-                    items: provider.jabatans.map((j) {
-                      return DropdownMenuItem(
-                        value: j.idJabatan,
-                        child: Text(j.namaJabatan),
-                      );
-                    }).toList(),
-                    onChanged: (v) =>
-                        setState(() => _selectedJabatanId = v),
-                    validator: (v) =>
-                        v == null ? 'Jabatan wajib dipilih' : null,
-                  ),
-                  const SizedBox(height: 14),
-
-                  // Rekening Pembayaran (opsional)
-                  TextFormField(
-                    controller: _rekCtrl,
-                    decoration: _inputDecoration(
-                      label: 'Rekening Pembayaran (opsional)',
-                      hint: 'Contoh: BCA 8880587898',
-                      prefixIcon: Icons.account_balance_outlined,
+                    child: Text(
+                      _menuState.values.every((v) => v) ? 'Hapus Semua' : 'Pilih Semua',
+                      style: const TextStyle(
+                        color: _primary,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 14),
+                ],
+              ),
+              const SizedBox(height: 4),
 
-                  // WhatsApp (opsional)
-                  TextFormField(
-                    controller: _waCtrl,
-                    keyboardType: TextInputType.phone,
-                    decoration: _inputDecoration(
-                      label: 'WhatsApp (opsional)',
-                      hint: 'Contoh: 08512345678',
-                      prefixIcon: Icons.phone_outlined,
+              // Menu list
+              ...MenuConfig.all.map((menu) {
+                final isEnabled = _menuState[menu.key] ?? false;
+                return AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  margin: const EdgeInsets.only(bottom: 10),
+                  decoration: BoxDecoration(
+                    color: isEnabled ? _primary.withOpacity(0.05) : Colors.grey.shade50,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: isEnabled ? _primary.withOpacity(0.3) : Colors.grey.shade200,
+                      width: 1.5,
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: isEnabled ? _primary.withOpacity(0.12) : Colors.grey.shade200,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(
+                        menu.icon,
+                        color: isEnabled ? _primary : Colors.grey.shade400,
+                        size: 20,
+                      ),
+                    ),
+                    title: Text(
+                      menu.label,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                        color: isEnabled ? _textPrimary : _textSecondary,
+                      ),
+                    ),
+                    trailing: Switch.adaptive(
+                      value: isEnabled,
+                      onChanged: (val) => setState(() => _menuState[menu.key] = val),
+                      activeColor: _primary,
+                    ),
+                    onTap: () => setState(() => _menuState[menu.key] = !isEnabled),
+                  ),
+                );
+              }),
 
-                  // Tombol submit
-                  SizedBox(
-                    width: double.infinity,
-                    height: 52,
+              const SizedBox(height: 20),
+
+              // Action buttons
+              Row(
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: OutlinedButton.icon(
+                      onPressed: () => setState(() => _currentStep = 0),
+                      icon: const Icon(Icons.arrow_back_rounded, size: 18),
+                      label: const Text('Kembali'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: _textSecondary,
+                        side: BorderSide(color: Colors.grey.shade300),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    flex: 3,
                     child: ElevatedButton(
                       onPressed: _isLoading ? null : _submit,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: _primary,
                         foregroundColor: Colors.white,
                         elevation: 0,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14),
                         ),
@@ -1122,7 +1292,7 @@ class _UserFormSheetState extends State<_UserFormSheet> {
                           : Text(
                               _isEdit ? 'Simpan Perubahan' : 'Tambah User',
                               style: const TextStyle(
-                                fontSize: 16,
+                                fontSize: 15,
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
@@ -1130,10 +1300,68 @@ class _UserFormSheetState extends State<_UserFormSheet> {
                   ),
                 ],
               ),
-            ),
+            ],
           ],
         ),
       ),
+    );
+  }
+}
+
+// ── Step Indicator ─────────────────────────────────────────
+class _StepIndicator extends StatelessWidget {
+  final int number;
+  final String label;
+  final bool isActive;
+  final bool isDone;
+
+  const _StepIndicator({
+    required this.number,
+    required this.label,
+    required this.isActive,
+    required this.isDone,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isHighlighted = isActive || isDone;
+    return Column(
+      children: [
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 250),
+          width: 32,
+          height: 32,
+          decoration: BoxDecoration(
+            color: isHighlighted ? _primary : Colors.grey.shade100,
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: isHighlighted ? _primary : Colors.grey.shade300,
+              width: 2,
+            ),
+          ),
+          child: Center(
+            child: isDone
+                ? const Icon(Icons.check, color: Colors.white, size: 16)
+                : Text(
+                    '$number',
+                    style: TextStyle(
+                      color: isActive ? Colors.white : Colors.grey.shade400,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    ),
+                  ),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+            color: isHighlighted ? _primary : _textSecondary,
+          ),
+        ),
+      ],
     );
   }
 }

@@ -147,7 +147,7 @@ class _LaporanTransaksiPageState extends State<LaporanTransaksiPage>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text('Laporan Keuangan',
+                          Text('Laporan Transaksi',
                               style: TextStyle(
                                 color: Colors.white, fontSize: 22,
                                 fontWeight: FontWeight.w800, letterSpacing: -0.5,

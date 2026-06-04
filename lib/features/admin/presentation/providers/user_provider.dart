@@ -35,6 +35,7 @@ class UserModel {
   final String? whatsapp;
   final String idJabatan;
   final String namaJabatan; // dari JOIN di backend
+  final List<String> menuKeys;
 
   const UserModel({
     required this.idUser,
@@ -44,6 +45,7 @@ class UserModel {
     this.whatsapp,
     required this.idJabatan,
     required this.namaJabatan,
+    this.menuKeys = const [],
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -58,6 +60,10 @@ class UserModel {
       whatsapp: json['whatsapp'] as String?,
       idJabatan: jabatan['id_jabatan'] as String? ?? '', // ← dari nested
       namaJabatan: jabatan['nama_jabatan'] as String? ?? '', // ← dari nested
+      menuKeys: (json['menu_keys'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          [],
     );
   }
 }
@@ -120,15 +126,17 @@ class UserProvider extends ChangeNotifier {
     required String idJabatan,
     String? rekPembayaran,
     String? whatsapp,
+    List<String> menuKeys = const [],
   }) async {
     try {
       await DioClient.instance.post(
-        ApiConstants.register,
+        ApiConstants.users,
         data: {
           'nama_user': namaUser,
           'email': email,
           'password': password,
           'id_jabatan': idJabatan,
+          'menu_keys': menuKeys,
           if (rekPembayaran != null && rekPembayaran.isNotEmpty)
             'rek_pembayaran': rekPembayaran,
           if (whatsapp != null && whatsapp.isNotEmpty) 'whatsapp': whatsapp,
@@ -152,6 +160,7 @@ class UserProvider extends ChangeNotifier {
     required String idJabatan,
     String? rekPembayaran,
     String? whatsapp,
+    List<String>? menuKeys,
   }) async {
     try {
       await DioClient.instance.put(
@@ -165,6 +174,7 @@ class UserProvider extends ChangeNotifier {
           if (whatsapp != null && whatsapp.isNotEmpty) 'whatsapp': whatsapp,
           // Hanya kirim password jika diisi
           if (password != null && password.isNotEmpty) 'password': password,
+          if (menuKeys != null) 'menu_keys': menuKeys,
         },
       );
       await fetchUsers();
