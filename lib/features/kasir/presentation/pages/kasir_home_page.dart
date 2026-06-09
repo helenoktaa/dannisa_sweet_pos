@@ -54,7 +54,7 @@ final _allTabs = [
     key: _keyTransaksi,
     label: 'Transaksi',
     icon: Icons.receipt_long_outlined,
-    activeIcon: Icons.point_of_sale,
+    activeIcon: Icons.receipt_long_outlined,
     page: const PilihTransaksiPage(),
   ),
   _TabItem(
