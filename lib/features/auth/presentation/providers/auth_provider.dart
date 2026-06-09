@@ -86,26 +86,27 @@ class AuthProvider extends ChangeNotifier {
 
   // ── Check token saat app start (SplashScreen) ──────────────
   Future<void> checkAuthStatus() async {
-  _setLoading();
-  try {
-    final token = await SecureStorageService.getToken();
-    if (token != null && token.isNotEmpty) {
-      _token = token;
-      // Fetch profile untuk dapat data user + role
-      final response = await DioClient.instance.get(ApiConstants.profile);
-      final data = response.data['data'] as Map<String, dynamic>;
-      _user = UserModel.fromJson(data['user'] ?? data);
-      _status = AuthStatus.authenticated;
-    } else {
+    _setLoading();
+    try {
+      final token = await SecureStorageService.getToken();
+      if (token != null && token.isNotEmpty) {
+        _token = token;
+        // Fetch profile untuk dapat data user + role
+        final response = await DioClient.instance.get(ApiConstants.profile);
+        final data = response.data['data'] as Map<String, dynamic>;
+        _user = UserModel.fromJson(data);
+        _status = AuthStatus.authenticated;
+      } else {
+        _status = AuthStatus.unauthenticated;
+      }
+    } catch (e) {
+      // Token expired → clear dan paksa login ulang
+      await SecureStorageService.clearAll();
       _status = AuthStatus.unauthenticated;
     }
-  } catch (e) {
-    // Token expired → clear dan paksa login ulang
-    await SecureStorageService.clearAll();
-    _status = AuthStatus.unauthenticated;
+    notifyListeners();
   }
-  notifyListeners();
-}
+
   // ── Logout ─────────────────────────────────────────────────
   Future<void> logout() async {
     await SecureStorageService.clearAll();

@@ -19,7 +19,8 @@ const _warning = Color(0xFFF59E0B);
 const _info = Color(0xFF0EA5E9);
 
 class DashboardPage extends StatefulWidget {
-  const DashboardPage({super.key});
+  final bool isKasir;
+  const DashboardPage({super.key, this.isKasir = false});
 
   @override
   State<DashboardPage> createState() => _DashboardPageState();
@@ -68,6 +69,69 @@ class _DashboardPageState extends State<DashboardPage> {
               backgroundColor: _primary,
               systemOverlayStyle: SystemUiOverlayStyle.light,
               automaticallyImplyLeading: false,
+              actions: widget.isKasir
+                  ? [
+                      IconButton(
+                        icon: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.logout_outlined,
+                            color: Colors.white,
+                            size: 18,
+                          ),
+                        ),
+                        tooltip: 'Logout',
+                        onPressed: () async {
+                          final auth = context.read<AuthProvider>();
+                          final confirm = await showDialog<bool>(
+                            context: context,
+                            builder: (_) => AlertDialog(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              title: const Text(
+                                'Logout',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              content: const Text(
+                                'Yakin ingin keluar dari aplikasi?',
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () =>
+                                      Navigator.pop(context, false),
+                                  child: const Text('Batal'),
+                                ),
+                                ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: _primary,
+                                    foregroundColor: Colors.white,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                  onPressed: () => Navigator.pop(context, true),
+                                  child: const Text('Logout'),
+                                ),
+                              ],
+                            ),
+                          );
+                          if (confirm != true) return;
+                          await auth.logout();
+                          if (!context.mounted) return;
+                          Navigator.pushReplacementNamed(
+                            context,
+                            AppRouter.login,
+                          );
+                        },
+                      ),
+                      const SizedBox(width: 4),
+                    ]
+                  : null,
               flexibleSpace: FlexibleSpaceBar(
                 background: Container(
                   decoration: const BoxDecoration(
@@ -246,6 +310,7 @@ class _DashboardPageState extends State<DashboardPage> {
                     DashboardStatus.loaded => _DashboardContent(
                       data: dashboard.data!,
                       harian: dashboard.harian!,
+                      isKasir: widget.isKasir,
                     ),
                   },
                 ),
@@ -265,7 +330,12 @@ class _DashboardPageState extends State<DashboardPage> {
 class _DashboardContent extends StatelessWidget {
   final DashboardModel data;
   final DashboardHarianModel harian;
-  const _DashboardContent({required this.data, required this.harian});
+  final bool isKasir;
+  const _DashboardContent({
+    required this.data,
+    required this.harian,
+    this.isKasir = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -311,7 +381,7 @@ class _DashboardContent extends StatelessWidget {
                 suffix: 'produk',
                 onTap: () => Navigator.pushNamed(
                   context,
-                  AppRouter.kelolaProduk,
+                  isKasir ? AppRouter.daftarProduk : AppRouter.kelolaProduk,
                 ), // ← pakai kelolaProduk
               ),
               const SizedBox(width: 10),
@@ -323,8 +393,8 @@ class _DashboardContent extends StatelessWidget {
                 suffix: 'produk',
                 onTap: () => Navigator.pushNamed(
                   context,
-                  AppRouter.kelolaProduk,
-                ), // ← pakai kelolaProduk
+                  isKasir ? AppRouter.daftarProduk : AppRouter.kelolaProduk,
+                ),
               ),
             ],
           ),

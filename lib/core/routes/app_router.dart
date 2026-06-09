@@ -25,6 +25,7 @@ import 'package:dannisa_sweet_pos/features/admin/presentation/pages/markdown_pri
 
 // ── Kasir Pages ────────────────────────────────────────────
 import 'package:dannisa_sweet_pos/features/kasir/presentation/pages/kasir_home_page.dart';
+import 'package:dannisa_sweet_pos/features/admin/presentation/pages/dashboard_page.dart'; 
 
 // ── Providers ──────────────────────────────────────────────
 import 'package:dannisa_sweet_pos/features/admin/presentation/providers/kategori_provider.dart';
@@ -56,6 +57,7 @@ class AppRouter {
 
   // Kasir routes
   static const String kasirHome      = '/kasir/home';
+  static const String kasirDashboard = '/kasir/dashboard'; 
 
   // Legacy
   static const String dashboard      = '/dashboard';
@@ -85,6 +87,7 @@ class AppRouter {
 
         // ── Kasir ──────────────────────────────────────────
         kasirHome:      (_) => const KasirHomePage(),
+        kasirDashboard: (_) => const DashboardPage(),
       };
 }
 
