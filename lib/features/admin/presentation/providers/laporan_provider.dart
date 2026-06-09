@@ -3,7 +3,6 @@ import 'package:dio/dio.dart';
 import 'package:dannisa_sweet_pos/core/constants/api_constants.dart';
 import 'package:dannisa_sweet_pos/core/services/dio_client.dart';
 
-
 // ── Model Rugi Stok ────────────────────────────────────────
 class RugiStokItem {
   final String namaProduk;
@@ -21,12 +20,13 @@ class RugiStokItem {
   });
 
   factory RugiStokItem.fromJson(Map<String, dynamic> json) => RugiStokItem(
-        namaProduk: json['nama_produk']?.toString() ?? '',
-        jumlah: (json['jumlah'] as num?)?.toInt() ?? 0,
-        nilaiRugi: (json['nilai_rugi'] as num?)?.toDouble() ?? 0,
-        keterangan: json['keterangan']?.toString() ?? '',
-        tanggal: DateTime.tryParse(json['tanggal']?.toString() ?? '') ?? DateTime.now(),
-      );
+    namaProduk: json['nama_produk']?.toString() ?? '',
+    jumlah: (json['jumlah'] as num?)?.toInt() ?? 0,
+    nilaiRugi: (json['nilai_rugi'] as num?)?.toDouble() ?? 0,
+    keterangan: json['keterangan']?.toString() ?? '',
+    tanggal:
+        DateTime.tryParse(json['tanggal']?.toString() ?? '') ?? DateTime.now(),
+  );
 }
 
 class RugiStokData {
@@ -40,6 +40,7 @@ class RugiStokData {
     required this.items,
   });
 }
+
 // ─────────────────────────────────────────────────────────────
 //  Model: ProdukDetail (nested di dalam detail transaksi)
 // ─────────────────────────────────────────────────────────────
@@ -96,15 +97,15 @@ class DetailLaporan {
   });
 
   factory DetailLaporan.fromJson(Map<String, dynamic> json) => DetailLaporan(
-        idTransaksi: json['id_transaksi'] as String? ?? '',
-        idProduk: json['id_produk'] as String? ?? '',
-        qty: (json['qty'] as num?)?.toInt() ?? 0,
-        hargaJual: (json['harga_jual'] as num?)?.toDouble() ?? 0,
-        subTotal: (json['sub_total'] as num?)?.toDouble() ?? 0,
-        produk: ProdukDetail.fromJson(
-          json['produk'] as Map<String, dynamic>? ?? {},
-        ),
-      );
+    idTransaksi: json['id_transaksi'] as String? ?? '',
+    idProduk: json['id_produk'] as String? ?? '',
+    qty: (json['qty'] as num?)?.toInt() ?? 0,
+    hargaJual: (json['harga_jual'] as num?)?.toDouble() ?? 0,
+    subTotal: (json['sub_total'] as num?)?.toDouble() ?? 0,
+    produk: ProdukDetail.fromJson(
+      json['produk'] as Map<String, dynamic>? ?? {},
+    ),
+  );
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -113,6 +114,7 @@ class DetailLaporan {
 class TransaksiLaporan {
   final String idTransaksi;
   final String tanggalTransaksi;
+  final String? tanggalLunas;
   final String namaCustomer;
   final double jumlahBayar;
   final String metodePembayaran;
@@ -122,14 +124,14 @@ class TransaksiLaporan {
   final List<DetailLaporan> detail;
 
   // Hitung modal dari detail produk
-  double get totalModal =>
-      detail.fold(0, (sum, d) => sum + d.modal);
+  double get totalModal => detail.fold(0, (sum, d) => sum + d.modal);
 
   double get laba => totalPenjualan - totalModal;
 
   const TransaksiLaporan({
     required this.idTransaksi,
     required this.tanggalTransaksi,
+    this.tanggalLunas,
     required this.namaCustomer,
     required this.jumlahBayar,
     required this.metodePembayaran,
@@ -140,11 +142,11 @@ class TransaksiLaporan {
   });
 
   factory TransaksiLaporan.fromJson(Map<String, dynamic> json) {
-    final List<dynamic> rawDetail =
-        json['detail'] as List<dynamic>? ?? [];
+    final List<dynamic> rawDetail = json['detail'] as List<dynamic>? ?? [];
     return TransaksiLaporan(
       idTransaksi: json['id_transaksi'] as String? ?? '',
       tanggalTransaksi: json['tanggal_transaksi'] as String? ?? '',
+      tanggalLunas: json['tanggal_lunas'] as String?,
       namaCustomer: json['nama_customer'] as String? ?? '',
       jumlahBayar: (json['jumlah_bayar'] as num?)?.toDouble() ?? 0,
       metodePembayaran: json['metode_pembayaran'] as String? ?? '',

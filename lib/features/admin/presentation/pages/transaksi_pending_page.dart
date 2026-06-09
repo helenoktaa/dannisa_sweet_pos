@@ -72,22 +72,28 @@ class TransaksiPending {
   final String tanggalTransaksi;
   final String namaCustomer;
   final double jumlahBayar;
+  final double jumlahDp;
   final String metodePembayaran;
   final String statusPembayaran;
+  final String jenisOrder;
   final int totalItem;
   final double totalPenjualan;
   final List<DetailPending> detail;
+  final String? tanggalLunas;
 
   const TransaksiPending({
     required this.idTransaksi,
     required this.tanggalTransaksi,
     required this.namaCustomer,
     required this.jumlahBayar,
+    required this.jumlahDp,
     required this.metodePembayaran,
     required this.statusPembayaran,
+    required this.jenisOrder,
     required this.totalItem,
     required this.totalPenjualan,
     required this.detail,
+    required this.tanggalLunas,
   });
 
   factory TransaksiPending.fromJson(Map<String, dynamic> json) {
@@ -97,13 +103,16 @@ class TransaksiPending {
       tanggalTransaksi: json['tanggal_transaksi'] as String? ?? '',
       namaCustomer: json['nama_customer'] as String? ?? '',
       jumlahBayar: (json['jumlah_bayar'] as num?)?.toDouble() ?? 0,
+      jumlahDp: (json['jumlah_dp'] as num?)?.toDouble() ?? 0,
       metodePembayaran: json['metode_pembayaran'] as String? ?? '',
       statusPembayaran: json['status_pembayaran'] as String? ?? '',
+      jenisOrder: json['jenis_order'] as String? ?? 'ready_stock',
       totalItem: (json['total_item'] as num?)?.toInt() ?? 0,
       totalPenjualan: (json['total_penjualan'] as num?)?.toDouble() ?? 0,
       detail: rawDetail
           .map((e) => DetailPending.fromJson(e as Map<String, dynamic>))
           .toList(),
+      tanggalLunas: json['tanggal_lunas'] as String?,
     );
   }
 }
@@ -163,21 +172,33 @@ class _TransaksiPendingPageState extends State<TransaksiPendingPage> {
     });
 
     try {
-      final response = await DioClient.instance.get(
-        ApiConstants.transaksi,
-        queryParameters: {'status': 'Pending'},
-      );
+      // Fetch Pending dan DP sekaligus
+      final results = await Future.wait([
+        DioClient.instance.get(
+          ApiConstants.transaksi,
+          queryParameters: {'status': 'Pending'},
+        ),
+        DioClient.instance.get(
+          ApiConstants.transaksi,
+          queryParameters: {'status': 'DP'},
+        ),
+      ]);
 
-      debugPrint('=== RESPONSE PENDING: ${response.data} ===');
-
-      // Hapus baris outer, langsung cast ke List
-      final List<dynamic> rawList =
-          response.data['data'] as List<dynamic>? ?? [];
+      final List<dynamic> pendingList =
+          results[0].data['data'] as List<dynamic>? ?? [];
+      final List<dynamic> dpList =
+          results[1].data['data'] as List<dynamic>? ?? [];
 
       setState(() {
-        _transaksis = rawList
-            .map((e) => TransaksiPending.fromJson(e as Map<String, dynamic>))
-            .toList();
+        _transaksis =
+            [...pendingList, ...dpList]
+                .map(
+                  (e) => TransaksiPending.fromJson(e as Map<String, dynamic>),
+                )
+                .toList()
+              ..sort(
+                (a, b) => b.tanggalTransaksi.compareTo(a.tanggalTransaksi),
+              );
         _isLoading = false;
       });
     } on DioException catch (e) {
@@ -634,82 +655,380 @@ class _PendingCard extends StatelessWidget {
   // ── Tandai Lunas langsung ──────────────────────────────
   Future<void> _showLunasDialog(BuildContext context) async {
     final bayarCtrl = TextEditingController();
+    final dpCtrl = TextEditingController();
+    String selectedStatus = transaksi.statusPembayaran == 'DP'
+        ? 'Lunas'
+        : 'Lunas';
+    DateTime selectedTanggal = DateTime.now();
+
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Row(
-          children: [
-            Icon(Icons.check_circle_outline, color: _success),
-            SizedBox(width: 8),
-            Text(
-              'Tandai Lunas',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: _surface,
-                borderRadius: BorderRadius.circular(12),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setStateDialog) => AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: const Row(
+            children: [
+              Icon(Icons.check_circle_outline, color: _success),
+              SizedBox(width: 8),
+              Text(
+                'Update Pembayaran',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
-              child: Column(
-                children: [
-                  _InfoRow(label: 'Customer', value: transaksi.namaCustomer),
-                  _InfoRow(
-                    label: 'Total',
-                    value: _formatRupiah(transaksi.totalPenjualan),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // ── Info transaksi ────────────────────────
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: _surface,
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  _InfoRow(label: 'Metode', value: transaksi.metodePembayaran),
+                  child: Column(
+                    children: [
+                      _InfoRow(
+                        label: 'Customer',
+                        value: transaksi.namaCustomer,
+                      ),
+                      _InfoRow(
+                        label: 'Total',
+                        value: _formatRupiah(transaksi.totalPenjualan),
+                      ),
+                      _InfoRow(
+                        label: 'Metode',
+                        value: transaksi.metodePembayaran,
+                      ),
+                      _InfoRow(
+                        label: 'Jenis Order',
+                        value: transaksi.jenisOrder == 'pre_order'
+                            ? 'Pre Order'
+                            : 'Ready Stock',
+                      ),
+                      _InfoRow(
+                        label: 'Tgl Transaksi',
+                        value: _formatTanggal(transaksi.tanggalTransaksi),
+                      ),
+                      const SizedBox(height: 6),
+
+                      // ── Date picker tgl pembayaran ────────
+                      GestureDetector(
+                        onTap: () async {
+                          final picked = await showDatePicker(
+                            context: ctx,
+                            initialDate: selectedTanggal,
+                            firstDate: DateTime(2024),
+                            lastDate: DateTime.now(),
+                            builder: (context, child) => Theme(
+                              data: Theme.of(context).copyWith(
+                                colorScheme: const ColorScheme.light(
+                                  primary: _primary,
+                                ),
+                              ),
+                              child: child!,
+                            ),
+                          );
+                          if (picked != null) {
+                            setStateDialog(() => selectedTanggal = picked);
+                          }
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: _primary.withOpacity(0.05),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: _primary.withOpacity(0.3),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                'Tgl Pembayaran',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: _textSecondary,
+                                ),
+                              ),
+                              Row(
+                                children: [
+                                  Text(
+                                    '${selectedTanggal.day}/${selectedTanggal.month}/${selectedTanggal.year}',
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      color: _primary,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  const Icon(
+                                    Icons.edit_calendar_outlined,
+                                    size: 14,
+                                    color: _primary,
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 14),
+
+                // ── Pilihan DP / Lunas — HANYA pre order belum DP ──
+                if (transaksi.jenisOrder == 'pre_order' &&
+                    transaksi.statusPembayaran != 'DP') ...[
+                  Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () =>
+                              setStateDialog(() => selectedStatus = 'Lunas'),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            decoration: BoxDecoration(
+                              color: selectedStatus == 'Lunas'
+                                  ? _success.withOpacity(0.1)
+                                  : Colors.grey.shade100,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: selectedStatus == 'Lunas'
+                                    ? _success
+                                    : Colors.grey.shade300,
+                                width: 1.5,
+                              ),
+                            ),
+                            child: Column(
+                              children: [
+                                Icon(
+                                  Icons.check_circle_outline,
+                                  color: selectedStatus == 'Lunas'
+                                      ? _success
+                                      : _textSecondary,
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Lunas',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    color: selectedStatus == 'Lunas'
+                                        ? _success
+                                        : _textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () =>
+                              setStateDialog(() => selectedStatus = 'DP'),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            decoration: BoxDecoration(
+                              color: selectedStatus == 'DP'
+                                  ? _warning.withOpacity(0.1)
+                                  : Colors.grey.shade100,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: selectedStatus == 'DP'
+                                    ? _warning
+                                    : Colors.grey.shade300,
+                                width: 1.5,
+                              ),
+                            ),
+                            child: Column(
+                              children: [
+                                Icon(
+                                  Icons.payments_outlined,
+                                  color: selectedStatus == 'DP'
+                                      ? _warning
+                                      : _textSecondary,
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'DP',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    color: selectedStatus == 'DP'
+                                        ? _warning
+                                        : _textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
                 ],
+
+                // ── Info sisa — kalau sudah DP ────────────
+                if (transaksi.statusPembayaran == 'DP') ...[
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: _warning.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: _warning.withOpacity(0.3)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.info_outline,
+                          color: _warning,
+                          size: 16,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Sudah DP ${_formatRupiah(transaksi.jumlahDp)} • '
+                            'Sisa ${_formatRupiah(transaksi.totalPenjualan - transaksi.jumlahDp)}',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: _warning,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+
+                // ── Input nominal DP ──────────────────────
+                if (selectedStatus == 'DP') ...[
+                  TextField(
+                    controller: dpCtrl,
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      labelText: 'Nominal DP (min. 50%)',
+                      hintText:
+                          'Min. ${_formatRupiah(transaksi.totalPenjualan * 0.5)}',
+                      prefixIcon: const Icon(
+                        Icons.payments_outlined,
+                        color: _warning,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                          color: _warning,
+                          width: 1.5,
+                        ),
+                      ),
+                      filled: true,
+                      fillColor: Colors.grey.shade50,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                ],
+
+                // ── Input jumlah bayar ────────────────────
+                TextField(
+                  controller: bayarCtrl,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: transaksi.statusPembayaran == 'DP'
+                        ? 'Jumlah Pelunasan'
+                        : 'Jumlah Diterima',
+                    hintText: transaksi.statusPembayaran == 'DP'
+                        ? _formatRupiah(
+                            transaksi.totalPenjualan - transaksi.jumlahDp,
+                          )
+                        : _formatRupiah(transaksi.totalPenjualan),
+                    prefixIcon: const Icon(Icons.attach_money, color: _primary),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: _primary, width: 1.5),
+                    ),
+                    filled: true,
+                    fillColor: Colors.grey.shade50,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text(
+                'Batal',
+                style: TextStyle(color: _textSecondary),
               ),
             ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: bayarCtrl,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                hintText: 'Jumlah yang diterima',
-                prefixIcon: const Icon(Icons.attach_money, color: _primary),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: selectedStatus == 'DP' ? _warning : _success,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: _primary, width: 1.5),
-                ),
-                filled: true,
-                fillColor: Colors.grey.shade50,
+              ),
+              onPressed: () {
+                if (bayarCtrl.text.trim().isEmpty) {
+                  ScaffoldMessenger.of(ctx).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        selectedStatus == 'DP'
+                            ? 'Masukkan jumlah yang diterima'
+                            : 'Masukkan jumlah yang diterima customer',
+                      ),
+                      backgroundColor: _danger,
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  );
+                  return;
+                }
+                if (selectedStatus == 'DP' && dpCtrl.text.trim().isEmpty) {
+                  ScaffoldMessenger.of(ctx).showSnackBar(
+                    SnackBar(
+                      content: const Text('Masukkan nominal DP'),
+                      backgroundColor: _danger,
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  );
+                  return;
+                }
+                Navigator.pop(ctx, true);
+              },
+              child: Text(
+                selectedStatus == 'DP' ? 'Konfirmasi DP' : 'Konfirmasi Lunas',
               ),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Batal', style: TextStyle(color: _textSecondary)),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: _success,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Konfirmasi Lunas'),
-          ),
-        ],
       ),
     );
 
@@ -718,11 +1037,15 @@ class _PendingCard extends StatelessWidget {
     final jumlahBayar =
         double.tryParse(bayarCtrl.text.replaceAll('.', '')) ??
         transaksi.totalPenjualan;
+    final jumlahDp = double.tryParse(dpCtrl.text.replaceAll('.', '')) ?? 0;
 
     final provider = context.read<TransaksiProvider>();
     final ok = await provider.updateStatusPembayaran(
       idTransaksi: transaksi.idTransaksi,
+      statusPembayaran: selectedStatus,
       jumlahBayar: jumlahBayar,
+      jumlahDp: selectedStatus == 'DP' ? jumlahDp : 0,
+      tanggalLunas: selectedStatus == 'Lunas' ? selectedTanggal : null,
     );
 
     if (!context.mounted) return;
@@ -731,7 +1054,9 @@ class _PendingCard extends StatelessWidget {
       SnackBar(
         content: Text(
           ok
-              ? '${transaksi.namaCustomer} - pembayaran dikonfirmasi ✓'
+              ? selectedStatus == 'DP'
+                    ? '${transaksi.namaCustomer} - DP dikonfirmasi ✓'
+                    : '${transaksi.namaCustomer} - pembayaran lunas ✓'
               : 'Gagal update status',
         ),
         backgroundColor: ok ? _success : _danger,
@@ -740,7 +1065,7 @@ class _PendingCard extends StatelessWidget {
       ),
     );
 
-    if (ok) onUpdated(); // refresh list
+    if (ok) onUpdated();
   }
 }
 

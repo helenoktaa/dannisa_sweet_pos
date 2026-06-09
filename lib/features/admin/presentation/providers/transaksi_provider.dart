@@ -374,15 +374,30 @@ class TransaksiProvider extends ChangeNotifier {
   Future<bool> updateStatusPembayaran({
     required String idTransaksi,
     required double jumlahBayar,
+    String statusPembayaran = 'Lunas',
+    double jumlahDp = 0,
+    DateTime? tanggalLunas, // ← tambah
   }) async {
     try {
+      final Map<String, dynamic> body = {
+        'status_pembayaran': statusPembayaran,
+        'jumlah_bayar': jumlahBayar,
+        'jumlah_dp': jumlahDp,
+      };
+
+      if (tanggalLunas != null) {
+        body['tanggal_lunas'] = tanggalLunas.toIso8601String();
+      }
+
       await DioClient.instance.put(
         '${ApiConstants.transaksi}/$idTransaksi/status',
-        data: {'status_pembayaran': 'Lunas', 'jumlah_bayar': jumlahBayar},
+        data: body,
       );
       return true;
     } on DioException catch (e) {
       debugPrint('=== ERROR UPDATE STATUS: ${e.response?.data} ===');
+      _error = e.response?.data['message'] ?? 'Gagal update status';
+      notifyListeners();
       return false;
     }
   }

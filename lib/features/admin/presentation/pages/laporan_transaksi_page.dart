@@ -29,16 +29,44 @@ String _formatRupiah(double amount) {
 String _formatTanggal(String raw) {
   try {
     final dt = DateTime.parse(raw).toLocal();
-    const bulan = ['','Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+    const bulan = [
+      '',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'Mei',
+      'Jun',
+      'Jul',
+      'Agu',
+      'Sep',
+      'Okt',
+      'Nov',
+      'Des',
+    ];
     return '${dt.day} ${bulan[dt.month]} ${dt.year}  '
-        '${dt.hour.toString().padLeft(2,'0')}:${dt.minute.toString().padLeft(2,'0')}';
+        '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
   } catch (_) {
     return raw;
   }
 }
 
 String _fmtDateDisplay(DateTime d) {
-  const bulan = ['','Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  const bulan = [
+    '',
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'Mei',
+    'Jun',
+    'Jul',
+    'Agu',
+    'Sep',
+    'Okt',
+    'Nov',
+    'Des',
+  ];
   return '${d.day} ${bulan[d.month]} ${d.year}';
 }
 
@@ -83,9 +111,9 @@ class _LaporanTransaksiPageState extends State<LaporanTransaksiPage>
       lastDate: DateTime.now(),
       initialDateRange: _range,
       builder: (ctx, child) => Theme(
-        data: Theme.of(ctx).copyWith(
-          colorScheme: const ColorScheme.light(primary: _primary),
-        ),
+        data: Theme.of(
+          ctx,
+        ).copyWith(colorScheme: const ColorScheme.light(primary: _primary)),
         child: child!,
       ),
     );
@@ -132,9 +160,11 @@ class _LaporanTransaksiPageState extends State<LaporanTransaksiPage>
                 child: Stack(
                   children: [
                     Positioned(
-                      right: -30, top: -20,
+                      right: -30,
+                      top: -20,
                       child: Container(
-                        width: 160, height: 160,
+                        width: 160,
+                        height: 160,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: Colors.white.withOpacity(0.07),
@@ -142,19 +172,29 @@ class _LaporanTransaksiPageState extends State<LaporanTransaksiPage>
                       ),
                     ),
                     const Positioned(
-                      left: 20, bottom: 56,
+                      left: 20,
+                      bottom: 56,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text('Laporan Transaksi',
-                              style: TextStyle(
-                                color: Colors.white, fontSize: 22,
-                                fontWeight: FontWeight.w800, letterSpacing: -0.5,
-                              )),
+                          Text(
+                            'Laporan Transaksi',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 22,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -0.5,
+                            ),
+                          ),
                           SizedBox(height: 4),
-                          Text('Rekap penjualan & kerugian stok',
-                              style: TextStyle(color: Colors.white70, fontSize: 13)),
+                          Text(
+                            'Rekap penjualan & kerugian stok',
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 13,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -168,10 +208,19 @@ class _LaporanTransaksiPageState extends State<LaporanTransaksiPage>
               indicatorWeight: 3,
               labelColor: Colors.white,
               unselectedLabelColor: Colors.white60,
-              labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+              labelStyle: const TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 13,
+              ),
               tabs: const [
-                Tab(icon: Icon(Icons.receipt_long_outlined, size: 16), text: 'Transaksi'),
-                Tab(icon: Icon(Icons.trending_down_outlined, size: 16), text: 'Rugi Stok'),
+                Tab(
+                  icon: Icon(Icons.receipt_long_outlined, size: 16),
+                  text: 'Transaksi',
+                ),
+                Tab(
+                  icon: Icon(Icons.trending_down_outlined, size: 16),
+                  text: 'Rugi Stok',
+                ),
               ],
             ),
           ),
@@ -192,14 +241,18 @@ class _LaporanTransaksiPageState extends State<LaporanTransaksiPage>
                 child: GestureDetector(
                   onTap: _pickRange,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 13,
+                    ),
                     decoration: BoxDecoration(
                       color: _cardBg,
                       borderRadius: BorderRadius.circular(14),
                       boxShadow: [
                         BoxShadow(
                           color: _primary.withOpacity(0.1),
-                          blurRadius: 10, offset: const Offset(0, 4),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
                         ),
                       ],
                     ),
@@ -211,34 +264,60 @@ class _LaporanTransaksiPageState extends State<LaporanTransaksiPage>
                             color: _primary.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          child: const Icon(Icons.date_range_outlined, color: _primary, size: 18),
+                          child: const Icon(
+                            Icons.date_range_outlined,
+                            color: _primary,
+                            size: 18,
+                          ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text('Periode',
-                                  style: TextStyle(fontSize: 11, color: _textSecondary)),
-                              Text(_rangeLabel,
-                                  style: const TextStyle(
-                                    fontSize: 14, fontWeight: FontWeight.w700,
-                                    color: _textPrimary,
-                                  )),
+                              const Text(
+                                'Periode',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: _textSecondary,
+                                ),
+                              ),
+                              Text(
+                                _rangeLabel,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  color: _textPrimary,
+                                ),
+                              ),
                             ],
                           ),
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 5,
+                          ),
                           decoration: BoxDecoration(
                             color: _primary.withOpacity(0.08),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: const Row(
                             children: [
-                              Text('Ubah', style: TextStyle(fontSize: 12, color: _primary, fontWeight: FontWeight.w600)),
+                              Text(
+                                'Ubah',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: _primary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                               SizedBox(width: 4),
-                              Icon(Icons.keyboard_arrow_down_rounded, color: _primary, size: 16),
+                              Icon(
+                                Icons.keyboard_arrow_down_rounded,
+                                color: _primary,
+                                size: 16,
+                              ),
                             ],
                           ),
                         ),
@@ -255,7 +334,9 @@ class _LaporanTransaksiPageState extends State<LaporanTransaksiPage>
         body: () {
           if (provider.status == LaporanStatus.loading ||
               provider.status == LaporanStatus.initial) {
-            return const Center(child: CircularProgressIndicator(color: _primary));
+            return const Center(
+              child: CircularProgressIndicator(color: _primary),
+            );
           }
           if (provider.status == LaporanStatus.error) {
             return Center(
@@ -264,15 +345,18 @@ class _LaporanTransaksiPageState extends State<LaporanTransaksiPage>
                 children: [
                   const Icon(Icons.cloud_off, size: 56, color: _primary),
                   const SizedBox(height: 12),
-                  Text(provider.error ?? 'Terjadi kesalahan',
-                      style: const TextStyle(color: _textSecondary)),
+                  Text(
+                    provider.error ?? 'Terjadi kesalahan',
+                    style: const TextStyle(color: _textSecondary),
+                  ),
                   const SizedBox(height: 16),
                   ElevatedButton.icon(
                     onPressed: _loadData,
                     icon: const Icon(Icons.refresh),
                     label: const Text('Coba Lagi'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: _primary, foregroundColor: Colors.white,
+                      backgroundColor: _primary,
+                      foregroundColor: Colors.white,
                     ),
                   ),
                 ],
@@ -318,11 +402,21 @@ class _TransaksiTab extends StatelessWidget {
                 color: _primary.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.receipt_long_outlined, color: _primary, size: 16),
+              child: const Icon(
+                Icons.receipt_long_outlined,
+                color: _primary,
+                size: 16,
+              ),
             ),
             const SizedBox(width: 8),
-            const Text('Riwayat Transaksi',
-                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16, color: _textPrimary)),
+            const Text(
+              'Riwayat Transaksi',
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 16,
+                color: _textPrimary,
+              ),
+            ),
             const Spacer(),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -330,8 +424,14 @@ class _TransaksiTab extends StatelessWidget {
                 color: _primary.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: Text('${laporan.transaksis.length} transaksi',
-                  style: const TextStyle(fontSize: 12, color: _primary, fontWeight: FontWeight.w600)),
+              child: Text(
+                '${laporan.transaksis.length} transaksi',
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: _primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           ],
         ),
@@ -342,19 +442,27 @@ class _TransaksiTab extends StatelessWidget {
               padding: EdgeInsets.all(40),
               child: Column(
                 children: [
-                  Icon(Icons.receipt_long_outlined, size: 56, color: Color(0xFFD1D5DB)),
+                  Icon(
+                    Icons.receipt_long_outlined,
+                    size: 56,
+                    color: Color(0xFFD1D5DB),
+                  ),
                   SizedBox(height: 12),
-                  Text('Belum ada transaksi pada periode ini',
-                      style: TextStyle(color: _textSecondary)),
+                  Text(
+                    'Belum ada transaksi pada periode ini',
+                    style: TextStyle(color: _textSecondary),
+                  ),
                 ],
               ),
             ),
           )
         else
-          ...laporan.transaksis.map((t) => Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: _TransaksiCard(transaksi: t),
-              )),
+          ...laporan.transaksis.map(
+            (t) => Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: _TransaksiCard(transaksi: t),
+            ),
+          ),
       ],
     );
   }
@@ -402,16 +510,22 @@ class _RugiStokTab extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: labaBersih >= 0 ? _success.withOpacity(0.1) : _danger.withOpacity(0.1),
+            color: labaBersih >= 0
+                ? _success.withOpacity(0.1)
+                : _danger.withOpacity(0.1),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: labaBersih >= 0 ? _success.withOpacity(0.3) : _danger.withOpacity(0.3),
+              color: labaBersih >= 0
+                  ? _success.withOpacity(0.3)
+                  : _danger.withOpacity(0.3),
             ),
           ),
           child: Row(
             children: [
               Icon(
-                labaBersih >= 0 ? Icons.check_circle_outline : Icons.warning_amber_outlined,
+                labaBersih >= 0
+                    ? Icons.check_circle_outline
+                    : Icons.warning_amber_outlined,
                 color: labaBersih >= 0 ? _success : _danger,
                 size: 28,
               ),
@@ -419,8 +533,10 @@ class _RugiStokTab extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Laba Bersih',
-                      style: TextStyle(fontSize: 12, color: _textSecondary)),
+                  const Text(
+                    'Laba Bersih',
+                    style: TextStyle(fontSize: 12, color: _textSecondary),
+                  ),
                   Text(
                     _formatRupiah(labaBersih),
                     style: TextStyle(
@@ -432,8 +548,10 @@ class _RugiStokTab extends StatelessWidget {
                 ],
               ),
               const Spacer(),
-              Text('Laba - Rugi Stok',
-                  style: const TextStyle(fontSize: 11, color: _textSecondary)),
+              Text(
+                'Laba - Rugi Stok',
+                style: const TextStyle(fontSize: 11, color: _textSecondary),
+              ),
             ],
           ),
         ),
@@ -448,11 +566,21 @@ class _RugiStokTab extends StatelessWidget {
                 color: _danger.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.remove_circle_outline, color: _danger, size: 16),
+              child: const Icon(
+                Icons.remove_circle_outline,
+                color: _danger,
+                size: 16,
+              ),
             ),
             const SizedBox(width: 8),
-            const Text('Detail Kerugian Stok',
-                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16, color: _textPrimary)),
+            const Text(
+              'Detail Kerugian Stok',
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 16,
+                color: _textPrimary,
+              ),
+            ),
             const Spacer(),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -460,8 +588,14 @@ class _RugiStokTab extends StatelessWidget {
                 color: _danger.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: Text('${rugiStok?.totalItem ?? 0} item',
-                  style: const TextStyle(fontSize: 12, color: _danger, fontWeight: FontWeight.w600)),
+              child: Text(
+                '${rugiStok?.totalItem ?? 0} item',
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: _danger,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           ],
         ),
@@ -476,8 +610,10 @@ class _RugiStokTab extends StatelessWidget {
                 children: [
                   Icon(Icons.check_circle_outline, size: 56, color: _success),
                   SizedBox(height: 12),
-                  Text('Tidak ada kerugian stok pada periode ini',
-                      style: TextStyle(color: _textSecondary)),
+                  Text(
+                    'Tidak ada kerugian stok pada periode ini',
+                    style: TextStyle(color: _textSecondary),
+                  ),
                 ],
               ),
             ),
@@ -495,7 +631,21 @@ class _RugiStokCard extends StatelessWidget {
   const _RugiStokCard({required this.item});
 
   String _fmtTgl(DateTime d) {
-    const bulan = ['','Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+    const bulan = [
+      '',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'Mei',
+      'Jun',
+      'Jul',
+      'Agu',
+      'Sep',
+      'Okt',
+      'Nov',
+      'Des',
+    ];
     return '${d.day} ${bulan[d.month]} ${d.year}';
   }
 
@@ -511,49 +661,71 @@ class _RugiStokCard extends StatelessWidget {
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.04),
-            blurRadius: 8, offset: const Offset(0, 3),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
       child: Row(
         children: [
           Container(
-            width: 44, height: 44,
+            width: 44,
+            height: 44,
             decoration: BoxDecoration(
               color: _danger.withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.remove_circle_outline, color: _danger, size: 22),
+            child: const Icon(
+              Icons.remove_circle_outline,
+              color: _danger,
+              size: 22,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(item.namaProduk,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w700, fontSize: 14, color: _textPrimary,
-                    )),
+                Text(
+                  item.namaProduk,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                    color: _textPrimary,
+                  ),
+                ),
                 if (item.keterangan.isNotEmpty)
-                  Text(item.keterangan,
-                      style: const TextStyle(
-                        fontSize: 11, color: _textSecondary, fontStyle: FontStyle.italic,
-                      )),
+                  Text(
+                    item.keterangan,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: _textSecondary,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
                 const SizedBox(height: 4),
-                Text(_fmtTgl(item.tanggal),
-                    style: const TextStyle(fontSize: 11, color: _textSecondary)),
+                Text(
+                  _fmtTgl(item.tanggal),
+                  style: const TextStyle(fontSize: 11, color: _textSecondary),
+                ),
               ],
             ),
           ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text(_formatRupiah(item.nilaiRugi),
-                  style: const TextStyle(
-                    fontSize: 14, fontWeight: FontWeight.w700, color: _danger,
-                  )),
-              Text('${item.jumlah} pcs',
-                  style: const TextStyle(fontSize: 11, color: _textSecondary)),
+              Text(
+                _formatRupiah(item.nilaiRugi),
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: _danger,
+                ),
+              ),
+              Text(
+                '${item.jumlah} pcs',
+                style: const TextStyle(fontSize: 11, color: _textSecondary),
+              ),
             ],
           ),
         ],
@@ -640,7 +812,8 @@ class _SummaryCard extends StatelessWidget {
           boxShadow: [
             BoxShadow(
               color: color.withOpacity(0.12),
-              blurRadius: 10, offset: const Offset(0, 4),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
@@ -659,9 +832,11 @@ class _SummaryCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Text(label,
-                      style: const TextStyle(fontSize: 11, color: _textSecondary),
-                      overflow: TextOverflow.ellipsis),
+                  child: Text(
+                    label,
+                    style: const TextStyle(fontSize: 11, color: _textSecondary),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ],
             ),
@@ -702,7 +877,10 @@ class _TransaksiCardState extends State<_TransaksiCard>
   @override
   void initState() {
     super.initState();
-    _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 250));
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 250),
+    );
     _anim = CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut);
   }
 
@@ -719,10 +897,14 @@ class _TransaksiCardState extends State<_TransaksiCard>
 
   Color get _metodColor {
     switch (widget.transaksi.metodePembayaran) {
-      case 'Tunai': return _success;
-      case 'Transfer': return _info;
-      case 'QRIS': return const Color(0xFF8B5CF6);
-      default: return _textSecondary;
+      case 'Tunai':
+        return _success;
+      case 'Transfer':
+        return _info;
+      case 'QRIS':
+        return const Color(0xFF8B5CF6);
+      default:
+        return _textSecondary;
     }
   }
 
@@ -736,7 +918,8 @@ class _TransaksiCardState extends State<_TransaksiCard>
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
-            blurRadius: 10, offset: const Offset(0, 4),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -749,13 +932,18 @@ class _TransaksiCardState extends State<_TransaksiCard>
               child: Row(
                 children: [
                   Container(
-                    width: 44, height: 44,
+                    width: 44,
+                    height: 44,
                     decoration: BoxDecoration(
                       color: _primary.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Center(
-                      child: Icon(Icons.receipt_long_outlined, color: _primary, size: 22),
+                      child: Icon(
+                        Icons.receipt_long_outlined,
+                        color: _primary,
+                        size: 22,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -766,37 +954,82 @@ class _TransaksiCardState extends State<_TransaksiCard>
                         Row(
                           children: [
                             Expanded(
-                              child: Text(t.namaCustomer,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w700, fontSize: 15, color: _textPrimary,
-                                  )),
+                              child: Text(
+                                t.namaCustomer,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 15,
+                                  color: _textPrimary,
+                                ),
+                              ),
                             ),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 3,
+                              ),
                               decoration: BoxDecoration(
                                 color: _metodColor.withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(6),
                               ),
-                              child: Text(t.metodePembayaran,
-                                  style: TextStyle(
-                                    fontSize: 11, color: _metodColor, fontWeight: FontWeight.w600,
-                                  )),
+                              child: Text(
+                                t.metodePembayaran,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: _metodColor,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                             ),
                           ],
                         ),
                         const SizedBox(height: 2),
-                        Text(_formatTanggal(t.tanggalTransaksi),
-                            style: const TextStyle(fontSize: 11, color: _textSecondary)),
+                        Text(
+                          'Pesan: ${_formatTanggal(t.tanggalTransaksi)}',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: _textSecondary,
+                          ),
+                        ),
+                        if (t.tanggalLunas != null) ...[
+                          const SizedBox(height: 2),
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.check_circle_outline,
+                                size: 11,
+                                color: _success,
+                              ),
+                              const SizedBox(width: 3),
+                              Text(
+                                'Bayar: ${_formatTanggal(t.tanggalLunas!)}',
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  color: _success,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                         const SizedBox(height: 4),
                         Row(
                           children: [
-                            Text(t.idTransaksi,
-                                style: const TextStyle(fontSize: 11, color: _textSecondary)),
+                            Text(
+                              t.idTransaksi,
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: _textSecondary,
+                              ),
+                            ),
                             const Spacer(),
-                            Text(_formatRupiah(t.totalPenjualan),
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w800, fontSize: 15, color: _primary,
-                                )),
+                            Text(
+                              _formatRupiah(t.totalPenjualan),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w800,
+                                fontSize: 15,
+                                color: _primary,
+                              ),
+                            ),
                           ],
                         ),
                       ],
@@ -806,7 +1039,10 @@ class _TransaksiCardState extends State<_TransaksiCard>
                   AnimatedRotation(
                     turns: _isExpanded ? 0.5 : 0,
                     duration: const Duration(milliseconds: 250),
-                    child: const Icon(Icons.keyboard_arrow_down_rounded, color: _textSecondary),
+                    child: const Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      color: _textSecondary,
+                    ),
                   ),
                 ],
               ),
@@ -816,7 +1052,11 @@ class _TransaksiCardState extends State<_TransaksiCard>
             sizeFactor: _anim,
             child: Column(
               children: [
-                Container(height: 1, margin: const EdgeInsets.symmetric(horizontal: 14), color: Colors.grey.shade100),
+                Container(
+                  height: 1,
+                  margin: const EdgeInsets.symmetric(horizontal: 14),
+                  color: Colors.grey.shade100,
+                ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
                   child: Column(
@@ -829,31 +1069,61 @@ class _TransaksiCardState extends State<_TransaksiCard>
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Column(
-                          children: t.detail.map((d) => Padding(
-                            padding: const EdgeInsets.only(bottom: 6),
-                            child: Row(
-                              children: [
-                                const Icon(Icons.circle, size: 6, color: _primary),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text('${d.produk.namaProduk} x${d.qty}',
-                                      style: const TextStyle(fontSize: 13, color: _textPrimary)),
+                          children: t.detail
+                              .map(
+                                (d) => Padding(
+                                  padding: const EdgeInsets.only(bottom: 6),
+                                  child: Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.circle,
+                                        size: 6,
+                                        color: _primary,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          '${d.produk.namaProduk} x${d.qty}',
+                                          style: const TextStyle(
+                                            fontSize: 13,
+                                            color: _textPrimary,
+                                          ),
+                                        ),
+                                      ),
+                                      Text(
+                                        _formatRupiah(d.subTotal),
+                                        style: const TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                                Text(_formatRupiah(d.subTotal),
-                                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-                              ],
-                            ),
-                          )).toList(),
+                              )
+                              .toList(),
                         ),
                       ),
                       const SizedBox(height: 8),
                       Row(
                         children: [
-                          _MiniStat(label: 'Modal', value: _formatRupiah(t.totalModal), color: _warning),
+                          _MiniStat(
+                            label: 'Modal',
+                            value: _formatRupiah(t.totalModal),
+                            color: _warning,
+                          ),
                           const SizedBox(width: 8),
-                          _MiniStat(label: 'Laba', value: _formatRupiah(t.laba), color: _success),
+                          _MiniStat(
+                            label: 'Laba',
+                            value: _formatRupiah(t.laba),
+                            color: _success,
+                          ),
                           const SizedBox(width: 8),
-                          _MiniStat(label: 'Item', value: '${t.totalItem} pcs', color: _info),
+                          _MiniStat(
+                            label: 'Item',
+                            value: '${t.totalItem} pcs',
+                            color: _info,
+                          ),
                         ],
                       ),
                     ],
@@ -873,7 +1143,11 @@ class _MiniStat extends StatelessWidget {
   final String value;
   final Color color;
 
-  const _MiniStat({required this.label, required this.value, required this.color});
+  const _MiniStat({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -886,11 +1160,20 @@ class _MiniStat extends StatelessWidget {
         ),
         child: Column(
           children: [
-            Text(label, style: const TextStyle(fontSize: 11, color: _textSecondary)),
+            Text(
+              label,
+              style: const TextStyle(fontSize: 11, color: _textSecondary),
+            ),
             const SizedBox(height: 4),
-            Text(value,
-                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: color),
-                overflow: TextOverflow.ellipsis),
+            Text(
+              value,
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 12,
+                color: color,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
           ],
         ),
       ),
