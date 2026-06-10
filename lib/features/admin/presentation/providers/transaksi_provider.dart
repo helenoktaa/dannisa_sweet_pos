@@ -4,6 +4,8 @@ import 'package:dannisa_sweet_pos/core/constants/api_constants.dart';
 import 'package:dannisa_sweet_pos/core/services/dio_client.dart';
 import 'package:dannisa_sweet_pos/features/admin/presentation/providers/produk_provider.dart';
 import 'package:dannisa_sweet_pos/features/admin/data/models/produk_model.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 
 // ─────────────────────────────────────────────────────────────
 //  Model: CartItem
@@ -229,7 +231,7 @@ class PreOrderItem {
 //  TransaksiProvider
 // ─────────────────────────────────────────────────────────────
 class TransaksiProvider extends ChangeNotifier {
-  final List<CartItem> _keranjang = [];
+  List<CartItem> _keranjang = [];
   String _idUser = '';
   bool _isLoading = false;
   String? _error;
@@ -264,6 +266,7 @@ class TransaksiProvider extends ChangeNotifier {
       _keranjang.add(CartItem(produk: produk));
     }
     notifyListeners();
+     _saveKeranjang();
   }
 
   void kurangiItem(String idProduk) {
@@ -275,17 +278,59 @@ class TransaksiProvider extends ChangeNotifier {
       _keranjang.removeAt(idx);
     }
     notifyListeners();
+     _saveKeranjang();
   }
 
   void hapusItem(String idProduk) {
     _keranjang.removeWhere((i) => i.produk.idProduk == idProduk);
     notifyListeners();
+     _saveKeranjang();
   }
 
   void clearKeranjang() {
     _keranjang.clear();
     notifyListeners();
+    _saveKeranjang();
   }
+
+  static const _keranjangKey = 'keranjang_cache';
+
+Future<void> _saveKeranjang() async {
+  final prefs = await SharedPreferences.getInstance();
+  final data = _keranjang.map((item) => {
+    'qty': item.qty,
+    'produk': {
+      'id_produk': item.produk.idProduk,
+      'nama_produk': item.produk.namaProduk,
+      'harga_jual': item.produk.hargaJual,
+      'harga_modal': item.produk.hargaModal,
+      'harga_diskon': item.produk.hargaDiskon,   
+      'persen_diskon': item.produk.porsenDiskon, 
+      'sumber_diskon': item.produk.sumberDiskon,
+      'status_produk': item.produk.statusProduk,
+      'stok': item.produk.stok,
+      'id_kategori': item.produk.idKategori,
+      'nama_kategori': item.produk.namaKategori,
+      'expired_date': item.produk.expiredDate?.toIso8601String(),
+    },
+  }).toList();
+  await prefs.setString(_keranjangKey, jsonEncode(data));
+}
+
+Future<void> loadKeranjang() async {
+  final prefs = await SharedPreferences.getInstance();
+  final raw = prefs.getString(_keranjangKey);
+  if (raw == null) return;
+  try {
+    final List decoded = jsonDecode(raw);
+    _keranjang = decoded.map((e) {
+      final p = e['produk'] as Map<String, dynamic>;
+      final produk = ProdukModel.fromJson(p);
+      return CartItem(produk: produk, qty: e['qty'] as int);
+    }).toList();
+    notifyListeners();
+  } catch (_) {}
+}
 
   // ── POST /v1/transaksi ─────────────────────────────────────
   Future<TransaksiResult?> checkout({

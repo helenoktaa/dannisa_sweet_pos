@@ -20,12 +20,11 @@ import 'package:dannisa_sweet_pos/features/admin/presentation/pages/transaksi_pe
 import 'package:dannisa_sweet_pos/features/admin/presentation/providers/dashboard_provider.dart';
 import 'package:dannisa_sweet_pos/features/admin/presentation/pages/admin_main_page.dart';
 import 'package:dannisa_sweet_pos/features/admin/presentation/pages/stok_history_page.dart';
-import 'package:dannisa_sweet_pos/features/admin/presentation/pages/pilih_transaksi_page.dart';
 import 'package:dannisa_sweet_pos/features/admin/presentation/pages/markdown_pricing_page.dart';
 
 // ── Kasir Pages ────────────────────────────────────────────
 import 'package:dannisa_sweet_pos/features/kasir/presentation/pages/kasir_home_page.dart';
-import 'package:dannisa_sweet_pos/features/admin/presentation/pages/dashboard_page.dart'; 
+import 'package:dannisa_sweet_pos/features/admin/presentation/pages/dashboard_page.dart';
 
 // ── Providers ──────────────────────────────────────────────
 import 'package:dannisa_sweet_pos/features/admin/presentation/providers/kategori_provider.dart';
@@ -40,55 +39,53 @@ import 'package:dannisa_sweet_pos/features/admin/presentation/providers/stok_his
 //  AppRouter
 // ══════════════════════════════════════════════════════════
 class AppRouter {
-  static const String splash         = '/';
-  static const String login          = '/login';
-  static const String register       = '/register';
+  static const String splash = '/';
+  static const String login = '/login';
+  static const String register = '/register';
 
   // Admin routes
-  static const String adminHome      = '/admin/home';
-  static const String kelolaProduk   = '/admin/produk';
+  static const String adminHome = '/admin/home';
+  static const String kelolaProduk = '/admin/produk';
   static const String kelolaKategori = '/admin/kategori';
-  static const String kelolaUser     = '/admin/user';
-  static const String daftarProduk   = '/admin/daftar-produk';
+  static const String kelolaUser = '/admin/user';
+  static const String daftarProduk = '/admin/daftar-produk';
   static const String inputTransaksi = '/admin/transaksi';
-  static const String laporan        = '/admin/laporan';
+  static const String laporan = '/admin/laporan';
   static const String transaksiPending = '/admin/transaksi-pending';
-  static const String stokHistory   = '/stok-history';
+  static const String stokHistory = '/stok-history';
 
   // Kasir routes
-  static const String kasirHome      = '/kasir/home';
-  static const String kasirDashboard = '/kasir/dashboard'; 
+  static const String kasirHome = '/kasir/home';
+  static const String kasirDashboard = '/kasir/dashboard';
 
   // Legacy
-  static const String dashboard      = '/dashboard';
+  static const String dashboard = '/dashboard';
 
   //markdown pricing
   static const String markdownPricing = '/admin/markdown-pricing';
 
-
   static Map<String, WidgetBuilder> get routes => {
-        splash:         (_) => const SplashPage(),
-        login:          (_) => const LoginPage(),
-        register:       (_) => const RegisterPage(),
+    splash: (_) => const SplashPage(),
+    login: (_) => const LoginPage(),
+    register: (_) => const RegisterPage(),
 
-        // ── Admin ──────────────────────────────────────────
-        adminHome:      (_) => const AdminMainPage(),
-        dashboard:      (_) => const AdminHomePage(), // legacy
-        kelolaProduk:   (_) => const KelolaProdukPage(),
-        kelolaKategori: (_) => const KelolaKategoriPage(),
-        kelolaUser:     (_) => const KelolaUserPage(),
-        daftarProduk:   (_) => const DaftarProdukPage(),
-        inputTransaksi: (_) => const PilihTransaksiPage(),
-        laporan:        (_) => const LaporanTransaksiPage(),
-        transaksiPending: (_) => const TransaksiPendingPage(),
-        stokHistory:      (_) => const StokHistoryPage(),
-        markdownPricing: (_) => const MarkdownPricingPage(),
-        
+    // ── Admin ──────────────────────────────────────────
+    adminHome: (_) => const AdminMainPage(),
+    dashboard: (_) => const AdminHomePage(), // legacy
+    kelolaProduk: (_) => const KelolaProdukPage(),
+    kelolaKategori: (_) => const KelolaKategoriPage(),
+    kelolaUser: (_) => const KelolaUserPage(),
+    daftarProduk: (_) => const DaftarProdukPage(),
+    inputTransaksi: (_) => const InputTransaksiPage(),
+    laporan: (_) => const LaporanTransaksiPage(),
+    transaksiPending: (_) => const TransaksiPendingPage(),
+    stokHistory: (_) => const StokHistoryPage(),
+    markdownPricing: (_) => const MarkdownPricingPage(),
 
-        // ── Kasir ──────────────────────────────────────────
-        kasirHome:      (_) => const KasirHomePage(),
-        kasirDashboard: (_) => const DashboardPage(),
-      };
+    // ── Kasir ──────────────────────────────────────────
+    kasirHome: (_) => const KasirHomePage(),
+    kasirDashboard: (_) => const DashboardPage(),
+  };
 }
 
 // ══════════════════════════════════════════════════════════
@@ -191,7 +188,8 @@ class _SplashPageState extends State<SplashPage> {
             children: [
               // Logo
               Container(
-                width: 100, height: 100,
+                width: 100,
+                height: 100,
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(28),
@@ -230,7 +228,8 @@ class _SplashPageState extends State<SplashPage> {
 
               // Loading
               const SizedBox(
-                width: 24, height: 24,
+                width: 24,
+                height: 24,
                 child: CircularProgressIndicator(
                   strokeWidth: 2.5,
                   color: Colors.white,

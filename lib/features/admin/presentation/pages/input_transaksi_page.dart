@@ -103,7 +103,7 @@ class _InputTransaksiPageState extends State<InputTransaksiPage>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<ProdukProvider>().fetchProduks();
       context.read<KategoriProvider>().fetchKategoris();
-      context.read<TransaksiProvider>().clearKeranjang();
+      context.read<TransaksiProvider>().loadKeranjang();
       context.read<TransaksiProvider>().fetchPreOrderAktif();
     });
   }
@@ -156,47 +156,7 @@ class _InputTransaksiPageState extends State<InputTransaksiPage>
           ),
         ),
         actions: [
-          // Tombol Pre Order
-          IconButton(
-            tooltip: 'Status Pre Order',
-            icon: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                const Icon(Icons.assignment_outlined, color: Colors.white),
-                if (transaksiProvider.preOrders.isNotEmpty)
-                  Positioned(
-                    right: -4,
-                    top: -4,
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: const BoxDecoration(
-                        color: Colors.orange,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Text(
-                        '${transaksiProvider.preOrders.length}',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 9,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => ChangeNotifierProvider.value(
-                  value: transaksiProvider,
-                  child: const PreOrderPage(),
-                ),
-              ),
-            ).then((_) => transaksiProvider.fetchPreOrderAktif()),
-          ),
-
-          // Tombol keranjang (kode yang sudah ada)
+          // Tombol keranjang
           if (transaksiProvider.keranjang.isNotEmpty)
             Stack(
               children: [
@@ -678,7 +638,7 @@ class _ProdukCard extends StatelessWidget {
         children: [
           // ── Top banner ────────────────────────────────────
           Container(
-            height: 90,
+            height: 80,
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: isPreOrder
@@ -742,29 +702,48 @@ class _ProdukCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                // Badge Pre Order / Ready Stock
+                // Badge Pre Order
                 Positioned(
                   top: 7,
                   right: 7,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 3,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isPreOrder
-                          ? Colors.orange.shade600
-                          : Colors.black.withOpacity(0.3),
-                      borderRadius: BorderRadius.circular(7),
-                    ),
-                    child: Text(
-                      isPreOrder ? 'Pre Order' : 'Ready',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 9,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
+                  child: Builder(
+                    builder: (_) {
+                      Color bgColor;
+                      String label;
+
+                      if (isPreOrder) {
+                        bgColor = Colors.orange.shade600;
+                        label = 'Pre Order';
+                      } else if (produk.stok <= 5 && produk.stok > 0) {
+                        bgColor = _warning; // kuning / amber
+                        label = 'Menipis';
+                      } else if (produk.stok == 0) {
+                        bgColor = _danger;
+                        label = 'Habis';
+                      } else {
+                        bgColor = _success; // hijau
+                        label = 'Ready';
+                      }
+
+                      return Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: bgColor,
+                          borderRadius: BorderRadius.circular(7),
+                        ),
+                        child: Text(
+                          label,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 9,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
               ],
@@ -777,7 +756,7 @@ class _ProdukCard extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(10, 6, 10, 4),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min, // ← tambah ini
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   // Nama produk
                   Text(
@@ -834,7 +813,7 @@ class _ProdukCard extends StatelessWidget {
                     ),
                   ],
 
-                  const Spacer(),
+                  const SizedBox(height: 4),
 
                   // Harga
                   if (produk.adaDiskon) ...[
