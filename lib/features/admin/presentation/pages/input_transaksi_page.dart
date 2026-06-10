@@ -1912,42 +1912,6 @@ class _InvoiceDialogState extends State<_InvoiceDialog> {
               ),
             ),
 
-            // Input jumlah bayar Transfer/QRIS belum lunas
-            if (isTransfer && !_sudahLunas)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-                child: TextField(
-                  controller: _bayarCtrl,
-                  keyboardType: TextInputType.number,
-                  decoration: InputDecoration(
-                    hintText: 'Masukkan jumlah yang dibayar',
-                    prefixIcon: const Icon(
-                      Icons.attach_money_outlined,
-                      color: _primary,
-                      size: 20,
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey.shade300),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey.shade300),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: _primary, width: 1.5),
-                    ),
-                    filled: true,
-                    fillColor: Colors.grey.shade50,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 14,
-                    ),
-                  ),
-                ),
-              ),
-
             // Action buttons
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
@@ -1984,39 +1948,6 @@ class _InvoiceDialogState extends State<_InvoiceDialog> {
                       ),
                     ),
                   ),
-
-                  if (isTransfer && !_sudahLunas) ...[
-                    const SizedBox(height: 10),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: _isUpdatingStatus ? null : _updateLunas,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _success,
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        icon: _isUpdatingStatus
-                            ? const SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : const Icon(Icons.check_circle_outline, size: 20),
-                        label: const Text(
-                          'Tandai Sudah Lunas',
-                          style: TextStyle(fontWeight: FontWeight.w700),
-                        ),
-                      ),
-                    ),
-                  ],
 
                   const SizedBox(height: 10),
                   SizedBox(
