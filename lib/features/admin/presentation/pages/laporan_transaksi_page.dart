@@ -90,7 +90,7 @@ class _LaporanTransaksiPageState extends State<LaporanTransaksiPage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
   }
 
@@ -220,6 +220,10 @@ class _LaporanTransaksiPageState extends State<LaporanTransaksiPage>
                 Tab(
                   icon: Icon(Icons.trending_down_outlined, size: 16),
                   text: 'Rugi Stok',
+                ),
+                Tab(
+                  icon: Icon(Icons.star_outline_rounded, size: 16),
+                  text: 'Best Seller',
                 ),
               ],
             ),
@@ -371,6 +375,7 @@ class _LaporanTransaksiPageState extends State<LaporanTransaksiPage>
                 rugiStok: provider.rugiStok,
                 laporan: provider.laporan!,
               ),
+              _BestSellerTab(items: provider.bestSellers),
             ],
           );
         }(),
@@ -1177,6 +1182,343 @@ class _MiniStat extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _BestSellerTab extends StatelessWidget {
+  final List<BestSellerItem> items;
+  const _BestSellerTab({required this.items});
+
+  @override
+  Widget build(BuildContext context) {
+    if (items.isEmpty) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.star_outline_rounded,
+              size: 56,
+              color: Color(0xFFD1D5DB),
+            ),
+            SizedBox(height: 12),
+            Text(
+              'Belum ada data produk',
+              style: TextStyle(color: _textSecondary),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final maxQty = items.first.totalQty;
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+      children: [
+        // ── Header produk terlaris ──────────────────────
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(colors: [_primary, _primaryDark]),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.star_rounded,
+                  color: Colors.white,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      '🏆 Produk Terlaris',
+                      style: TextStyle(color: Colors.white70, fontSize: 12),
+                    ),
+                    Text(
+                      items.first.namaProduk,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    '${items.first.totalQty} terjual',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  Text(
+                    _formatRupiah(items.first.totalOmzet),
+                    style: const TextStyle(color: Colors.white70, fontSize: 11),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // ── Summary total produk ────────────────────────
+        Row(
+          children: [
+            _SummaryCard(
+              label: 'Total Produk',
+              value: '${items.length}',
+              icon: Icons.inventory_2_outlined,
+              color: _primary,
+              isCurrency: false,
+            ),
+            const SizedBox(width: 10),
+            _SummaryCard(
+              label: 'Total Terjual',
+              value: '${items.fold(0, (s, e) => s + e.totalQty)} pcs',
+              icon: Icons.shopping_bag_outlined,
+              color: _success,
+              isCurrency: false,
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+
+        // ── Label section ───────────────────────────────
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: _warning.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.bar_chart_rounded,
+                color: _warning,
+                size: 16,
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Text(
+              'Ranking Produk',
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 16,
+                color: _textPrimary,
+              ),
+            ),
+            const Spacer(),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: _primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                '${items.length} produk',
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: _primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+
+        // ── List ranking ────────────────────────────────
+        ...items.asMap().entries.map((entry) {
+          final rank = entry.key + 1;
+          final item = entry.value;
+          final barPct = maxQty > 0 ? item.totalQty / maxQty : 0.0;
+          final isPreOrder = item.statusProduk == 'preorder';
+
+          final rankColor = rank == 1
+              ? const Color(0xFFF59E0B)
+              : rank == 2
+              ? const Color(0xFF94A3B8)
+              : rank == 3
+              ? const Color(0xFFCD7F32)
+              : _textSecondary;
+
+          return Container(
+            margin: const EdgeInsets.only(bottom: 10),
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: _cardBg,
+              borderRadius: BorderRadius.circular(16),
+              border: rank <= 3
+                  ? Border.all(color: rankColor.withOpacity(0.3))
+                  : null,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.04),
+                  blurRadius: 8,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    // Nomor ranking
+                    Container(
+                      width: 34,
+                      height: 34,
+                      decoration: BoxDecoration(
+                        color: rankColor.withOpacity(0.15),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Text(
+                          rank <= 3 ? ['🥇', '🥈', '🥉'][rank - 1] : '#$rank',
+                          style: TextStyle(
+                            fontSize: rank <= 3 ? 16 : 11,
+                            fontWeight: FontWeight.w800,
+                            color: rankColor,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            item.namaProduk,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 14,
+                              color: _textPrimary,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 3),
+                          Row(
+                            children: [
+                              if (item.namaKategori.isNotEmpty) ...[
+                                Text(
+                                  item.namaKategori,
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    color: _textSecondary,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                              ],
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: isPreOrder
+                                      ? Colors.orange.withOpacity(0.15)
+                                      : _success.withOpacity(0.12),
+                                  borderRadius: BorderRadius.circular(5),
+                                ),
+                                child: Text(
+                                  isPreOrder ? 'Pre Order' : 'Ready Stock',
+                                  style: TextStyle(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w700,
+                                    color: isPreOrder
+                                        ? Colors.orange.shade700
+                                        : _success,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          '${item.totalQty} terjual',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 14,
+                            color: _textPrimary,
+                          ),
+                        ),
+                        Text(
+                          _formatRupiah(item.totalOmzet),
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: _textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                // Bar progress
+                Row(
+                  children: [
+                    Expanded(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: LinearProgressIndicator(
+                          value: barPct,
+                          minHeight: 7,
+                          backgroundColor: Colors.grey.shade100,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            rank == 1
+                                ? _primary
+                                : rank == 2
+                                ? _info
+                                : rank == 3
+                                ? _success
+                                : _primary.withOpacity(0.35),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '${(barPct * 100).toStringAsFixed(0)}%',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: _textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          );
+        }),
+      ],
     );
   }
 }

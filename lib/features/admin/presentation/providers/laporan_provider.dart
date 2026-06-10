@@ -288,4 +288,57 @@ class LaporanProvider extends ChangeNotifier {
 
     notifyListeners();
   }
+
+  List<BestSellerItem> get bestSellers {
+    if (_laporan == null) return [];
+
+    final Map<String, BestSellerItem> map = {};
+
+    for (final t in _laporan!.transaksis) {
+      for (final d in t.detail) {
+        final id = d.idProduk;
+        if (map.containsKey(id)) {
+          map[id] = BestSellerItem(
+            idProduk: id,
+            namaProduk: d.produk.namaProduk,
+            namaKategori: d.produk.namaKategori,
+            statusProduk: map[id]!.statusProduk,
+            totalQty: map[id]!.totalQty + d.qty,
+            totalOmzet: map[id]!.totalOmzet + d.subTotal,
+          );
+        } else {
+          map[id] = BestSellerItem(
+            idProduk: id,
+            namaProduk: d.produk.namaProduk,
+            namaKategori: d.produk.namaKategori,
+            statusProduk: '', // tidak ada di DetailLaporan, kosongkan dulu
+            totalQty: d.qty,
+            totalOmzet: d.subTotal,
+          );
+        }
+      }
+    }
+
+    final list = map.values.toList()
+      ..sort((a, b) => b.totalQty.compareTo(a.totalQty));
+    return list;
+  }
+}
+
+class BestSellerItem {
+  final String idProduk;
+  final String namaProduk;
+  final String namaKategori;
+  final String statusProduk;
+  final int totalQty;
+  final double totalOmzet;
+
+  const BestSellerItem({
+    required this.idProduk,
+    required this.namaProduk,
+    required this.namaKategori,
+    required this.statusProduk,
+    required this.totalQty,
+    required this.totalOmzet,
+  });
 }
