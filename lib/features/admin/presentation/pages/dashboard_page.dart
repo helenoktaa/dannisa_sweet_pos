@@ -351,13 +351,19 @@ class _DashboardContent extends StatelessWidget {
           ],
 
           // 2. Lunas hari ini
-          _LunasHariIniCard(total: harian.totalLunasHariIni),
-          const SizedBox(height: 12),
+          if (!isKasir) ...[
+            _LunasHariIniCard(total: harian.totalLunasHariIni),
+            const SizedBox(height: 12),
+          ],
 
           // 3. Keuntungan bersih
-          _KeuntunganCard(harian: harian),
-          const SizedBox(height: 24),
+          if (!isKasir) ...[
+            _KeuntunganCard(harian: harian),
+            const SizedBox(height: 24),
+          ],
 
+          if (isKasir) const SizedBox(height: 8),
+          
           // 4. Ringkasan hari ini
           const _SectionTitle(title: 'Ringkasan Hari Ini'),
           const SizedBox(height: 12),

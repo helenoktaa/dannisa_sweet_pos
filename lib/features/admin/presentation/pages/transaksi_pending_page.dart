@@ -129,6 +129,7 @@ class TransaksiPending {
   final List<DetailPending> detail;
   final String? tanggalLunas;
   final String statusOrder;
+   final String catatan;
 
   const TransaksiPending({
     required this.idTransaksi,
@@ -144,6 +145,8 @@ class TransaksiPending {
     required this.detail,
     required this.tanggalLunas,
     required this.statusOrder,
+    required this.catatan,
+    
   });
 
   factory TransaksiPending.fromJson(Map<String, dynamic> json) {
@@ -164,6 +167,7 @@ class TransaksiPending {
           .toList(),
       tanggalLunas: json['tanggal_lunas'] as String?,
       statusOrder: json['status_order'] as String? ?? 'menunggu_diproses',
+      catatan: json['catatan'] as String? ?? '',
     );
   }
 }
@@ -983,6 +987,7 @@ class _PendingCard extends StatelessWidget {
               t.totalPenjualan);
 
     final provider = context.read<TransaksiProvider>();
+    final navigator = Navigator.of(context);
     final ok = await provider.updateStatusPembayaran(
       idTransaksi: t.idTransaksi,
       statusPembayaran: selectedStatus,
@@ -992,17 +997,72 @@ class _PendingCard extends StatelessWidget {
     );
 
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          ok ? '${t.namaCustomer} - pembayaran lunas ✓' : 'Gagal update status',
+
+    if (!ok) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Gagal update status'),
+          backgroundColor: _danger,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
         ),
-        backgroundColor: ok ? _success : _danger,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      );
+      return;
+    }
+
+    // Update list di background
+    onUpdated();
+
+    // Fetch invoice terbaru lalu tampilkan dialog invoice lunas
+    InvoiceResult? invoice;
+    try {
+      final response = await DioClient.instance.get(
+        '${ApiConstants.transaksi}/${t.idTransaksi}/invoice',
+      );
+      final data = response.data['data'] as Map<String, dynamic>;
+      invoice = InvoiceResult.fromJson(data);
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Lunas ✓ tapi gagal memuat invoice'),
+            backgroundColor: _warning,
+          ),
+        );
+      }
+      return;
+    }
+
+    await navigator.push(
+      DialogRoute(
+        context: navigator.context,
+        builder: (_) => ChangeNotifierProvider.value(
+          value: provider, // ← pakai provider yang sudah disimpan
+          child: _InvoicePendingDialog(
+            invoice: invoice!,
+            onLunas: onUpdated,
+            initialSudahLunas: true,
+          ),
+        ),
       ),
     );
-    if (ok) onUpdated();
+
+    if (!context.mounted) return;
+
+    // Buka invoice dialog langsung dalam kondisi sudah lunas
+    await showDialog(
+      context: context,
+      builder: (_) => ChangeNotifierProvider.value(
+        value: context.read<TransaksiProvider>(),
+        child: _InvoicePendingDialog(
+          invoice: invoice!,
+          onLunas: onUpdated,
+          initialSudahLunas: true,
+        ),
+      ),
+    );
   }
 }
 
@@ -1436,6 +1496,8 @@ class _PreOrderStatusPageState extends State<PreOrderStatusPage> {
                     value: t.statusPembayaran,
                     // valueColor tidak ada di _InfoRow pending, skip atau tambahkan
                   ),
+                  if (t.catatan.isNotEmpty)
+                    _InfoRow(label: 'Catatan', value: t.catatan),
                 ],
               ),
             ),
@@ -1769,8 +1831,13 @@ class _PreOrderStatusPageState extends State<PreOrderStatusPage> {
 class _InvoicePendingDialog extends StatefulWidget {
   final InvoiceResult invoice;
   final VoidCallback onLunas;
+  final bool initialSudahLunas;
 
-  const _InvoicePendingDialog({required this.invoice, required this.onLunas});
+  const _InvoicePendingDialog({
+    required this.invoice,
+    required this.onLunas,
+    this.initialSudahLunas = false,
+  });
 
   @override
   State<_InvoicePendingDialog> createState() => _InvoicePendingDialogState();
@@ -1782,6 +1849,16 @@ class _InvoicePendingDialogState extends State<_InvoicePendingDialog> {
   bool _sudahLunas = false;
   final _invoiceKey = GlobalKey();
   bool _isSharingImage = false;
+  InvoiceResult? _invoiceUpdated;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialSudahLunas) {
+      _sudahLunas = true;
+      _invoiceUpdated = widget.invoice;
+    }
+  }
 
   @override
   void dispose() {
@@ -1791,42 +1868,32 @@ class _InvoicePendingDialogState extends State<_InvoicePendingDialog> {
 
   Future<void> _shareInvoiceAsImage() async {
     setState(() => _isSharingImage = true);
-
     try {
       final boundary =
           _invoiceKey.currentContext?.findRenderObject()
               as RenderRepaintBoundary?;
-
       if (boundary == null) return;
-
       final image = await boundary.toImage(pixelRatio: 3.0);
-
       final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-
       if (byteData == null) return;
-
       final pngBytes = byteData.buffer.asUint8List();
-
       final tempDir = await getTemporaryDirectory();
-
       final file = File(
         '${tempDir.path}/invoice_${widget.invoice.idTransaksi}.png',
       );
-
       await file.writeAsBytes(pngBytes);
-
       await Share.shareXFiles([XFile(file.path)]);
     } catch (e) {
       debugPrint('Error share image: $e');
     } finally {
-      if (mounted) {
-        setState(() => _isSharingImage = false);
-      }
+      if (mounted) setState(() => _isSharingImage = false);
     }
   }
 
+  // ── GANTI SELURUH _tandaiLunas ────────────────────────────
   Future<void> _tandaiLunas() async {
     setState(() => _isUpdating = true);
+
     final jumlahBayar =
         double.tryParse(_bayarCtrl.text.replaceAll('.', '')) ??
         widget.invoice.totalPenjualan;
@@ -1837,30 +1904,36 @@ class _InvoicePendingDialogState extends State<_InvoicePendingDialog> {
       jumlahBayar: jumlahBayar,
     );
 
+    if (!ok) {
+      setState(() => _isUpdating = false);
+      return;
+    }
+
+    // Fetch ulang invoice dari server supaya dapat tanggalLunas akurat
+    final updated = await provider.fetchInvoice(widget.invoice.idTransaksi);
+
     setState(() {
       _isUpdating = false;
-      if (ok) _sudahLunas = true;
+      _sudahLunas = true;
+      _invoiceUpdated = updated;
     });
 
     if (!mounted) return;
-    if (ok) {
-      widget.onLunas();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Pembayaran dikonfirmasi ✓'),
-          backgroundColor: _success,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-        ),
-      );
-    }
+    widget.onLunas();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('Pembayaran dikonfirmasi ✓'),
+        backgroundColor: _success,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final inv = widget.invoice;
+    final inv = _invoiceUpdated ?? widget.invoice;
+
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: SingleChildScrollView(
@@ -1995,9 +2068,75 @@ class _InvoicePendingDialogState extends State<_InvoicePendingDialog> {
                             isBold: true,
                           ),
 
-                          if (inv.infoPembayaran != null) ...[
-                            const SizedBox(height: 12),
+                          // ── TAMBAH: blok lunas ──────────────
+                          if (_sudahLunas) ...[
+                            const SizedBox(height: 8),
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 10,
+                              ),
+                              decoration: BoxDecoration(
+                                color: _success.withOpacity(0.08),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: _success.withOpacity(0.3),
+                                ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: const [
+                                      Icon(
+                                        Icons.check_circle,
+                                        size: 14,
+                                        color: _success,
+                                      ),
+                                      SizedBox(width: 6),
+                                      Text(
+                                        'Pembayaran Lunas',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w700,
+                                          color: _success,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 6),
+                                  _InfoRow(
+                                    label: 'Tgl Lunas',
+                                    value: inv.tanggalLunas != null
+                                        ? _formatTanggal(inv.tanggalLunas!)
+                                        : _formatTanggal(
+                                            DateTime.now().toIso8601String(),
+                                          ),
+                                  ),
+                                  if (inv.jumlahBayar > 0)
+                                    _InfoRow(
+                                      label: 'Dibayar',
+                                      value: _formatRupiah(inv.jumlahBayar),
+                                    ),
+                                  if (inv.jumlahDp > 0)
+                                    _InfoRow(
+                                      label: 'DP Sebelumnya',
+                                      value: _formatRupiah(inv.jumlahDp),
+                                    ),
+                                  if (inv.kembalian > 0)
+                                    _InfoRow(
+                                      label: 'Kembalian',
+                                      value: _formatRupiah(inv.kembalian),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ],
 
+                          // ── END blok lunas ───────────────────
+                          if (inv.infoPembayaran != null && !_sudahLunas) ...[
+                            const SizedBox(height: 12),
                             Container(
                               width: double.infinity,
                               padding: const EdgeInsets.all(12),
@@ -2019,24 +2158,19 @@ class _InvoicePendingDialogState extends State<_InvoicePendingDialog> {
                                       color: _info,
                                     ),
                                   ),
-
                                   const SizedBox(height: 8),
-
                                   _InfoRow(
                                     label: 'Rekening',
                                     value: inv.infoPembayaran!.noRekening,
                                   ),
-
                                   _InfoRow(
                                     label: 'Atas Nama',
                                     value: inv.infoPembayaran!.namaRekening,
                                   ),
-
                                   _InfoRow(
                                     label: 'WA',
                                     value: inv.infoPembayaran!.whatsapp,
                                   ),
-
                                   Text(
                                     inv.infoPembayaran!.catatan,
                                     style: const TextStyle(
@@ -2062,7 +2196,6 @@ class _InvoicePendingDialogState extends State<_InvoicePendingDialog> {
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
               child: Column(
                 children: [
-                  // Kirim WA
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
@@ -2084,41 +2217,6 @@ class _InvoicePendingDialogState extends State<_InvoicePendingDialog> {
                       ),
                     ),
                   ),
-
-                  // Tandai Lunas
-                  if (!_sudahLunas) ...[
-                    const SizedBox(height: 10),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: _isUpdating ? null : _tandaiLunas,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _success,
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        icon: _isUpdating
-                            ? const SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : const Icon(Icons.check_circle_outline, size: 20),
-                        label: const Text(
-                          'Tandai Sudah Lunas',
-                          style: TextStyle(fontWeight: FontWeight.w700),
-                        ),
-                      ),
-                    ),
-                  ],
-
                   const SizedBox(height: 10),
                   SizedBox(
                     width: double.infinity,

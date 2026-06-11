@@ -107,7 +107,7 @@ class TransaksiTabPage extends StatelessWidget {
                 _MenuCard(
                   icon: Icons.pending_actions_outlined,
                   label: 'Transaksi Pending',
-                  description: 'Konfirmasi pembayaran Transfer/QRIS',
+                  description: 'Konfirmasi pembayaran Transfer',
                   color: const Color(0xFFF59E0B),
                   onTap: () => Navigator.pushNamed(
                       context, AppRouter.transaksiPending),

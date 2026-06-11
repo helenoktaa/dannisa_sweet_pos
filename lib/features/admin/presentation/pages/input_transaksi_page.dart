@@ -1368,10 +1368,6 @@ class _KeranjangSheetState extends State<_KeranjangSheet> {
                                         value: 'Transfer',
                                         child: Text('Transfer'),
                                       ),
-                                      DropdownMenuItem(
-                                        value: 'QRIS',
-                                        child: Text('QRIS'),
-                                      ),
                                     ],
                                     onChanged: (v) => setState(() {
                                       _metode = v!;

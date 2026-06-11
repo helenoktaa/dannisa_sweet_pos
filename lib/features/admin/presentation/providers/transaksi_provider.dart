@@ -137,8 +137,11 @@ class InvoiceResult {
   final double kembalian;
   final List<DetailTransaksi> detail;
   final InfoPembayaran? infoPembayaran;
+   final double jumlahDp;       
+  final String? tanggalLunas;  
 
-  // Nomor WA customer — diisi dari Flutter
+
+  // Nomor WA customer 
   String waCustomer;
 
   InvoiceResult({
@@ -155,6 +158,8 @@ class InvoiceResult {
     required this.detail,
     this.infoPembayaran,
     this.waCustomer = '',
+    required this.jumlahDp,    
+    this.tanggalLunas,         
   });
 
   factory InvoiceResult.fromJson(Map<String, dynamic> json) {
@@ -167,6 +172,8 @@ class InvoiceResult {
       namaKasir: json['nama_kasir'] as String? ?? '',
       metodePembayaran: json['metode_pembayaran'] as String? ?? '',
       statusPembayaran: json['status_pembayaran'] as String? ?? '',
+        jumlahDp: (json['jumlah_dp'] as num?)?.toDouble() ?? 0,          
+      tanggalLunas: json['tanggal_lunas'] as String?,                   
       totalItem: (json['total_item'] as num?)?.toInt() ?? 0,
       totalPenjualan: (json['total_penjualan'] as num?)?.toDouble() ?? 0,
       jumlahBayar: (json['jumlah_bayar'] as num?)?.toDouble() ?? 0,

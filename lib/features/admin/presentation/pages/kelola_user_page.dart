@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:dannisa_sweet_pos/features/admin/presentation/providers/user_provider.dart';
+import 'package:dannisa_sweet_pos/features/auth/presentation/providers/auth_provider.dart';
 
 // ── Warna tema Dannisa Sweet ───────────────────────────────
 const _primary = Color(0xFFE91E8C);
@@ -54,16 +55,18 @@ class _KelolaUserPageState extends State<KelolaUserPage>
     final filtered = provider.users.where((u) {
       final matchSearch =
           u.namaUser.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-              u.email.toLowerCase().contains(_searchQuery.toLowerCase());
-      final matchJabatan = _filterJabatan == 'Semua' ||
-          u.namaJabatan == _filterJabatan;
+          u.email.toLowerCase().contains(_searchQuery.toLowerCase());
+      final matchJabatan =
+          _filterJabatan == 'Semua' || u.namaJabatan == _filterJabatan;
       return matchSearch && matchJabatan;
     }).toList();
 
-    final totalAdmin =
-        provider.users.where((u) => u.namaJabatan == 'Admin').length;
-    final totalKasir =
-        provider.users.where((u) => u.namaJabatan == 'Kasir').length;
+    final totalAdmin = provider.users
+        .where((u) => u.namaJabatan == 'Admin')
+        .length;
+    final totalKasir = provider.users
+        .where((u) => u.namaJabatan == 'Kasir')
+        .length;
 
     return Scaffold(
       backgroundColor: _surface,
@@ -144,7 +147,10 @@ class _KelolaUserPageState extends State<KelolaUserPage>
             ),
             actions: [
               IconButton(
-                icon: const Icon(Icons.person_add_outlined, color: Colors.white),
+                icon: const Icon(
+                  Icons.person_add_outlined,
+                  color: Colors.white,
+                ),
                 tooltip: 'Tambah User',
                 onPressed: () => _showFormDialog(context),
               ),
@@ -212,21 +218,30 @@ class _KelolaUserPageState extends State<KelolaUserPage>
                         style: const TextStyle(fontSize: 14),
                         decoration: InputDecoration(
                           hintText: 'Cari nama atau email...',
-                          hintStyle:
-                              TextStyle(color: _textSecondary, fontSize: 14),
-                          prefixIcon:
-                              const Icon(Icons.search, color: _primary, size: 20),
+                          hintStyle: TextStyle(
+                            color: _textSecondary,
+                            fontSize: 14,
+                          ),
+                          prefixIcon: const Icon(
+                            Icons.search,
+                            color: _primary,
+                            size: 20,
+                          ),
                           suffixIcon: _searchQuery.isNotEmpty
                               ? IconButton(
-                                  icon: const Icon(Icons.close,
-                                      size: 18, color: _textSecondary),
+                                  icon: const Icon(
+                                    Icons.close,
+                                    size: 18,
+                                    color: _textSecondary,
+                                  ),
                                   onPressed: () =>
                                       setState(() => _searchQuery = ''),
                                 )
                               : null,
                           border: InputBorder.none,
-                          contentPadding:
-                              const EdgeInsets.symmetric(vertical: 14),
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 14,
+                          ),
                         ),
                       ),
                     ),
@@ -240,13 +255,14 @@ class _KelolaUserPageState extends State<KelolaUserPage>
                         children: ['Semua', 'Admin', 'Kasir'].map((label) {
                           final isActive = _filterJabatan == label;
                           return GestureDetector(
-                            onTap: () =>
-                                setState(() => _filterJabatan = label),
+                            onTap: () => setState(() => _filterJabatan = label),
                             child: AnimatedContainer(
                               duration: const Duration(milliseconds: 200),
                               margin: const EdgeInsets.only(right: 8),
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 6),
+                                horizontal: 16,
+                                vertical: 6,
+                              ),
                               decoration: BoxDecoration(
                                 color: isActive ? _primary : _cardBg,
                                 borderRadius: BorderRadius.circular(20),
@@ -261,7 +277,7 @@ class _KelolaUserPageState extends State<KelolaUserPage>
                                           color: _primary.withOpacity(0.3),
                                           blurRadius: 8,
                                           offset: const Offset(0, 2),
-                                        )
+                                        ),
                                       ]
                                     : [],
                               ),
@@ -270,7 +286,9 @@ class _KelolaUserPageState extends State<KelolaUserPage>
                                 style: TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,
-                                  color: isActive ? Colors.white : _textSecondary,
+                                  color: isActive
+                                      ? Colors.white
+                                      : _textSecondary,
                                 ),
                               ),
                             ),
@@ -289,72 +307,77 @@ class _KelolaUserPageState extends State<KelolaUserPage>
         // ── List User ────────────────────────────────────────
         body: switch (provider.status) {
           UserStatus.loading || UserStatus.initial => const Center(
-              child: CircularProgressIndicator(color: _primary),
-            ),
+            child: CircularProgressIndicator(color: _primary),
+          ),
           UserStatus.error => Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.cloud_off, size: 56, color: _primary),
-                  const SizedBox(height: 12),
-                  Text(provider.error ?? 'Terjadi kesalahan',
-                      style: const TextStyle(color: _textSecondary)),
-                  const SizedBox(height: 16),
-                  ElevatedButton.icon(
-                    onPressed: () => provider.fetchUsers(),
-                    icon: const Icon(Icons.refresh),
-                    label: const Text('Coba Lagi'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _primary,
-                      foregroundColor: Colors.white,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          UserStatus.loaded => filtered.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.people_outline,
-                          size: 64, color: Colors.grey.shade300),
-                      const SizedBox(height: 12),
-                      Text(
-                        _searchQuery.isNotEmpty
-                            ? 'User "$_searchQuery" tidak ditemukan'
-                            : 'Belum ada user',
-                        style:
-                            TextStyle(color: _textSecondary, fontSize: 14),
-                      ),
-                      if (_searchQuery.isEmpty) ...[
-                        const SizedBox(height: 16),
-                        ElevatedButton.icon(
-                          onPressed: () => _showFormDialog(context),
-                          icon: const Icon(Icons.add),
-                          label: const Text('Tambah User Pertama'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: _primary,
-                            foregroundColor: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                )
-              : ListView.builder(
-                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 100),
-                  itemCount: filtered.length,
-                  itemBuilder: (context, i) {
-                    final u = filtered[i];
-                    return _UserCard(
-                      user: u,
-                      index: i,
-                      onEdit: () => _showFormDialog(context, user: u),
-                      onDelete: () => _confirmDelete(context, u),
-                    );
-                  },
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.cloud_off, size: 56, color: _primary),
+                const SizedBox(height: 12),
+                Text(
+                  provider.error ?? 'Terjadi kesalahan',
+                  style: const TextStyle(color: _textSecondary),
                 ),
+                const SizedBox(height: 16),
+                ElevatedButton.icon(
+                  onPressed: () => provider.fetchUsers(),
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('Coba Lagi'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _primary,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          UserStatus.loaded =>
+            filtered.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.people_outline,
+                          size: 64,
+                          color: Colors.grey.shade300,
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          _searchQuery.isNotEmpty
+                              ? 'User "$_searchQuery" tidak ditemukan'
+                              : 'Belum ada user',
+                          style: TextStyle(color: _textSecondary, fontSize: 14),
+                        ),
+                        if (_searchQuery.isEmpty) ...[
+                          const SizedBox(height: 16),
+                          ElevatedButton.icon(
+                            onPressed: () => _showFormDialog(context),
+                            icon: const Icon(Icons.add),
+                            label: const Text('Tambah User Pertama'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: _primary,
+                              foregroundColor: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 100),
+                    itemCount: filtered.length,
+                    itemBuilder: (context, i) {
+                      final u = filtered[i];
+                      return _UserCard(
+                        user: u,
+                        index: i,
+                        onEdit: () => _showFormDialog(context, user: u),
+                        onDelete: () => _confirmDelete(context, u),
+                      );
+                    },
+                  ),
         },
       ),
 
@@ -377,13 +400,18 @@ class _KelolaUserPageState extends State<KelolaUserPage>
   }
 
   void _showFormDialog(BuildContext context, {UserModel? user}) {
+    final authUser = context.read<AuthProvider>().user;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => ChangeNotifierProvider.value(
         value: context.read<UserProvider>(),
-        child: _UserFormSheet(user: user),
+        child: _UserFormSheet(
+          user: user,
+          adminRek: authUser?.rekPembayaran ?? '',
+          adminWa: authUser?.whatsapp ?? '',
+        ),
       ),
     );
   }
@@ -397,9 +425,10 @@ class _KelolaUserPageState extends State<KelolaUserPage>
           children: [
             Icon(Icons.delete_outline, color: _danger),
             SizedBox(width: 8),
-            Text('Hapus User',
-                style:
-                    TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Text(
+              'Hapus User',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
           ],
         ),
         content: Column(
@@ -421,7 +450,9 @@ class _KelolaUserPageState extends State<KelolaUserPage>
                           ? user.namaUser[0].toUpperCase()
                           : '?',
                       style: const TextStyle(
-                          color: _danger, fontWeight: FontWeight.bold),
+                        color: _danger,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -429,12 +460,20 @@ class _KelolaUserPageState extends State<KelolaUserPage>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(user.namaUser,
-                            style: const TextStyle(
-                                fontWeight: FontWeight.w600, fontSize: 15)),
-                        Text(user.email,
-                            style: const TextStyle(
-                                color: _textSecondary, fontSize: 12)),
+                        Text(
+                          user.namaUser,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 15,
+                          ),
+                        ),
+                        Text(
+                          user.email,
+                          style: const TextStyle(
+                            color: _textSecondary,
+                            fontSize: 12,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -458,23 +497,27 @@ class _KelolaUserPageState extends State<KelolaUserPage>
               backgroundColor: _danger,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
             onPressed: () async {
               Navigator.pop(context);
-              final ok = await context
-                  .read<UserProvider>()
-                  .deleteUser(user.idUser);
+              final ok = await context.read<UserProvider>().deleteUser(
+                user.idUser,
+              );
               if (!context.mounted) return;
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text(ok
-                      ? '${user.namaUser} berhasil dihapus'
-                      : 'Gagal menghapus user'),
+                  content: Text(
+                    ok
+                        ? '${user.namaUser} berhasil dihapus'
+                        : 'Gagal menghapus user',
+                  ),
                   backgroundColor: ok ? _success : _danger,
                   behavior: SnackBarBehavior.floating,
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10)),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
               );
             },
@@ -538,9 +581,10 @@ class _StatCard extends StatelessWidget {
                     color: color,
                   ),
                 ),
-                Text(label,
-                    style: const TextStyle(
-                        fontSize: 10, color: _textSecondary)),
+                Text(
+                  label,
+                  style: const TextStyle(fontSize: 10, color: _textSecondary),
+                ),
               ],
             ),
           ],
@@ -564,8 +608,7 @@ class _UserCard extends StatelessWidget {
     required this.onDelete,
   });
 
-  Color get _jabatanColor =>
-      user.namaJabatan == 'Admin' ? _info : _success;
+  Color get _jabatanColor => user.namaJabatan == 'Admin' ? _info : _success;
 
   Color get _avatarColor {
     final colors = [
@@ -644,7 +687,9 @@ class _UserCard extends StatelessWidget {
                       Text(
                         user.email,
                         style: const TextStyle(
-                            fontSize: 12, color: _textSecondary),
+                          fontSize: 12,
+                          color: _textSecondary,
+                        ),
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 6),
@@ -653,7 +698,9 @@ class _UserCard extends StatelessWidget {
                           // Badge jabatan
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 3),
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
                             decoration: BoxDecoration(
                               color: _jabatanColor.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(6),
@@ -685,7 +732,9 @@ class _UserCard extends StatelessWidget {
                             const SizedBox(width: 6),
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 3),
+                                horizontal: 8,
+                                vertical: 3,
+                              ),
                               decoration: BoxDecoration(
                                 color: _success.withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(6),
@@ -693,8 +742,11 @@ class _UserCard extends StatelessWidget {
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const Icon(Icons.phone_outlined,
-                                      size: 11, color: _success),
+                                  const Icon(
+                                    Icons.phone_outlined,
+                                    size: 11,
+                                    color: _success,
+                                  ),
                                   const SizedBox(width: 4),
                                   Text(
                                     user.whatsapp!,
@@ -715,13 +767,18 @@ class _UserCard extends StatelessWidget {
                         const SizedBox(height: 4),
                         Row(
                           children: [
-                            const Icon(Icons.account_balance_outlined,
-                                size: 12, color: _textSecondary),
+                            const Icon(
+                              Icons.account_balance_outlined,
+                              size: 12,
+                              color: _textSecondary,
+                            ),
                             const SizedBox(width: 4),
                             Text(
                               user.rekPembayaran!,
                               style: const TextStyle(
-                                  fontSize: 11, color: _textSecondary),
+                                fontSize: 11,
+                                color: _textSecondary,
+                              ),
                             ),
                           ],
                         ),
@@ -747,8 +804,11 @@ class _UserCard extends StatelessWidget {
                 Expanded(
                   child: TextButton.icon(
                     onPressed: onEdit,
-                    icon: const Icon(Icons.edit_outlined,
-                        size: 16, color: Colors.orange),
+                    icon: const Icon(
+                      Icons.edit_outlined,
+                      size: 16,
+                      color: Colors.orange,
+                    ),
                     label: const Text(
                       'Edit',
                       style: TextStyle(
@@ -758,16 +818,19 @@ class _UserCard extends StatelessWidget {
                       ),
                     ),
                     style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 10)),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                    ),
                   ),
                 ),
-                Container(
-                    width: 1, height: 30, color: Colors.grey.shade200),
+                Container(width: 1, height: 30, color: Colors.grey.shade200),
                 Expanded(
                   child: TextButton.icon(
                     onPressed: onDelete,
-                    icon: const Icon(Icons.delete_outline,
-                        size: 16, color: _danger),
+                    icon: const Icon(
+                      Icons.delete_outline,
+                      size: 16,
+                      color: _danger,
+                    ),
                     label: const Text(
                       'Hapus',
                       style: TextStyle(
@@ -777,7 +840,8 @@ class _UserCard extends StatelessWidget {
                       ),
                     ),
                     style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 10)),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                    ),
                   ),
                 ),
               ],
@@ -792,7 +856,9 @@ class _UserCard extends StatelessWidget {
 // ── Form Bottom Sheet ──────────────────────────────────────
 class _UserFormSheet extends StatefulWidget {
   final UserModel? user;
-  const _UserFormSheet({this.user});
+  final String adminRek;
+  final String adminWa;
+  const _UserFormSheet({this.user, this.adminRek = '', this.adminWa = ''});
 
   @override
   State<_UserFormSheet> createState() => _UserFormSheetState();
@@ -807,11 +873,23 @@ class MenuConfig {
   static const kelolaUser = 'kelola_user';
 
   static const List<_MenuOption> all = [
-    _MenuOption(key: dashboard, label: 'Dashboard', icon: Icons.dashboard_outlined),
-    _MenuOption(key: transaksi, label: 'Transaksi', icon: Icons.receipt_long_outlined),
+    _MenuOption(
+      key: dashboard,
+      label: 'Dashboard',
+      icon: Icons.dashboard_outlined,
+    ),
+    _MenuOption(
+      key: transaksi,
+      label: 'Transaksi',
+      icon: Icons.receipt_long_outlined,
+    ),
     _MenuOption(key: produk, label: 'Produk', icon: Icons.inventory_2_outlined),
     _MenuOption(key: laporan, label: 'Laporan', icon: Icons.bar_chart_outlined),
-    _MenuOption(key: kelolaUser, label: 'Kelola User', icon: Icons.manage_accounts_outlined),
+    _MenuOption(
+      key: kelolaUser,
+      label: 'Kelola User',
+      icon: Icons.manage_accounts_outlined,
+    ),
   ];
 }
 
@@ -819,7 +897,11 @@ class _MenuOption {
   final String key;
   final String label;
   final IconData icon;
-  const _MenuOption({required this.key, required this.label, required this.icon});
+  const _MenuOption({
+    required this.key,
+    required this.label,
+    required this.icon,
+  });
 }
 
 // ── Form State ─────────────────────────────────────────────
@@ -846,8 +928,12 @@ class _UserFormSheetState extends State<_UserFormSheet> {
     _namaCtrl = TextEditingController(text: widget.user?.namaUser ?? '');
     _emailCtrl = TextEditingController(text: widget.user?.email ?? '');
     _passCtrl = TextEditingController();
-    _rekCtrl = TextEditingController(text: widget.user?.rekPembayaran ?? '');
-    _waCtrl = TextEditingController(text: widget.user?.whatsapp ?? '');
+    _rekCtrl = TextEditingController(
+      text: widget.user?.rekPembayaran ?? widget.adminRek,
+    );
+    _waCtrl = TextEditingController(
+      text: widget.user?.whatsapp ?? widget.adminWa,
+    );
     _selectedJabatanId = widget.user?.idJabatan;
 
     // Init menu state dari data user (edit) atau semua false (create)
@@ -889,7 +975,7 @@ class _UserFormSheetState extends State<_UserFormSheet> {
         idJabatan: _selectedJabatanId!,
         rekPembayaran: _rekCtrl.text.trim(),
         whatsapp: _waCtrl.text.trim(),
-        menuKeys: _selectedMenuKeys, // ← kirim menu
+        menuKeys: _selectedMenuKeys,
       );
     } else {
       ok = await provider.createUser(
@@ -899,7 +985,7 @@ class _UserFormSheetState extends State<_UserFormSheet> {
         idJabatan: _selectedJabatanId!,
         rekPembayaran: _rekCtrl.text.trim(),
         whatsapp: _waCtrl.text.trim(),
-        menuKeys: _selectedMenuKeys, // ← kirim menu
+        menuKeys: _selectedMenuKeys,
       );
     }
 
@@ -909,9 +995,13 @@ class _UserFormSheetState extends State<_UserFormSheet> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(ok
-            ? _isEdit ? 'User berhasil diupdate ✓' : 'User berhasil ditambahkan ✓'
-            : 'Gagal menyimpan user'),
+        content: Text(
+          ok
+              ? _isEdit
+                    ? 'User berhasil diupdate ✓'
+                    : 'User berhasil ditambahkan ✓'
+              : 'Gagal menyimpan user',
+        ),
         backgroundColor: ok ? _success : _danger,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -1016,7 +1106,9 @@ class _UserFormSheetState extends State<_UserFormSheet> {
                   ),
                   child: Icon(
                     _currentStep == 0
-                        ? (_isEdit ? Icons.edit_outlined : Icons.person_add_outlined)
+                        ? (_isEdit
+                              ? Icons.edit_outlined
+                              : Icons.person_add_outlined)
                         : Icons.menu_open_outlined,
                     color: _primary,
                     size: 20,
@@ -1040,7 +1132,10 @@ class _UserFormSheetState extends State<_UserFormSheet> {
                       _currentStep == 0
                           ? 'Lengkapi data user di bawah ini'
                           : 'Pilih menu yang dapat diakses',
-                      style: const TextStyle(fontSize: 12, color: _textSecondary),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: _textSecondary,
+                      ),
                     ),
                   ],
                 ),
@@ -1080,7 +1175,8 @@ class _UserFormSheetState extends State<_UserFormSheet> {
                       ),
                       validator: (v) {
                         if (v?.isEmpty ?? true) return 'Email wajib diisi';
-                        if (!v!.contains('@')) return 'Format email tidak valid';
+                        if (!v!.contains('@'))
+                          return 'Format email tidak valid';
                         return null;
                       },
                     ),
@@ -1089,21 +1185,30 @@ class _UserFormSheetState extends State<_UserFormSheet> {
                       controller: _passCtrl,
                       obscureText: _obscurePass,
                       decoration: _inputDecoration(
-                        label: _isEdit ? 'Password Baru (opsional)' : 'Password',
-                        hint: _isEdit ? 'Kosongkan jika tidak ingin diubah' : 'Min. 6 karakter',
+                        label: _isEdit
+                            ? 'Password Baru (opsional)'
+                            : 'Password',
+                        hint: _isEdit
+                            ? 'Kosongkan jika tidak ingin diubah'
+                            : 'Min. 6 karakter',
                         prefixIcon: Icons.lock_outline,
                         suffix: IconButton(
                           icon: Icon(
-                            _obscurePass ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                            _obscurePass
+                                ? Icons.visibility_outlined
+                                : Icons.visibility_off_outlined,
                             color: _textSecondary,
                             size: 20,
                           ),
-                          onPressed: () => setState(() => _obscurePass = !_obscurePass),
+                          onPressed: () =>
+                              setState(() => _obscurePass = !_obscurePass),
                         ),
                       ),
                       validator: (v) {
-                        if (!_isEdit && (v?.isEmpty ?? true)) return 'Password wajib diisi';
-                        if (v != null && v.isNotEmpty && v.length < 6) return 'Minimal 6 karakter';
+                        if (!_isEdit && (v?.isEmpty ?? true))
+                          return 'Password wajib diisi';
+                        if (v != null && v.isNotEmpty && v.length < 6)
+                          return 'Minimal 6 karakter';
                         return null;
                       },
                     ),
@@ -1122,25 +1227,114 @@ class _UserFormSheetState extends State<_UserFormSheet> {
                         );
                       }).toList(),
                       onChanged: (v) => setState(() => _selectedJabatanId = v),
-                      validator: (v) => v == null ? 'Jabatan wajib dipilih' : null,
+                      validator: (v) =>
+                          v == null ? 'Jabatan wajib dipilih' : null,
                     ),
                     const SizedBox(height: 14),
-                    TextFormField(
-                      controller: _rekCtrl,
-                      decoration: _inputDecoration(
-                        label: 'Rekening Pembayaran (opsional)',
-                        hint: 'Contoh: BCA 8880587898',
-                        prefixIcon: Icons.account_balance_outlined,
+                    // GANTI 2 TextFormField rekening & WA dengan ini:
+
+                    // Rekening
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: Colors.grey.shade300),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.account_balance_outlined,
+                            color: Colors.grey.shade400,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Rekening Pembayaran',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: _textSecondary,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  _rekCtrl.text.isNotEmpty
+                                      ? _rekCtrl.text
+                                      : '-',
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: _textPrimary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Icon(
+                            Icons.lock_outline,
+                            size: 14,
+                            color: Colors.grey.shade400,
+                          ),
+                        ],
                       ),
                     ),
                     const SizedBox(height: 14),
-                    TextFormField(
-                      controller: _waCtrl,
-                      keyboardType: TextInputType.phone,
-                      decoration: _inputDecoration(
-                        label: 'WhatsApp (opsional)',
-                        hint: 'Contoh: 08512345678',
-                        prefixIcon: Icons.phone_outlined,
+
+                    // WhatsApp
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: Colors.grey.shade300),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.phone_outlined,
+                            color: Colors.grey.shade400,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'WhatsApp',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: _textSecondary,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  _waCtrl.text.isNotEmpty ? _waCtrl.text : '-',
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: _textPrimary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Icon(
+                            Icons.lock_outline,
+                            size: 14,
+                            color: Colors.grey.shade400,
+                          ),
+                        ],
                       ),
                     ),
                     const SizedBox(height: 24),
@@ -1152,7 +1346,10 @@ class _UserFormSheetState extends State<_UserFormSheet> {
                         icon: const Icon(Icons.arrow_forward_rounded),
                         label: const Text(
                           'Lanjut: Atur Akses Menu',
-                          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: _primary,
@@ -1188,7 +1385,9 @@ class _UserFormSheetState extends State<_UserFormSheet> {
                       });
                     },
                     child: Text(
-                      _menuState.values.every((v) => v) ? 'Hapus Semua' : 'Pilih Semua',
+                      _menuState.values.every((v) => v)
+                          ? 'Hapus Semua'
+                          : 'Pilih Semua',
                       style: const TextStyle(
                         color: _primary,
                         fontWeight: FontWeight.w600,
@@ -1206,19 +1405,28 @@ class _UserFormSheetState extends State<_UserFormSheet> {
                   duration: const Duration(milliseconds: 200),
                   margin: const EdgeInsets.only(bottom: 10),
                   decoration: BoxDecoration(
-                    color: isEnabled ? _primary.withOpacity(0.05) : Colors.grey.shade50,
+                    color: isEnabled
+                        ? _primary.withOpacity(0.05)
+                        : Colors.grey.shade50,
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(
-                      color: isEnabled ? _primary.withOpacity(0.3) : Colors.grey.shade200,
+                      color: isEnabled
+                          ? _primary.withOpacity(0.3)
+                          : Colors.grey.shade200,
                       width: 1.5,
                     ),
                   ),
                   child: ListTile(
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
                     leading: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: isEnabled ? _primary.withOpacity(0.12) : Colors.grey.shade200,
+                        color: isEnabled
+                            ? _primary.withOpacity(0.12)
+                            : Colors.grey.shade200,
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Icon(
@@ -1237,10 +1445,12 @@ class _UserFormSheetState extends State<_UserFormSheet> {
                     ),
                     trailing: Switch.adaptive(
                       value: isEnabled,
-                      onChanged: (val) => setState(() => _menuState[menu.key] = val),
+                      onChanged: (val) =>
+                          setState(() => _menuState[menu.key] = val),
                       activeColor: _primary,
                     ),
-                    onTap: () => setState(() => _menuState[menu.key] = !isEnabled),
+                    onTap: () =>
+                        setState(() => _menuState[menu.key] = !isEnabled),
                   ),
                 );
               }),
