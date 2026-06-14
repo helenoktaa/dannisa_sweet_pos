@@ -137,11 +137,11 @@ class InvoiceResult {
   final double kembalian;
   final List<DetailTransaksi> detail;
   final InfoPembayaran? infoPembayaran;
-   final double jumlahDp;       
-  final String? tanggalLunas;  
+  final double jumlahDp;
+  final String? tanggalLunas;
+  final String jenisOrder;
 
-
-  // Nomor WA customer 
+  // Nomor WA customer
   String waCustomer;
 
   InvoiceResult({
@@ -158,8 +158,9 @@ class InvoiceResult {
     required this.detail,
     this.infoPembayaran,
     this.waCustomer = '',
-    required this.jumlahDp,    
-    this.tanggalLunas,         
+    required this.jumlahDp,
+    this.tanggalLunas,
+    this.jenisOrder = 'ready_stock',
   });
 
   factory InvoiceResult.fromJson(Map<String, dynamic> json) {
@@ -172,8 +173,9 @@ class InvoiceResult {
       namaKasir: json['nama_kasir'] as String? ?? '',
       metodePembayaran: json['metode_pembayaran'] as String? ?? '',
       statusPembayaran: json['status_pembayaran'] as String? ?? '',
-        jumlahDp: (json['jumlah_dp'] as num?)?.toDouble() ?? 0,          
-      tanggalLunas: json['tanggal_lunas'] as String?,                   
+      jumlahDp: (json['jumlah_dp'] as num?)?.toDouble() ?? 0,
+      tanggalLunas: json['tanggal_lunas'] as String?,
+      jenisOrder: json['jenis_order'] as String? ?? 'ready_stock',
       totalItem: (json['total_item'] as num?)?.toInt() ?? 0,
       totalPenjualan: (json['total_penjualan'] as num?)?.toDouble() ?? 0,
       jumlahBayar: (json['jumlah_bayar'] as num?)?.toDouble() ?? 0,
@@ -273,7 +275,7 @@ class TransaksiProvider extends ChangeNotifier {
       _keranjang.add(CartItem(produk: produk));
     }
     notifyListeners();
-     _saveKeranjang();
+    _saveKeranjang();
   }
 
   void kurangiItem(String idProduk) {
@@ -285,13 +287,13 @@ class TransaksiProvider extends ChangeNotifier {
       _keranjang.removeAt(idx);
     }
     notifyListeners();
-     _saveKeranjang();
+    _saveKeranjang();
   }
 
   void hapusItem(String idProduk) {
     _keranjang.removeWhere((i) => i.produk.idProduk == idProduk);
     notifyListeners();
-     _saveKeranjang();
+    _saveKeranjang();
   }
 
   void clearKeranjang() {
@@ -302,42 +304,46 @@ class TransaksiProvider extends ChangeNotifier {
 
   static const _keranjangKey = 'keranjang_cache';
 
-Future<void> _saveKeranjang() async {
-  final prefs = await SharedPreferences.getInstance();
-  final data = _keranjang.map((item) => {
-    'qty': item.qty,
-    'produk': {
-      'id_produk': item.produk.idProduk,
-      'nama_produk': item.produk.namaProduk,
-      'harga_jual': item.produk.hargaJual,
-      'harga_modal': item.produk.hargaModal,
-      'harga_diskon': item.produk.hargaDiskon,   
-      'persen_diskon': item.produk.porsenDiskon, 
-      'sumber_diskon': item.produk.sumberDiskon,
-      'status_produk': item.produk.statusProduk,
-      'stok': item.produk.stok,
-      'id_kategori': item.produk.idKategori,
-      'nama_kategori': item.produk.namaKategori,
-      'expired_date': item.produk.expiredDate?.toIso8601String(),
-    },
-  }).toList();
-  await prefs.setString(_keranjangKey, jsonEncode(data));
-}
+  Future<void> _saveKeranjang() async {
+    final prefs = await SharedPreferences.getInstance();
+    final data = _keranjang
+        .map(
+          (item) => {
+            'qty': item.qty,
+            'produk': {
+              'id_produk': item.produk.idProduk,
+              'nama_produk': item.produk.namaProduk,
+              'harga_jual': item.produk.hargaJual,
+              'harga_modal': item.produk.hargaModal,
+              'harga_diskon': item.produk.hargaDiskon,
+              'persen_diskon': item.produk.porsenDiskon,
+              'sumber_diskon': item.produk.sumberDiskon,
+              'status_produk': item.produk.statusProduk,
+              'stok': item.produk.stok,
+              'id_kategori': item.produk.idKategori,
+              'nama_kategori': item.produk.namaKategori,
+              'expired_date': item.produk.expiredDate?.toIso8601String(),
+            },
+          },
+        )
+        .toList();
+    await prefs.setString(_keranjangKey, jsonEncode(data));
+  }
 
-Future<void> loadKeranjang() async {
-  final prefs = await SharedPreferences.getInstance();
-  final raw = prefs.getString(_keranjangKey);
-  if (raw == null) return;
-  try {
-    final List decoded = jsonDecode(raw);
-    _keranjang = decoded.map((e) {
-      final p = e['produk'] as Map<String, dynamic>;
-      final produk = ProdukModel.fromJson(p);
-      return CartItem(produk: produk, qty: e['qty'] as int);
-    }).toList();
-    notifyListeners();
-  } catch (_) {}
-}
+  Future<void> loadKeranjang() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_keranjangKey);
+    if (raw == null) return;
+    try {
+      final List decoded = jsonDecode(raw);
+      _keranjang = decoded.map((e) {
+        final p = e['produk'] as Map<String, dynamic>;
+        final produk = ProdukModel.fromJson(p);
+        return CartItem(produk: produk, qty: e['qty'] as int);
+      }).toList();
+      notifyListeners();
+    } catch (_) {}
+  }
 
   // ── POST /v1/transaksi ─────────────────────────────────────
   Future<TransaksiResult?> checkout({
@@ -525,6 +531,7 @@ Future<void> loadKeranjang() async {
   Future<bool> lunasi({
     required String idTransaksi,
     required double jumlahBayar,
+    double jumlahDp = 0,
   }) async {
     try {
       await DioClient.instance.put(

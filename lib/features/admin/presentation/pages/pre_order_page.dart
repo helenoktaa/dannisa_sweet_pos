@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:dannisa_sweet_pos/features/admin/presentation/providers/transaksi_provider.dart';
+import 'package:dannisa_sweet_pos/core/constants/api_constants.dart';
+import 'package:dannisa_sweet_pos/core/services/dio_client.dart';
+import 'package:dannisa_sweet_pos/features/admin/presentation/pages/transaksi_pending_page.dart';
 
 const _primary = Color(0xFFE91E8C);
 const _surface = Color(0xFFFFF0F7);
@@ -433,7 +436,15 @@ class PreOrderDetailPage extends StatefulWidget {
 
 class _PreOrderDetailPageState extends State<PreOrderDetailPage> {
   bool _isUpdating = false;
+  late PreOrderItem _po;
 
+  @override
+  void initState() {
+    super.initState();
+    _po = widget.preOrder;
+  }
+
+  // ── Update status order
   Future<void> _updateStatus(String nextStatus) async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -467,26 +478,59 @@ class _PreOrderDetailPageState extends State<PreOrderDetailPage> {
     setState(() => _isUpdating = true);
     final provider = context.read<TransaksiProvider>();
     final ok = await provider.updateStatusOrder(
-      idTransaksi: widget.preOrder.idTransaksi,
+      idTransaksi: _po.idTransaksi, // ← pakai _po bukan widget.preOrder
       statusOrder: nextStatus,
     );
     setState(() => _isUpdating = false);
 
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          ok ? 'Status berhasil diupdate ✓' : 'Gagal update status',
-        ),
-        backgroundColor: ok ? _success : _danger,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ),
-    );
 
-    if (ok) Navigator.pop(context);
+    if (ok) {
+      // Kalau sudah selesai atau dibatalkan → pop halaman
+      if (nextStatus == 'selesai' || nextStatus == 'dibatalkan') {
+        Navigator.pop(context);
+      } else {
+        // Status masih di tengah → update lokal, JANGAN pop
+        setState(() {
+          _po = PreOrderItem(
+            idTransaksi: _po.idTransaksi,
+            tanggalTransaksi: _po.tanggalTransaksi,
+            namaCustomer: _po.namaCustomer,
+            metodePembayaran: _po.metodePembayaran,
+            statusPembayaran: _po.statusPembayaran,
+            jumlahDp: _po.jumlahDp,
+            statusOrder: nextStatus, // ← maju ke status berikutnya
+            catatan: _po.catatan,
+            totalPenjualan: _po.totalPenjualan,
+            totalItem: _po.totalItem,
+            detail: _po.detail,
+          );
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Status diupdate ke "${_statusConfig[nextStatus]?['label']}" ✓',
+            ),
+            backgroundColor: _success,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        );
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Gagal update status'),
+          backgroundColor: _danger,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
+  // ── Batalkan pesanan
   Future<void> _batalkan() async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -520,19 +564,18 @@ class _PreOrderDetailPageState extends State<PreOrderDetailPage> {
     setState(() => _isUpdating = true);
     final provider = context.read<TransaksiProvider>();
     final ok = await provider.updateStatusOrder(
-      idTransaksi: widget.preOrder.idTransaksi,
+      idTransaksi: _po.idTransaksi,
       statusOrder: 'dibatalkan',
     );
     setState(() => _isUpdating = false);
 
     if (!mounted) return;
-    if (ok) Navigator.pop(context);
+    if (ok) Navigator.pop(context); // ← batalkan → langsung pop
   }
 
-  // Tambah di _PreOrderDetailPageState
-
+  // ── Bayar DP 50%
   Future<void> _bayarDp() async {
-    final dp50 = widget.preOrder.totalPenjualan * 0.5;
+    final dp50 = _po.totalPenjualan * 0.5; // ← pakai _po
     final controller = TextEditingController(text: dp50.toStringAsFixed(0));
 
     final confirm = await showModalBottomSheet<bool>(
@@ -634,25 +677,56 @@ class _PreOrderDetailPageState extends State<PreOrderDetailPage> {
 
     setState(() => _isUpdating = true);
     final ok = await context.read<TransaksiProvider>().bayarDp(
-      idTransaksi: widget.preOrder.idTransaksi,
+      idTransaksi: _po.idTransaksi, // ← pakai _po
       jumlahDp: jumlahDp,
     );
     setState(() => _isUpdating = false);
 
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(ok ? 'DP berhasil dicatat ✓' : 'Gagal mencatat DP'),
-        backgroundColor: ok ? _success : _danger,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ),
-    );
-    if (ok) Navigator.pop(context);
+
+    if (ok) {
+      // Update lokal, JANGAN pop — admin masih perlu update status order
+      setState(() {
+        _po = PreOrderItem(
+          idTransaksi: _po.idTransaksi,
+          tanggalTransaksi: _po.tanggalTransaksi,
+          namaCustomer: _po.namaCustomer,
+          metodePembayaran: _po.metodePembayaran,
+          statusPembayaran: 'DP', // ← update status bayar
+          jumlahDp: jumlahDp, // ← simpan nilai DP baru
+          statusOrder: _po.statusOrder,
+          catatan: _po.catatan,
+          totalPenjualan: _po.totalPenjualan,
+          totalItem: _po.totalItem,
+          detail: _po.detail,
+        );
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+            'DP berhasil dicatat ✓  Lunasi saat pesanan siap diantar',
+          ),
+          backgroundColor: _success,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Gagal mencatat DP'),
+          backgroundColor: _danger,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
+  // ── Lunasi sisa pembayaran
   Future<void> _lunasi() async {
-    final sisaBayar = widget.preOrder.totalPenjualan - widget.preOrder.jumlahDp;
+    final sisaBayar = _po.totalPenjualan - _po.jumlahDp; // ← pakai _po
     final controller = TextEditingController(
       text: sisaBayar.toStringAsFixed(0),
     );
@@ -742,32 +816,95 @@ class _PreOrderDetailPageState extends State<PreOrderDetailPage> {
 
     setState(() => _isUpdating = true);
     final ok = await context.read<TransaksiProvider>().lunasi(
-      idTransaksi: widget.preOrder.idTransaksi,
+      idTransaksi: _po.idTransaksi, 
       jumlahBayar: jumlahBayar,
+      jumlahDp: _po.jumlahDp,
     );
     setState(() => _isUpdating = false);
 
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(ok ? 'Pembayaran lunas ✓' : 'Gagal melunasi'),
-        backgroundColor: ok ? _success : _danger,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+
+    if (!ok) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Gagal melunasi'),
+          backgroundColor: _danger,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    // ✅ 1. Update state lokal dulu
+    setState(() {
+      _po = PreOrderItem(
+        idTransaksi: _po.idTransaksi,
+        tanggalTransaksi: _po.tanggalTransaksi,
+        namaCustomer: _po.namaCustomer,
+        metodePembayaran: _po.metodePembayaran,
+        statusPembayaran: 'Lunas',
+        jumlahDp: _po.totalPenjualan,
+        statusOrder: _po.statusOrder,
+        catatan: _po.catatan,
+        totalPenjualan: _po.totalPenjualan,
+        totalItem: _po.totalItem,
+        detail: _po.detail,
+      );
+    });
+
+    // ✅ 2. Fetch invoice dari server
+    InvoiceResult? invoice;
+    try {
+      final response = await DioClient.instance.get(
+        '${ApiConstants.transaksi}/${_po.idTransaksi}/invoice',
+      );
+      final data = response.data['data'] as Map<String, dynamic>;
+      invoice = InvoiceResult.fromJson(data);
+    } catch (e) {
+      debugPrint('Gagal fetch invoice pre order: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Lunas ✓ tapi gagal memuat invoice'),
+            backgroundColor: _warning,
+          ),
+        );
+      }
+      return;
+    }
+
+    if (!mounted) return;
+
+    //  3. Tampilkan dialog invoice lunas
+    // JANGAN pop halaman — dialog ditampilkan di atas PreOrderDetailPage
+    // supaya setelah tutup invoice, admin masih bisa update status order
+    await showDialog(
+      context: context,
+      builder: (_) => ChangeNotifierProvider.value(
+        value: context.read<TransaksiProvider>(),
+        child: InvoicePendingDialog(
+          invoice: invoice!,
+          onLunas: () {}, // sudah lunas, tidak perlu aksi tambahan
+          initialSudahLunas: true, // langsung tampil sebagai "Lunas"
+        ),
       ),
     );
-    if (ok) Navigator.pop(context);
   }
 
   @override
   Widget build(BuildContext context) {
-    final po = widget.preOrder;
+    final po = _po; // ← pakai _po, bukan widget.preOrder
     final cfg =
         _statusConfig[po.statusOrder] ?? _statusConfig['menunggu_diproses']!;
     final statusColor = Color(cfg['color'] as int);
     final nextStatus = _nextStatus(po.statusOrder);
     final sudahSelesai =
         po.statusOrder == 'selesai' || po.statusOrder == 'dibatalkan';
+
+    // Cek apakah boleh advance ke selesai (harus lunas dulu)
+    final bolehAdvance =
+        nextStatus != null &&
+        !(nextStatus == 'selesai' && po.statusPembayaran != 'Lunas');
 
     return Scaffold(
       backgroundColor: _surface,
@@ -816,7 +953,6 @@ class _PreOrderDetailPageState extends State<PreOrderDetailPage> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  // Progress tracker
                   _StatusTracker(currentStatus: po.statusOrder),
                 ],
               ),
@@ -961,9 +1097,9 @@ class _PreOrderDetailPageState extends State<PreOrderDetailPage> {
             ),
             const SizedBox(height: 24),
 
-            // ── Tombol aksi ───────────────────────────────────
+            // ── Tombol aksi ───────────────────────────────
             if (!sudahSelesai) ...[
-              // Tombol pembayaran DP
+              // 1. Tombol Bayar DP (muncul kalau masih Pending)
               if (po.statusPembayaran == 'Pending') ...[
                 SizedBox(
                   width: double.infinity,
@@ -991,7 +1127,7 @@ class _PreOrderDetailPageState extends State<PreOrderDetailPage> {
                 const SizedBox(height: 8),
               ],
 
-              // Info DP + tombol lunasi
+              // 2. Info DP + tombol Lunasi (muncul kalau status DP)
               if (po.statusPembayaran == 'DP') ...[
                 Container(
                   width: double.infinity,
@@ -1045,50 +1181,80 @@ class _PreOrderDetailPageState extends State<PreOrderDetailPage> {
                 const SizedBox(height: 8),
               ],
 
-              // Tombol update status order
+              // 3. Tombol update status order
               if (nextStatus != null) ...[
-                SizedBox(
-                  width: double.infinity,
-                  height: 52,
-                  child: ElevatedButton.icon(
-                    onPressed: _isUpdating
-                        ? null
-                        : () => _updateStatus(nextStatus),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _primary,
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
+                // Warning kalau mau selesai tapi belum lunas
+                if (!bolehAdvance) ...[
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    margin: const EdgeInsets.only(bottom: 8),
+                    decoration: BoxDecoration(
+                      color: _danger.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: _danger.withOpacity(0.3)),
                     ),
-                    icon: _isUpdating
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
+                    child: const Row(
+                      children: [
+                        Icon(Icons.warning_amber, size: 16, color: _danger),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Lunasi pembayaran terlebih dahulu sebelum menyelesaikan pesanan',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: _danger,
+                              fontWeight: FontWeight.w600,
                             ),
-                          )
-                        : Icon(
-                            _statusConfig[nextStatus]?['icon'] as IconData? ??
-                                Icons.arrow_forward,
-                            size: 20,
                           ),
-                    label: Text(
-                      'Update ke "${_statusConfig[nextStatus]?['label']}"',
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
+                        ),
+                      ],
+                    ),
+                  ),
+                ] else ...[
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: ElevatedButton.icon(
+                      onPressed: _isUpdating
+                          ? null
+                          : () => _updateStatus(nextStatus),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _primary,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      icon: _isUpdating
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Icon(
+                              _statusConfig[nextStatus]?['icon'] as IconData? ??
+                                  Icons.arrow_forward,
+                              size: 20,
+                            ),
+                      label: Text(
+                        'Update ke "${_statusConfig[nextStatus]?['label']}"',
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 10),
+                  const SizedBox(height: 10),
+                ],
               ],
 
-              // Tombol batalkan
+              // 4. Tombol Batalkan
               SizedBox(
                 width: double.infinity,
                 height: 48,

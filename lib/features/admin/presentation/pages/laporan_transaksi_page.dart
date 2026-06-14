@@ -1026,6 +1026,33 @@ class _TransaksiCardState extends State<_TransaksiCard>
                                 color: _textSecondary,
                               ),
                             ),
+                            const SizedBox(width: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color:
+                                    (t.jenisOrder == 'pre_order'
+                                            ? Colors.orange
+                                            : _success)
+                                        .withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(5),
+                              ),
+                              child: Text(
+                                t.jenisOrder == 'pre_order'
+                                    ? 'Pre Order'
+                                    : 'Ready Stock',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: t.jenisOrder == 'pre_order'
+                                      ? Colors.orange.shade700
+                                      : _success,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
                             const Spacer(),
                             Text(
                               _formatRupiah(t.totalPenjualan),

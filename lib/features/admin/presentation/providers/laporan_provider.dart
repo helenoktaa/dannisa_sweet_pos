@@ -119,6 +119,7 @@ class TransaksiLaporan {
   final double jumlahBayar;
   final String metodePembayaran;
   final String statusPembayaran;
+  final String jenisOrder;
   final int totalItem;
   final double totalPenjualan;
   final List<DetailLaporan> detail;
@@ -136,6 +137,7 @@ class TransaksiLaporan {
     required this.jumlahBayar,
     required this.metodePembayaran,
     required this.statusPembayaran,
+    required this.jenisOrder,
     required this.totalItem,
     required this.totalPenjualan,
     required this.detail,
@@ -151,6 +153,7 @@ class TransaksiLaporan {
       jumlahBayar: (json['jumlah_bayar'] as num?)?.toDouble() ?? 0,
       metodePembayaran: json['metode_pembayaran'] as String? ?? '',
       statusPembayaran: json['status_pembayaran'] as String? ?? '',
+      jenisOrder: json['jenis_order'] as String? ?? '',
       totalItem: (json['total_item'] as num?)?.toInt() ?? 0,
       totalPenjualan: (json['total_penjualan'] as num?)?.toDouble() ?? 0,
       detail: rawDetail

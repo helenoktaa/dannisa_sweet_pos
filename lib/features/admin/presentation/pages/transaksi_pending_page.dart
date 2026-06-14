@@ -10,6 +10,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:dannisa_sweet_pos/core/constants/api_constants.dart';
 import 'package:dannisa_sweet_pos/core/services/dio_client.dart';
 import 'package:dannisa_sweet_pos/features/admin/presentation/providers/transaksi_provider.dart';
+import 'package:dannisa_sweet_pos/features/admin/presentation/pages/pre_order_page.dart';
 import 'package:dio/dio.dart';
 
 // ── Warna tema Dannisa Sweet ───────────────────────────────
@@ -129,7 +130,7 @@ class TransaksiPending {
   final List<DetailPending> detail;
   final String? tanggalLunas;
   final String statusOrder;
-   final String catatan;
+  final String catatan;
 
   const TransaksiPending({
     required this.idTransaksi,
@@ -146,7 +147,6 @@ class TransaksiPending {
     required this.tanggalLunas,
     required this.statusOrder,
     required this.catatan,
-    
   });
 
   factory TransaksiPending.fromJson(Map<String, dynamic> json) {
@@ -694,9 +694,31 @@ class _PendingCard extends StatelessWidget {
                         MaterialPageRoute(
                           builder: (_) => ChangeNotifierProvider.value(
                             value: context.read<TransaksiProvider>(),
-                            child: PreOrderStatusPage(
-                              transaksi: t,
-                              onUpdated: onUpdated,
+                            child: PreOrderDetailPage(
+                              // ← pakai halaman yang sudah difix
+                              preOrder: PreOrderItem(
+                                idTransaksi: t.idTransaksi,
+                                tanggalTransaksi: t.tanggalTransaksi,
+                                namaCustomer: t.namaCustomer,
+                                metodePembayaran: t.metodePembayaran,
+                                statusPembayaran: t.statusPembayaran,
+                                jumlahDp: t.jumlahDp,
+                                statusOrder: t.statusOrder,
+                                catatan: t.catatan,
+                                totalPenjualan: t.totalPenjualan,
+                                totalItem: t.totalItem,
+                                detail: t.detail
+                                    .map(
+                                      (d) => DetailTransaksi(
+                                        idProduk: d.idProduk,
+                                        namaProduk: d.namaProduk,
+                                        qty: d.qty,
+                                        hargaJual: d.hargaJual,
+                                        subTotal: d.subTotal,
+                                      ),
+                                    )
+                                    .toList(),
+                              ),
                             ),
                           ),
                         ),
@@ -769,14 +791,13 @@ class _PendingCard extends StatelessWidget {
       context: context,
       builder: (_) => ChangeNotifierProvider.value(
         value: context.read<TransaksiProvider>(),
-        child: _InvoicePendingDialog(invoice: invoice!, onLunas: onUpdated),
+        child: InvoicePendingDialog(invoice: invoice!, onLunas: onUpdated),
       ),
     );
   }
 
   Future<void> _showLunasDialog(BuildContext context) async {
     final bayarCtrl = TextEditingController();
-    final dpCtrl = TextEditingController();
     final t = transaksi;
     final isTransfer = t.metodePembayaran.toLowerCase().contains('transfer');
     String selectedStatus = 'Lunas';
@@ -1035,28 +1056,12 @@ class _PendingCard extends StatelessWidget {
       return;
     }
 
-    await navigator.push(
-      DialogRoute(
-        context: navigator.context,
-        builder: (_) => ChangeNotifierProvider.value(
-          value: provider, // ← pakai provider yang sudah disimpan
-          child: _InvoicePendingDialog(
-            invoice: invoice!,
-            onLunas: onUpdated,
-            initialSudahLunas: true,
-          ),
-        ),
-      ),
-    );
-
-    if (!context.mounted) return;
-
     // Buka invoice dialog langsung dalam kondisi sudah lunas
     await showDialog(
       context: context,
       builder: (_) => ChangeNotifierProvider.value(
         value: context.read<TransaksiProvider>(),
-        child: _InvoicePendingDialog(
+        child: InvoicePendingDialog(
           invoice: invoice!,
           onLunas: onUpdated,
           initialSudahLunas: true,
@@ -1085,6 +1090,7 @@ class PreOrderStatusPage extends StatefulWidget {
 
 class _PreOrderStatusPageState extends State<PreOrderStatusPage> {
   bool _isUpdating = false;
+  bool _sudahLunasLokal = false;
 
   Future<void> _updateStatus(String nextStatus) async {
     final confirm = await showDialog<bool>(
@@ -1403,18 +1409,63 @@ class _PreOrderStatusPageState extends State<PreOrderStatusPage> {
     setState(() => _isUpdating = false);
 
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(ok ? 'Pembayaran lunas ✓' : 'Gagal melunasi'),
-        backgroundColor: ok ? _success : _danger,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+
+    if (!ok) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Gagal melunasi'),
+          backgroundColor: _danger,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
+      return;
+    }
+
+    widget.onUpdated();
+
+    setState(() => _sudahLunasLokal = true);
+
+    // Fetch invoice terbaru
+
+    debugPrint('MULAI FETCH INVOICE ${widget.transaksi.idTransaksi}');
+    InvoiceResult? invoice;
+    try {
+      final response = await DioClient.instance.get(
+        '${ApiConstants.transaksi}/${widget.transaksi.idTransaksi}/invoice',
+      );
+      final data = response.data['data'] as Map<String, dynamic>;
+      invoice = InvoiceResult.fromJson(data);
+    } catch (e, st) {
+      debugPrint('ERROR FETCH INVOICE PREORDER: $e');
+      debugPrint('STACK: $st');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Lunas ✓ tapi gagal memuat invoice'),
+            backgroundColor: _warning,
+          ),
+        );
+        Navigator.pop(context);
+      }
+      return;
+    }
+
+    if (!mounted) return;
+
+    await showDialog(
+      context: context,
+      builder: (_) => ChangeNotifierProvider.value(
+        value: context.read<TransaksiProvider>(),
+        child: InvoicePendingDialog(
+          invoice: invoice!,
+          onLunas: widget.onUpdated,
+          initialSudahLunas: true,
+        ),
       ),
     );
-    if (ok) {
-      widget.onUpdated();
-      Navigator.pop(context);
-    }
   }
 
   @override
@@ -1659,7 +1710,7 @@ class _PreOrderStatusPageState extends State<PreOrderStatusPage> {
               ],
 
               // Info DP + Lunasi
-              if (t.statusPembayaran == 'DP') ...[
+              if (t.statusPembayaran == 'DP' && !_sudahLunasLokal) ...[
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(12),
@@ -1828,22 +1879,22 @@ class _PreOrderStatusPageState extends State<PreOrderStatusPage> {
 // ══════════════════════════════════════════════════════════
 //  Invoice Pending Dialog
 // ══════════════════════════════════════════════════════════
-class _InvoicePendingDialog extends StatefulWidget {
+class InvoicePendingDialog extends StatefulWidget {
   final InvoiceResult invoice;
   final VoidCallback onLunas;
   final bool initialSudahLunas;
 
-  const _InvoicePendingDialog({
+  const InvoicePendingDialog({
     required this.invoice,
     required this.onLunas,
     this.initialSudahLunas = false,
   });
 
   @override
-  State<_InvoicePendingDialog> createState() => _InvoicePendingDialogState();
+  State<InvoicePendingDialog> createState() => InvoicePendingDialogState();
 }
 
-class _InvoicePendingDialogState extends State<_InvoicePendingDialog> {
+class InvoicePendingDialogState extends State<InvoicePendingDialog> {
   final _bayarCtrl = TextEditingController();
   bool _isUpdating = false;
   bool _sudahLunas = false;
@@ -1890,7 +1941,6 @@ class _InvoicePendingDialogState extends State<_InvoicePendingDialog> {
     }
   }
 
-  // ── GANTI SELURUH _tandaiLunas ────────────────────────────
   Future<void> _tandaiLunas() async {
     setState(() => _isUpdating = true);
 
@@ -2068,7 +2118,34 @@ class _InvoicePendingDialogState extends State<_InvoicePendingDialog> {
                             isBold: true,
                           ),
 
-                          // ── TAMBAH: blok lunas ──────────────
+                          // ── DP Minimal (belum bayar DP, pre order, pending)
+                          if (!_sudahLunas &&
+                              inv.jenisOrder == 'pre_order' &&
+                              inv.jumlahDp == 0 &&
+                              inv.statusPembayaran == 'Pending') ...[
+                            _InfoRow(
+                              label: 'DP Minimal (50%)',
+                              value: _formatRupiah(inv.totalPenjualan * 0.5),
+                              isBold: true,
+                            ),
+                          ],
+
+                          // ── DP Terbayar & Sisa Tagihan (sudah bayar DP, pre order, belum lunas)
+                          if (!_sudahLunas &&
+                              inv.jenisOrder == 'pre_order' &&
+                              inv.jumlahDp > 0) ...[
+                            _InfoRow(
+                              label: 'DP Terbayar',
+                              value: _formatRupiah(inv.jumlahDp),
+                            ),
+                            _InfoRow(
+                              label: 'Sisa Tagihan',
+                              value: _formatRupiah(
+                                inv.totalPenjualan - inv.jumlahDp,
+                              ),
+                              isBold: true,
+                            ),
+                          ],
                           if (_sudahLunas) ...[
                             const SizedBox(height: 8),
                             Container(

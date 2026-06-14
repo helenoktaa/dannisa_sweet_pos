@@ -12,6 +12,7 @@ import 'package:dannisa_sweet_pos/features/admin/presentation/pages/laporan_tran
 import 'package:dannisa_sweet_pos/features/admin/presentation/pages/transaksi_pending_page.dart';
 import 'package:dannisa_sweet_pos/features/admin/presentation/pages/pilih_transaksi_page.dart';
 import 'package:dannisa_sweet_pos/features/admin/presentation/pages/kelola_user_page.dart';
+import 'package:dannisa_sweet_pos/features/admin/presentation/pages/input_transaksi_page.dart';
 
 // ── Warna tema ─────────────────────────────────────────────
 const _primary = Color(0xFFE91E8C);
@@ -55,7 +56,7 @@ final _allTabs = [
     label: 'Transaksi',
     icon: Icons.receipt_long_outlined,
     activeIcon: Icons.receipt_long_outlined,
-    page: const PilihTransaksiPage(),
+    page: const InputTransaksiPage(),
   ),
   _TabItem(
     key: _keyProduk,
