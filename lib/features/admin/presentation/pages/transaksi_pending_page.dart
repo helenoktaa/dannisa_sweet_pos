@@ -2127,6 +2127,7 @@ class InvoicePendingDialogState extends State<InvoicePendingDialog> {
                               label: 'DP Minimal (50%)',
                               value: _formatRupiah(inv.totalPenjualan * 0.5),
                               isBold: true,
+                              
                             ),
                           ],
 

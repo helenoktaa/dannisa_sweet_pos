@@ -1842,10 +1842,16 @@ class _InvoiceDialogState extends State<_InvoiceDialog> {
                             label: 'Total',
                             value: _formatRupiah(inv.totalPenjualan),
                             isBold: true,
-                            color: _primary,
                           ),
 
-                          // Jadi ini:
+                          if (inv.jenisOrder == 'pre_order')
+                            _InvRow(
+                              label: 'DP Minimal (50%)',
+                              value: _formatRupiah(inv.totalPenjualan * 0.5),
+                              isBold: true,
+                              color: _warning,
+                            ),
+
                           // ── Kembalian (hanya tunai, bukan pre order)
                           if (!isTransfer &&
                               inv.kembalian > 0 &&
@@ -1856,60 +1862,9 @@ class _InvoiceDialogState extends State<_InvoiceDialog> {
                               color: _success,
                             ),
 
-                          // ── Info khusus pre order
-                          if (inv.jenisOrder == 'pre_order') ...[
-                            const SizedBox(height: 8),
-                            Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: Colors.orange.shade50,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: Colors.orange.shade200,
-                                ),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Icon(
-                                        Icons.access_time,
-                                        size: 14,
-                                        color: Colors.orange.shade700,
-                                      ),
-                                      const SizedBox(width: 6),
-                                      Text(
-                                        'Pre Order — Bayar DP Dulu',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w700,
-                                          fontSize: 13,
-                                          color: Colors.orange.shade700,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 8),
-                                  _InvRow(
-                                    label: 'DP Minimal (50%)',
-                                    value: _formatRupiah(
-                                      inv.totalPenjualan * 0.5,
-                                    ),
-                                    isBold: true,
-                                    color: Colors.orange.shade700,
-                                  ),
-                                  _InvRow(
-                                    label: 'Total Tagihan',
-                                    value: _formatRupiah(inv.totalPenjualan),
-                                    isBold: true,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-
-                          if (isTransfer && inv.infoPembayaran != null) ...[
+                          // Sesudah — muncul untuk transfer DAN pre order:
+                          if ((isTransfer || inv.jenisOrder == 'pre_order') &&
+                              inv.infoPembayaran != null) ...[
                             const SizedBox(height: 12),
                             Container(
                               width: double.infinity,
