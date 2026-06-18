@@ -324,7 +324,7 @@ class _DaftarProdukPageState extends State<DaftarProdukPage>
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
-                          childAspectRatio: 0.70,
+                          childAspectRatio: 0.69,
                           crossAxisSpacing: 12,
                           mainAxisSpacing: 12,
                         ),
@@ -640,22 +640,23 @@ class _ProdukGridCard extends StatelessWidget {
           // ── Info ─────────────────────────────────────────
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(8),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     produk.namaProduk,
                     style: const TextStyle(
                       fontWeight: FontWeight.w700,
-                      fontSize: 13,
+                      fontSize: 12,
                       color: _textPrimary,
                     ),
 
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 3),
 
                   Wrap(
                     spacing: 4,
@@ -664,8 +665,8 @@ class _ProdukGridCard extends StatelessWidget {
                     children: [
                       Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 3,
+                          horizontal: 7,
+                          vertical: 2,
                         ),
 
                         decoration: BoxDecoration(
@@ -682,7 +683,7 @@ class _ProdukGridCard extends StatelessWidget {
                               : "Ready Stock",
 
                           style: TextStyle(
-                            fontSize: 10,
+                            fontSize: 9,
 
                             color: produk.statusProduk == "preorder"
                                 ? Colors.orange
@@ -717,7 +718,7 @@ class _ProdukGridCard extends StatelessWidget {
                         ),
                     ],
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 4),
                   // Badge diskon
                   if (produk.adaDiskon) ...[
                     Container(
@@ -733,7 +734,7 @@ class _ProdukGridCard extends StatelessWidget {
                         '-${produk.porsenDiskon?.toStringAsFixed(0)}%',
                         style: const TextStyle(
                           color: Colors.white,
-                          fontSize: 10,
+                          fontSize: 9,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -742,7 +743,7 @@ class _ProdukGridCard extends StatelessWidget {
                     Text(
                       _formatRupiah(produk.hargaJual),
                       style: const TextStyle(
-                        fontSize: 11,
+                        fontSize: 10,
                         color: _textSecondary,
                         decoration: TextDecoration.lineThrough,
                         decorationColor: _textSecondary,
@@ -752,7 +753,7 @@ class _ProdukGridCard extends StatelessWidget {
                       _formatRupiah(produk.hargaTampil),
                       style: const TextStyle(
                         fontWeight: FontWeight.w800,
-                        fontSize: 14,
+                        fontSize: 13,
                         color: _danger,
                       ),
                     ),
@@ -761,11 +762,11 @@ class _ProdukGridCard extends StatelessWidget {
                       _formatRupiah(produk.hargaJual),
                       style: const TextStyle(
                         fontWeight: FontWeight.w800,
-                        fontSize: 14,
+                        fontSize: 13,
                         color: _primary,
                       ),
                     ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 3),
                   Row(
                     children: [
                       Icon(
@@ -774,14 +775,16 @@ class _ProdukGridCard extends StatelessWidget {
                         color: stokColor,
                       ),
                       const SizedBox(width: 3),
-                      Text(
-                        produk.statusProduk == "preorder"
-                            ? "By Order"
-                            : "Stok: ${produk.stok}",
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: stokColor,
-                          fontWeight: FontWeight.w600,
+                      Flexible(
+                        child: Text(
+                          produk.statusProduk == "preorder"
+                              ? "By Order"
+                              : "Stok: ${produk.stok}",
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: stokColor,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ],

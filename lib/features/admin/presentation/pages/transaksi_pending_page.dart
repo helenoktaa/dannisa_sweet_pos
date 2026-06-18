@@ -250,6 +250,7 @@ class _TransaksiPendingPageState extends State<TransaksiPendingPage> {
                 .map(
                   (e) => TransaksiPending.fromJson(e as Map<String, dynamic>),
                 )
+                .where((t) => t.statusOrder != 'dibatalkan')
                 .toList()
               ..sort(
                 (a, b) => b.tanggalTransaksi.compareTo(a.tanggalTransaksi),

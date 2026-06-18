@@ -45,15 +45,15 @@ class _MarkdownPricingPageState extends State<MarkdownPricingPage> {
 
     // Hanya produk ready (bukan preorder) yang bisa di-diskon
     final filtered = provider.produks
-    .where(
-      (p) =>
-          p.statusProduk == 'ready' &&
-          p.expiredDate != null &&
-          p.expiredDate!.difference(DateTime.now()).inDays <= 7 && 
-          p.expiredDate!.isAfter(DateTime.now()) && 
-          p.namaProduk.toLowerCase().contains(_searchQuery.toLowerCase()),
-    )
-    .toList();
+        .where(
+          (p) =>
+              p.statusProduk == 'ready' &&
+              p.expiredDate != null &&
+              p.expiredDate!.difference(DateTime.now()).inDays <= 7 &&
+              p.expiredDate!.isAfter(DateTime.now()) &&
+              p.namaProduk.toLowerCase().contains(_searchQuery.toLowerCase()),
+        )
+        .toList();
 
     return Scaffold(
       backgroundColor: _surface,
@@ -367,81 +367,231 @@ class _MarkdownCard extends StatelessWidget {
     final porsenCtrl = TextEditingController(
       text: produk.porsenDiskon?.toStringAsFixed(0) ?? '20',
     );
-    final sampaiCtrl = TextEditingController();
+    final rupiahCtrl = TextEditingController(
+      text: produk.porsenDiskon != null
+          ? (produk.hargaJual * produk.porsenDiskon! / 100).toStringAsFixed(0)
+          : (produk.hargaJual * 0.2).toStringAsFixed(0),
+    );
+
+    bool _isEditingPersen = false;
+    bool _isEditingRupiah = false;
 
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text(
-          'Set Diskon Manual',
-          style: TextStyle(fontWeight: FontWeight.w800),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextFormField(
-              controller: porsenCtrl,
-              keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              decoration: InputDecoration(
-                labelText: 'Persen Diskon (%)',
-                suffixText: '%',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+      builder: (_) => StatefulBuilder(
+        builder: (ctx, setStateDialog) {
+          // Harga setelah diskon
+          final persen = double.tryParse(porsenCtrl.text) ?? 0;
+          final hargaDiskon = produk.hargaJual * (1 - persen / 100);
+          // Tanggal expired produk
+          final tglExpired = produk.expiredDate != null
+              ? '${produk.expiredDate!.day}/${produk.expiredDate!.month}/${produk.expiredDate!.year}'
+              : '-';
+
+          return AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            title: const Text(
+              'Set Diskon Manual',
+              style: TextStyle(fontWeight: FontWeight.w800),
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Info harga asli
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: _surface,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Harga Asli',
+                        style: TextStyle(fontSize: 13, color: _textSecondary),
+                      ),
+                      Text(
+                        'Rp ${_fmt(produk.hargaJual)}',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // Input Persen
+                TextFormField(
+                  controller: porsenCtrl,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  decoration: InputDecoration(
+                    labelText: 'Diskon (%)',
+                    suffixText: '%',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: _primary, width: 2),
+                    ),
+                  ),
+                  onChanged: (v) {
+                    if (_isEditingRupiah) return;
+                    _isEditingPersen = true;
+                    final persen = double.tryParse(v) ?? 0;
+                    final rupiah = produk.hargaJual * persen / 100;
+                    rupiahCtrl.text = rupiah.toStringAsFixed(0);
+                    setStateDialog(() {});
+                    _isEditingPersen = false;
+                  },
+                ),
+                const SizedBox(height: 12),
+
+                // Input Rupiah
+                TextFormField(
+                  controller: rupiahCtrl,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  decoration: InputDecoration(
+                    labelText: 'Diskon (Rupiah)',
+                    prefixText: 'Rp ',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: _primary, width: 2),
+                    ),
+                  ),
+                  onChanged: (v) {
+                    if (_isEditingPersen) return;
+                    _isEditingRupiah = true;
+                    final rupiah = double.tryParse(v) ?? 0;
+                    final persen = produk.hargaJual > 0
+                        ? (rupiah / produk.hargaJual * 100).clamp(0, 100)
+                        : 0.0;
+                    porsenCtrl.text = persen.toStringAsFixed(0);
+                    setStateDialog(() {});
+                    _isEditingRupiah = false;
+                  },
+                ),
+                const SizedBox(height: 12),
+
+                // Preview harga setelah diskon
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: _danger.withOpacity(0.07),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: _danger.withOpacity(0.3)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Harga Setelah Diskon',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: _textSecondary,
+                            ),
+                          ),
+                          Text(
+                            'Rp ${_fmt(hargaDiskon)}',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w800,
+                              color: _danger,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Aktif Sampai',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: _textSecondary,
+                            ),
+                          ),
+                          Text(
+                            tglExpired,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text(
+                  'Batal',
+                  style: TextStyle(color: _textSecondary),
                 ),
               ),
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: sampaiCtrl,
-              readOnly: true,
-              decoration: InputDecoration(
-                labelText: 'Aktif Sampai',
-                prefixIcon: const Icon(Icons.calendar_today, size: 18),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
+                onPressed: () async {
+                  if (porsenCtrl.text.isEmpty) return;
+
+                  final persen = double.tryParse(porsenCtrl.text) ?? 0;
+                  final hargaSetelahDiskon =
+                      produk.hargaJual * (1 - persen / 100);
+
+                  // Validasi: harga setelah diskon tidak boleh di bawah harga modal
+                  if (hargaSetelahDiskon < produk.hargaModal) {
+                    ScaffoldMessenger.of(ctx).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Diskon terlalu besar! Harga diskon (Rp ${_fmt(hargaSetelahDiskon)}) '
+                          'di bawah harga modal (Rp ${_fmt(produk.hargaModal)})',
+                        ),
+                        backgroundColor: _danger,
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    );
+                    return;
+                  }
+
+                  final sampai =
+                      produk.expiredDate?.toIso8601String().split('T')[0] ?? '';
+                  Navigator.pop(context);
+                  await _kirimOverride(context, persen, sampai);
+                },
+                child: const Text('Simpan'),
               ),
-              onTap: () async {
-                final picked = await showDatePicker(
-                  context: context,
-                  initialDate: DateTime.now().add(const Duration(days: 1)),
-                  firstDate: DateTime.now(),
-                  lastDate: DateTime(2035),
-                );
-                if (picked != null) {
-                  sampaiCtrl.text = picked.toIso8601String().split('T')[0];
-                }
-              },
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Batal', style: TextStyle(color: _textSecondary)),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: _primary,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-            onPressed: () async {
-              if (porsenCtrl.text.isEmpty || sampaiCtrl.text.isEmpty) return;
-              Navigator.pop(context);
-              await _kirimOverride(
-                context,
-                double.parse(porsenCtrl.text),
-                sampaiCtrl.text,
-              );
-            },
-            child: const Text('Simpan'),
-          ),
-        ],
+            ],
+          );
+        },
       ),
     );
   }
