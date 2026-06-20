@@ -51,6 +51,7 @@ class ProdukDetail {
   final double hargaJual;
   final int stok;
   final String namaKategori;
+  final String statusProduk;
 
   const ProdukDetail({
     required this.idProduk,
@@ -59,6 +60,7 @@ class ProdukDetail {
     required this.hargaJual,
     required this.stok,
     required this.namaKategori,
+    required this.statusProduk,
   });
 
   factory ProdukDetail.fromJson(Map<String, dynamic> json) {
@@ -70,6 +72,7 @@ class ProdukDetail {
       hargaJual: (json['harga_jual'] as num?)?.toDouble() ?? 0,
       stok: (json['stok'] as num?)?.toInt() ?? 0,
       namaKategori: kategori['nama_kategori'] as String? ?? '',
+      statusProduk: json['status_produk'] as String? ?? '',
     );
   }
 }
@@ -314,7 +317,7 @@ class LaporanProvider extends ChangeNotifier {
             idProduk: id,
             namaProduk: d.produk.namaProduk,
             namaKategori: d.produk.namaKategori,
-            statusProduk: '', // tidak ada di DetailLaporan, kosongkan dulu
+            statusProduk: d.produk.statusProduk,
             totalQty: d.qty,
             totalOmzet: d.subTotal,
           );

@@ -324,7 +324,7 @@ class _DaftarProdukPageState extends State<DaftarProdukPage>
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
-                          childAspectRatio: 0.69,
+                          childAspectRatio: 0.64,
                           crossAxisSpacing: 12,
                           mainAxisSpacing: 12,
                         ),
@@ -643,7 +643,6 @@ class _ProdukGridCard extends StatelessWidget {
               padding: const EdgeInsets.all(8),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     produk.namaProduk,
@@ -757,7 +756,7 @@ class _ProdukGridCard extends StatelessWidget {
                         color: _danger,
                       ),
                     ),
-                  ] else
+                  ] else 
                     Text(
                       _formatRupiah(produk.hargaJual),
                       style: const TextStyle(

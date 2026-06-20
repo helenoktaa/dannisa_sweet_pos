@@ -380,7 +380,7 @@ class _InputTransaksiPageState extends State<InputTransaksiPage>
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
-                          childAspectRatio: 0.76,
+                          childAspectRatio: 0.72,
                           crossAxisSpacing: 12,
                           mainAxisSpacing: 12,
                         ),

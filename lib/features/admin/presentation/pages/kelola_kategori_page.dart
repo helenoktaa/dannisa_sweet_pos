@@ -496,7 +496,6 @@ class _KategoriCard extends StatelessWidget {
             padding: const EdgeInsets.all(14),
             child: Row(
               children: [
-                // Icon kategori dengan warna unik
                 Container(
                   width: 52,
                   height: 52,

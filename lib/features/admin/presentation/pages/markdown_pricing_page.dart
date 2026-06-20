@@ -389,6 +389,10 @@ class _MarkdownCard extends StatelessWidget {
               : '-';
 
           return AlertDialog(
+            insetPadding: const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 24,
+            ),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
             ),
@@ -396,150 +400,152 @@ class _MarkdownCard extends StatelessWidget {
               'Set Diskon Manual',
               style: TextStyle(fontWeight: FontWeight.w800),
             ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Info harga asli
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: _surface,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Harga Asli',
-                        style: TextStyle(fontSize: 13, color: _textSecondary),
-                      ),
-                      Text(
-                        'Rp ${_fmt(produk.hargaJual)}',
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Info harga asli
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: _surface,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Harga Asli',
+                          style: TextStyle(fontSize: 13, color: _textSecondary),
                         ),
-                      ),
-                    ],
+                        Text(
+                          'Rp ${_fmt(produk.hargaJual)}',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 12),
+                  const SizedBox(height: 12),
 
-                // Input Persen
-                TextFormField(
-                  controller: porsenCtrl,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  decoration: InputDecoration(
-                    labelText: 'Diskon (%)',
-                    suffixText: '%',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: _primary, width: 2),
-                    ),
-                  ),
-                  onChanged: (v) {
-                    if (_isEditingRupiah) return;
-                    _isEditingPersen = true;
-                    final persen = double.tryParse(v) ?? 0;
-                    final rupiah = produk.hargaJual * persen / 100;
-                    rupiahCtrl.text = rupiah.toStringAsFixed(0);
-                    setStateDialog(() {});
-                    _isEditingPersen = false;
-                  },
-                ),
-                const SizedBox(height: 12),
-
-                // Input Rupiah
-                TextFormField(
-                  controller: rupiahCtrl,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  decoration: InputDecoration(
-                    labelText: 'Diskon (Rupiah)',
-                    prefixText: 'Rp ',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: _primary, width: 2),
-                    ),
-                  ),
-                  onChanged: (v) {
-                    if (_isEditingPersen) return;
-                    _isEditingRupiah = true;
-                    final rupiah = double.tryParse(v) ?? 0;
-                    final persen = produk.hargaJual > 0
-                        ? (rupiah / produk.hargaJual * 100).clamp(0, 100)
-                        : 0.0;
-                    porsenCtrl.text = persen.toStringAsFixed(0);
-                    setStateDialog(() {});
-                    _isEditingRupiah = false;
-                  },
-                ),
-                const SizedBox(height: 12),
-
-                // Preview harga setelah diskon
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: _danger.withOpacity(0.07),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: _danger.withOpacity(0.3)),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            'Harga Setelah Diskon',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: _textSecondary,
-                            ),
-                          ),
-                          Text(
-                            'Rp ${_fmt(hargaDiskon)}',
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w800,
-                              color: _danger,
-                            ),
-                          ),
-                        ],
+                  // Input Persen
+                  TextFormField(
+                    controller: porsenCtrl,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    decoration: InputDecoration(
+                      labelText: 'Diskon (%)',
+                      suffixText: '%',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      const SizedBox(height: 4),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            'Aktif Sampai',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: _textSecondary,
-                            ),
-                          ),
-                          Text(
-                            tglExpired,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: _primary, width: 2),
                       ),
-                    ],
+                    ),
+                    onChanged: (v) {
+                      if (_isEditingRupiah) return;
+                      _isEditingPersen = true;
+                      final persen = double.tryParse(v) ?? 0;
+                      final rupiah = produk.hargaJual * persen / 100;
+                      rupiahCtrl.text = rupiah.toStringAsFixed(0);
+                      setStateDialog(() {});
+                      _isEditingPersen = false;
+                    },
                   ),
-                ),
-              ],
+                  const SizedBox(height: 12),
+
+                  // Input Rupiah
+                  TextFormField(
+                    controller: rupiahCtrl,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    decoration: InputDecoration(
+                      labelText: 'Diskon (Rupiah)',
+                      prefixText: 'Rp ',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: _primary, width: 2),
+                      ),
+                    ),
+                    onChanged: (v) {
+                      if (_isEditingPersen) return;
+                      _isEditingRupiah = true;
+                      final rupiah = double.tryParse(v) ?? 0;
+                      final persen = produk.hargaJual > 0
+                          ? (rupiah / produk.hargaJual * 100).clamp(0, 100)
+                          : 0.0;
+                      porsenCtrl.text = persen.toStringAsFixed(0);
+                      setStateDialog(() {});
+                      _isEditingRupiah = false;
+                    },
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Preview harga setelah diskon
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: _danger.withOpacity(0.07),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: _danger.withOpacity(0.3)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'Harga Setelah Diskon',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: _textSecondary,
+                              ),
+                            ),
+                            Text(
+                              'Rp ${_fmt(hargaDiskon)}',
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w800,
+                                color: _danger,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'Aktif Sampai',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: _textSecondary,
+                              ),
+                            ),
+                            Text(
+                              tglExpired,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
             actions: [
               TextButton(
@@ -602,7 +608,6 @@ class _MarkdownCard extends StatelessWidget {
     String sampai,
   ) async {
     try {
-      // 1. Buat config dulu, abaikan kalau sudah ada (409)
       try {
         await DioClient.instance.post(
           '${ApiConstants.baseUrl}/markdown',

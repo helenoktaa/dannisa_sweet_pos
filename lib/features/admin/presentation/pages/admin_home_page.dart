@@ -15,10 +15,7 @@ const _warning = Color(0xFFF59E0B);
 final pendingBg = const Color(0xFFFFF1E8);
 final pendingIcon = const Color(0xFFFF9F43);
 
-// ══════════════════════════════════════════════════════════
-//  Diubah dari StatelessWidget → StatefulWidget
-//  Tujuan: agar bisa pakai initState untuk set idUser
-// ══════════════════════════════════════════════════════════
+
 class AdminHomePage extends StatefulWidget {
   const AdminHomePage({super.key});
 
@@ -38,7 +35,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    // Gunakan watch agar UI update otomatis jika auth berubah
+    
     final auth = context.watch<AuthProvider>();
     final namaUser = auth.user?.namaUser ?? 'Admin';
     final jabatan = auth.user?.jabatan.namaJabatan ?? 'Admin';
