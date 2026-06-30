@@ -136,7 +136,7 @@ class _LaporanTransaksiPageState extends State<LaporanTransaksiPage>
         headerSliverBuilder: (context, innerBoxIsScrolled) => [
           // ── App Bar ──────────────────────────────────────
           SliverAppBar(
-            expandedHeight: 120,
+            expandedHeight: 170,
             floating: false,
             pinned: true,
             elevation: 0,
@@ -160,72 +160,82 @@ class _LaporanTransaksiPageState extends State<LaporanTransaksiPage>
                 child: Stack(
                   children: [
                     Positioned(
-                      right: -30,
+                      right: -20,
                       top: -20,
                       child: Container(
-                        width: 160,
-                        height: 160,
+                        width: 140,
+                        height: 140,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: Colors.white.withOpacity(0.07),
                         ),
                       ),
                     ),
-                    const Positioned(
-                      left: 20,
-                      bottom: 56,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'Laporan Transaksi',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 22,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: -0.5,
+
+                    SafeArea(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 12, 20, 52),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: const [
+                            Text(
+                              'Laporan Transaksi',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 24,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: -.5,
+                              ),
                             ),
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            'Rekap penjualan & kerugian stok',
-                            style: TextStyle(
-                              color: Colors.white70,
-                              fontSize: 13,
+                            SizedBox(height: 6),
+                            Text(
+                              'Rekap penjualan & kerugian stok',
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 13,
+                              ),
                             ),
-                          ),
-                        ],
+                            SizedBox(height: 16),
+                          ],
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
             ),
-            bottom: TabBar(
-              controller: _tabController,
-              indicatorColor: Colors.white,
-              indicatorWeight: 3,
-              labelColor: Colors.white,
-              unselectedLabelColor: Colors.white60,
-              labelStyle: const TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 13,
+
+            bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(58),
+              child: Padding(
+                padding: const EdgeInsets.only(top: 10),
+                child: TabBar(
+                  controller: _tabController,
+                  indicatorColor: Colors.white,
+                  indicatorWeight: 3,
+                  labelColor: Colors.white,
+                  unselectedLabelColor: Colors.white60,
+                  labelStyle: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                  ),
+                  tabs: const [
+                    Tab(
+                      icon: Icon(Icons.receipt_long_outlined, size: 16),
+                      text: 'Transaksi',
+                    ),
+                    Tab(
+                      icon: Icon(Icons.trending_down_outlined, size: 16),
+                      text: 'Rugi Stok',
+                    ),
+                    Tab(
+                      icon: Icon(Icons.star_outline_rounded, size: 16),
+                      text: 'Best Seller',
+                    ),
+                  ],
+                ),
               ),
-              tabs: const [
-                Tab(
-                  icon: Icon(Icons.receipt_long_outlined, size: 16),
-                  text: 'Transaksi',
-                ),
-                Tab(
-                  icon: Icon(Icons.trending_down_outlined, size: 16),
-                  text: 'Rugi Stok',
-                ),
-                Tab(
-                  icon: Icon(Icons.star_outline_rounded, size: 16),
-                  text: 'Best Seller',
-                ),
-              ],
             ),
           ),
 
