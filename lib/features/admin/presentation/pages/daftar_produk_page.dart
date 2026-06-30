@@ -789,8 +789,16 @@ class _ProdukListCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final stokColor = _stokColor(produk.stok);
-    final stokLabel = _stokLabel(produk.stok);
+    final stokColor = produk.statusProduk == "preorder"
+        ? Colors.orange
+        : _stokColor(produk.stok);
+
+    final stokLabel = produk.statusProduk == "preorder"
+        ? "Pre Order"
+        : _stokLabel(produk.stok);
+
+    final showExpiry =
+        produk.statusProduk != "preorder" && produk.expiredDate != null;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -806,23 +814,23 @@ class _ProdukListCard extends StatelessWidget {
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         child: Row(
           children: [
             // Icon box
             Container(
-              width: 52,
-              height: 52,
+              width: 58,
+              height: 58,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [_accentColor, _accentColor.withOpacity(0.7)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(16),
               ),
               child: const Center(
-                child: Icon(Icons.cake_outlined, color: Colors.white, size: 26),
+                child: Icon(Icons.cake_outlined, color: Colors.white, size: 28),
               ),
             ),
             const SizedBox(width: 14),
@@ -833,10 +841,13 @@ class _ProdukListCard extends StatelessWidget {
                 children: [
                   Text(
                     produk.namaProduk,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontWeight: FontWeight.w700,
                       fontSize: 15,
                       color: _textPrimary,
+                      height: 1.2,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -845,11 +856,13 @@ class _ProdukListCard extends StatelessWidget {
                     style: const TextStyle(fontSize: 12, color: _textSecondary),
                   ),
                   const SizedBox(height: 6),
-                  Row(
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (produk.adaDiskon)
-                        Row(
-                          children: [
+                      // Harga
+                      Row(
+                        children: [
+                          if (produk.adaDiskon) ...[
                             Container(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 6,
@@ -869,66 +882,92 @@ class _ProdukListCard extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(width: 6),
+
                             Text(
                               _formatRupiah(produk.hargaJual),
                               style: const TextStyle(
-                                fontSize: 12,
+                                fontSize: 11,
                                 color: _textSecondary,
                                 decoration: TextDecoration.lineThrough,
-                                decorationColor: _textSecondary,
                               ),
                             ),
+
                             const SizedBox(width: 6),
-                            Text(
-                              _formatRupiah(produk.hargaTampil),
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w800,
-                                fontSize: 14,
-                                color: _danger,
-                              ),
-                            ),
                           ],
-                        )
-                      else
-                        Text(
-                          _formatRupiah(produk.hargaJual),
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w800,
-                            fontSize: 14,
-                            color: _primary,
+
+                          Text(
+                            _formatRupiah(
+                              produk.adaDiskon
+                                  ? produk.hargaTampil
+                                  : produk.hargaJual,
+                            ),
+                            style: TextStyle(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 16,
+                              color: produk.adaDiskon ? _danger : _primary,
+                            ),
                           ),
-                        ),
-                      const Spacer(),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 3,
-                        ),
-                        decoration: BoxDecoration(
-                          color: stokColor.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
+                        ],
+                      ),
+
+                      const SizedBox(height: 6),
+
+                      Row(
+                        children: [
+                          if (showExpiry) ...[
                             Icon(
-                              Icons.inventory_2_outlined,
+                              Icons.schedule,
                               size: 11,
-                              color: stokColor,
+                              color: _isExpired(produk.expiredDate)
+                                  ? Colors.red
+                                  : Colors.orange,
                             ),
                             const SizedBox(width: 4),
-                            Text(
-                              produk.statusProduk == "preorder"
-                                  ? "By Order"
-                                  : "$stokLabel (${produk.stok})",
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: stokColor,
-                                fontWeight: FontWeight.w600,
+                            Expanded(
+                              child: Text(
+                                _expiredLabel(produk.expiredDate),
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  color: _textSecondary,
+                                ),
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
-                          ],
-                        ),
+                          ] else
+                            const Spacer(),
+
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: stokColor.withOpacity(.12),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.inventory_2_outlined,
+                                  size: 11,
+                                  color: stokColor,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  produk.statusProduk == "preorder"
+                                      ? "By Order"
+                                      : "$stokLabel (${produk.stok})",
+                                  style: TextStyle(
+                                    color: stokColor,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -940,4 +979,4 @@ class _ProdukListCard extends StatelessWidget {
       ),
     );
   }
-} 
+}
