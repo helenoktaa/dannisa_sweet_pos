@@ -450,7 +450,7 @@ class _HistoryCard extends StatelessWidget {
   const _HistoryCard({required this.history});
 
   bool get _isPenambahan => history.jenis == 'penambahan';
-  
+
   String _formatRupiah(double value) {
     final formatted = value
         .toStringAsFixed(0)
@@ -462,6 +462,7 @@ class _HistoryCard extends StatelessWidget {
   }
 
   String _formatTanggal(DateTime tanggal) {
+    final wib = tanggal.toUtc().add(const Duration(hours: 7));
     final months = [
       '',
       'Jan',
@@ -477,9 +478,9 @@ class _HistoryCard extends StatelessWidget {
       'Nov',
       'Des',
     ];
-    return '${tanggal.day} ${months[tanggal.month]} ${tanggal.year} '
-        '${tanggal.hour.toString().padLeft(2, '0')}:'
-        '${tanggal.minute.toString().padLeft(2, '0')}';
+    return '${wib.day} ${months[wib.month]} ${wib.year} '
+        '${wib.hour.toString().padLeft(2, '0')}:'
+        '${wib.minute.toString().padLeft(2, '0')}';
   }
 
   @override
