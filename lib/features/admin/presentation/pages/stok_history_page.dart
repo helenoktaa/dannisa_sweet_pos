@@ -853,6 +853,7 @@ class _StokFormSheetState extends State<_StokFormSheet> {
                     // Dropdown Produk
                     DropdownButtonFormField<String>(
                       value: _selectedProdukId,
+                      isExpanded: true,
                       decoration: InputDecoration(
                         labelText: 'Pilih Produk',
                         prefixIcon: const Icon(

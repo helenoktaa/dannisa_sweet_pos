@@ -10,7 +10,7 @@ class ProdukProvider extends ChangeNotifier {
   ProdukStatus _status = ProdukStatus.initial;
   List<ProdukModel> _produks = [];
   String? _error;
-
+  
   ProdukStatus get status => _status;
   List<ProdukModel> get produks => _produks;
   String? get error => _error;
