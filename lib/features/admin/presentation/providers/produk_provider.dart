@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:dannisa_sweet_pos/core/constants/api_constants.dart';
 import 'package:dannisa_sweet_pos/core/services/dio_client.dart';
@@ -10,7 +11,7 @@ class ProdukProvider extends ChangeNotifier {
   ProdukStatus _status = ProdukStatus.initial;
   List<ProdukModel> _produks = [];
   String? _error;
-  
+
   ProdukStatus get status => _status;
   List<ProdukModel> get produks => _produks;
   String? get error => _error;
@@ -50,21 +51,23 @@ class ProdukProvider extends ChangeNotifier {
     required String idKategori,
     required String statusProduk,
     String? expiredDate,
+    File? imageFile,
   }) async {
     try {
-      await DioClient.instance.post(
-        ApiConstants.produk,
-        data: {
-          'id_produk': idProduk,
-          'nama_produk': namaProduk,
-          'harga_modal': hargaModal,
-          'harga_jual': hargaJual,
-          'stok': stok,
-          'id_kategori': idKategori,
-          'status_produk': statusProduk,
-          'expired_date': expiredDate,
-        },
-      );
+      final formData = FormData.fromMap({
+        'id_produk': idProduk,
+        'nama_produk': namaProduk,
+        'harga_modal': hargaModal.toString(),
+        'harga_jual': hargaJual.toString(),
+        'stok': stok.toString(),
+        'id_kategori': idKategori,
+        'status_produk': statusProduk,
+        'expired_date': expiredDate ?? '',
+        if (imageFile != null)
+          'image': await MultipartFile.fromFile(imageFile.path),
+      });
+
+      await DioClient.instance.post(ApiConstants.produk, data: formData);
       await fetchProduks();
       return true;
     } on DioException catch (e) {
@@ -84,19 +87,26 @@ class ProdukProvider extends ChangeNotifier {
     required String idKategori,
     required String statusProduk,
     String? expiredDate,
+    File? imageFile,
+    String? existingImageUrl,
   }) async {
     try {
+      final formData = FormData.fromMap({
+        'nama_produk': namaProduk,
+        'harga_modal': hargaModal.toString(),
+        'harga_jual': hargaJual.toString(),
+        'stok': stok.toString(),
+        'id_kategori': idKategori,
+        'status_produk': statusProduk,
+        'expired_date': expiredDate ?? '',
+        'image_url': existingImageUrl ?? '',
+        if (imageFile != null)
+          'image': await MultipartFile.fromFile(imageFile.path),
+      });
+
       await DioClient.instance.put(
         '${ApiConstants.produk}/$idProduk',
-        data: {
-          'nama_produk': namaProduk,
-          'harga_modal': hargaModal,
-          'harga_jual': hargaJual,
-          'stok': stok,
-          'id_kategori': idKategori,
-          'status_produk': statusProduk,
-          'expired_date': expiredDate,
-        },
+        data: formData,
       );
       await fetchProduks();
       return true;
