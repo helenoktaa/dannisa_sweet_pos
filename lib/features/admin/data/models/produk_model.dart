@@ -1,4 +1,5 @@
 class ProdukModel {
+  final String? imageUrl;
   final String idProduk;
   final String namaProduk;
   final double hargaModal;
@@ -14,6 +15,7 @@ class ProdukModel {
   final DateTime? expiredDate;
 
   const ProdukModel({
+    this.imageUrl,
     required this.idProduk,
     required this.namaProduk,
     required this.hargaModal,
@@ -36,6 +38,7 @@ double get hargaTampil => hargaDiskon ?? hargaJual;
     final kategoriJson = json['kategori'] as Map<String, dynamic>?;
 
     return ProdukModel(
+      imageUrl: json['image_url']?.toString(),
       idProduk: json['id_produk']?.toString() ?? '',
       namaProduk: json['nama_produk']?.toString() ?? '',
       hargaModal: (json['harga_modal'] as num).toDouble(),
