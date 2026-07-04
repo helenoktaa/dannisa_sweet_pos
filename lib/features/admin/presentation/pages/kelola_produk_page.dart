@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -5,6 +7,7 @@ import 'package:dannisa_sweet_pos/features/admin/data/models/produk_model.dart';
 import 'package:dannisa_sweet_pos/features/admin/presentation/providers/produk_provider.dart';
 import 'package:dannisa_sweet_pos/features/admin/presentation/providers/kategori_provider.dart';
 import 'package:dannisa_sweet_pos/core/routes/app_router.dart';
+import 'package:dannisa_sweet_pos/core/constants/api_constants.dart';
 
 // ── Warna tema Dannisa Sweet ───────────────────────────────
 const _primary = Color(0xFFE91E8C);
@@ -1025,6 +1028,8 @@ class _ProdukFormSheetState extends State<_ProdukFormSheet> {
   late final TextEditingController _expiredCtrl;
 
   String _statusProduk = "ready";
+  File? _imageFile;
+  String? _existingImageUrl;
 
   bool get _isEdit => widget.produk != null;
 
@@ -1052,6 +1057,7 @@ class _ProdukFormSheetState extends State<_ProdukFormSheet> {
     _stokCtrl = TextEditingController(text: p?.stok.toString() ?? '');
     _selectedKategoriId = p?.idKategori;
     _statusProduk = p?.statusProduk ?? "ready";
+    _existingImageUrl = p?.imageUrl;
 
     _expiredCtrl = TextEditingController(
       text: p?.expiredDate != null
@@ -1073,6 +1079,17 @@ class _ProdukFormSheetState extends State<_ProdukFormSheet> {
     _stokCtrl.dispose();
     _expiredCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickImage() async {
+    final picked = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 80,
+      maxWidth: 1024,
+    );
+    if (picked != null) {
+      setState(() => _imageFile = File(picked.path));
+    }
   }
 
   Future<void> _submit() async {
@@ -1102,6 +1119,8 @@ class _ProdukFormSheetState extends State<_ProdukFormSheet> {
         statusProduk: _statusProduk,
 
         expiredDate: _expiredCtrl.text.isEmpty ? null : _expiredCtrl.text,
+        imageFile: _imageFile,
+        existingImageUrl: _existingImageUrl,
       );
     } else {
       ok = await provider.createProduk(
@@ -1114,6 +1133,7 @@ class _ProdukFormSheetState extends State<_ProdukFormSheet> {
         statusProduk: _statusProduk,
 
         expiredDate: _expiredCtrl.text.isEmpty ? null : _expiredCtrl.text,
+        imageFile: _imageFile,
       );
     }
 
@@ -1231,6 +1251,52 @@ class _ProdukFormSheetState extends State<_ProdukFormSheet> {
                           ),
                         ),
                       ],
+                    ),
+                    const SizedBox(height: 12),
+
+                    // ── Foto Produk ──────────────────────────
+                    GestureDetector(
+                      onTap: _pickImage,
+                      child: Container(
+                        height: 140,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade50,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: Colors.grey.shade300),
+                        ),
+                        clipBehavior: Clip.antiAlias,
+                        child: _imageFile != null
+                            ? Stack(
+                                fit: StackFit.expand,
+                                children: [
+                                  Image.file(_imageFile!, fit: BoxFit.cover),
+                                  _RemoveImageButton(
+                                    onTap: () =>
+                                        setState(() => _imageFile = null),
+                                  ),
+                                ],
+                              )
+                            : (_existingImageUrl != null &&
+                                    _existingImageUrl!.isNotEmpty)
+                                ? Stack(
+                                    fit: StackFit.expand,
+                                    children: [
+                                      Image.network(
+                                        '${ApiConstants.baseUrl}$_existingImageUrl',
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (_, __, ___) =>
+                                            const _ImagePlaceholder(),
+                                      ),
+                                      _RemoveImageButton(
+                                        onTap: () => setState(() {
+                                          _existingImageUrl = null;
+                                        }),
+                                      ),
+                                    ],
+                                  )
+                                : const _ImagePlaceholder(),
+                      ),
                     ),
                     const SizedBox(height: 12),
 
@@ -1596,6 +1662,49 @@ class _FormField extends StatelessWidget {
           vertical: 14,
         ),
         labelStyle: const TextStyle(fontSize: 13),
+      ),
+    );
+  }
+}
+
+class _ImagePlaceholder extends StatelessWidget {
+  const _ImagePlaceholder();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(Icons.add_a_photo_outlined, color: Colors.grey.shade400, size: 32),
+        const SizedBox(height: 6),
+        Text(
+          'Tambah Foto Produk',
+          style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+        ),
+      ],
+    );
+  }
+}
+
+class _RemoveImageButton extends StatelessWidget {
+  final VoidCallback onTap;
+  const _RemoveImageButton({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      top: 6,
+      right: 6,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(4),
+          decoration: const BoxDecoration(
+            color: Colors.black54,
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(Icons.close, color: Colors.white, size: 16),
+        ),
       ),
     );
   }
