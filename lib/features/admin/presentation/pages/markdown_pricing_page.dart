@@ -189,9 +189,16 @@ class _MarkdownCard extends StatelessWidget {
 
   const _MarkdownCard({required this.produk, required this.onRefresh});
 
+  bool get _sudahExpired {
+    if (produk.expiredDate == null) return false;
+    return produk.expiredDate!.isBefore(DateTime.now());
+  }
+
   int get _sisaHari {
     if (produk.expiredDate == null) return 999;
-    return produk.expiredDate!.difference(DateTime.now()).inDays;
+    final diff = produk.expiredDate!.difference(DateTime.now());
+    if (diff.isNegative) return -1;
+    return (diff.inSeconds / 86400).ceil();
   }
 
   @override
@@ -244,8 +251,10 @@ class _MarkdownCard extends StatelessWidget {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            sisaHari <= 0
+                            _sudahExpired
                                 ? 'Sudah expired'
+                                : sisaHari == 0
+                                ? 'Expired hari ini'
                                 : '$sisaHari hari lagi expired',
                             style: TextStyle(
                               fontSize: 12,

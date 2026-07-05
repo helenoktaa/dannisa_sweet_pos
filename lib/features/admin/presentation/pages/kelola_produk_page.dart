@@ -620,6 +620,17 @@ class _ProdukCard extends StatelessWidget {
   double get _marginPersen =>
       produk.hargaModal > 0 ? (_laba / produk.hargaModal) * 100 : 0;
 
+  Widget _initialAvatar() => Center(
+    child: Text(
+      produk.namaProduk.isNotEmpty ? produk.namaProduk[0].toUpperCase() : '?',
+      style: const TextStyle(
+        color: Colors.white,
+        fontSize: 22,
+        fontWeight: FontWeight.bold,
+      ),
+    ),
+  );
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -657,19 +668,16 @@ class _ProdukCard extends StatelessWidget {
                     ),
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  child: Center(
-                    child: Text(
-                      produk.namaProduk.isNotEmpty
-                          ? produk.namaProduk[0].toUpperCase()
-                          : '?',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: produk.imageUrl != null && produk.imageUrl!.isNotEmpty
+                      ? Image.network(
+                          '${ApiConstants.serverUrl}${produk.imageUrl}',
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => _initialAvatar(),
+                        )
+                      : _initialAvatar(),
                 ),
+                const SizedBox(width: 12),
                 const SizedBox(width: 12),
 
                 // Info utama
@@ -1278,24 +1286,24 @@ class _ProdukFormSheetState extends State<_ProdukFormSheet> {
                                 ],
                               )
                             : (_existingImageUrl != null &&
-                                    _existingImageUrl!.isNotEmpty)
-                                ? Stack(
-                                    fit: StackFit.expand,
-                                    children: [
-                                      Image.network(
-                                        '${ApiConstants.baseUrl}$_existingImageUrl',
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (_, __, ___) =>
-                                            const _ImagePlaceholder(),
-                                      ),
-                                      _RemoveImageButton(
-                                        onTap: () => setState(() {
-                                          _existingImageUrl = null;
-                                        }),
-                                      ),
-                                    ],
-                                  )
-                                : const _ImagePlaceholder(),
+                                  _existingImageUrl!.isNotEmpty)
+                            ? Stack(
+                                fit: StackFit.expand,
+                                children: [
+                                  Image.network(
+                                    '${ApiConstants.baseUrl}$_existingImageUrl',
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) =>
+                                        const _ImagePlaceholder(),
+                                  ),
+                                  _RemoveImageButton(
+                                    onTap: () => setState(() {
+                                      _existingImageUrl = null;
+                                    }),
+                                  ),
+                                ],
+                              )
+                            : const _ImagePlaceholder(),
                       ),
                     ),
                     const SizedBox(height: 12),

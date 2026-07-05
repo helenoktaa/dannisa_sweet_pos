@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:dannisa_sweet_pos/features/admin/presentation/providers/produk_provider.dart';
 import 'package:dannisa_sweet_pos/features/admin/presentation/providers/kategori_provider.dart';
 import 'package:dannisa_sweet_pos/features/admin/data/models/produk_model.dart';
+import 'package:dannisa_sweet_pos/core/constants/api_constants.dart';
 
 // ── Warna tema Dannisa Sweet ───────────────────────────────
 const _primary = Color(0xFFE91E8C);
@@ -520,6 +521,24 @@ class _ProdukGridCard extends StatelessWidget {
     return colors[index % colors.length];
   }
 
+  Widget _headerFallback() => Center(
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Icon(Icons.cake_outlined, color: Colors.white, size: 28),
+        const SizedBox(height: 4),
+        Text(
+          produk.namaKategori ?? '',
+          style: TextStyle(
+            color: Colors.white.withOpacity(.9),
+            fontSize: 10,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    ),
+  );
+
   @override
   Widget build(BuildContext context) {
     final stokColor = produk.statusProduk == "preorder"
@@ -551,6 +570,7 @@ class _ProdukGridCard extends StatelessWidget {
           //================ HEADER ==================
           Container(
             height: 100,
+            clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [_accentColor, _accentColor.withOpacity(.65)],
@@ -564,27 +584,16 @@ class _ProdukGridCard extends StatelessWidget {
             ),
             child: Stack(
               children: [
-                Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.cake_outlined,
-                        color: Colors.white,
-                        size: 28,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        produk.namaKategori ?? '',
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(.9),
-                          fontSize: 10,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                if (produk.imageUrl != null && produk.imageUrl!.isNotEmpty)
+                  Positioned.fill(
+                    child: Image.network(
+                      '${ApiConstants.serverUrl}${produk.imageUrl}',
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => _headerFallback(),
+                    ),
+                  )
+                else
+                  _headerFallback(),
 
                 Positioned(
                   top: 8,
@@ -787,6 +796,10 @@ class _ProdukListCard extends StatelessWidget {
     return colors[index % colors.length];
   }
 
+  Widget _iconFallback() => const Center(
+    child: Icon(Icons.cake_outlined, color: Colors.white, size: 28),
+  );
+
   @override
   Widget build(BuildContext context) {
     final stokColor = produk.statusProduk == "preorder"
@@ -821,6 +834,7 @@ class _ProdukListCard extends StatelessWidget {
             Container(
               width: 58,
               height: 58,
+              clipBehavior: Clip.antiAlias,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [_accentColor, _accentColor.withOpacity(0.7)],
@@ -829,9 +843,13 @@ class _ProdukListCard extends StatelessWidget {
                 ),
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: const Center(
-                child: Icon(Icons.cake_outlined, color: Colors.white, size: 28),
-              ),
+              child: produk.imageUrl != null && produk.imageUrl!.isNotEmpty
+                  ? Image.network(
+                      '${ApiConstants.serverUrl}${produk.imageUrl}',
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => _iconFallback(),
+                    )
+                  : _iconFallback(),
             ),
             const SizedBox(width: 14),
 

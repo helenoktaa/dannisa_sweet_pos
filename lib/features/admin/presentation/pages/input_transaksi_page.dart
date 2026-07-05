@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:dannisa_sweet_pos/core/constants/api_constants.dart';
 import 'package:provider/provider.dart';
 import 'dart:ui' as ui;
 import 'dart:io';
@@ -9,7 +10,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:dannisa_sweet_pos/features/admin/presentation/providers/transaksi_provider.dart';
 import 'package:dannisa_sweet_pos/features/admin/presentation/providers/produk_provider.dart';
 import 'package:dannisa_sweet_pos/features/admin/presentation/providers/kategori_provider.dart';
-import 'package:dannisa_sweet_pos/features/admin/presentation/pages/pre_order_page.dart';
 import 'package:dannisa_sweet_pos/features/admin/data/models/produk_model.dart';
 
 // ── Warna tema Dannisa Sweet ───────────────────────────────
@@ -377,13 +377,12 @@ class _InputTransaksiPageState extends State<InputTransaksiPage>
                   )
                 : GridView.builder(
                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          childAspectRatio: 0.72,
-                          crossAxisSpacing: 12,
-                          mainAxisSpacing: 12,
-                        ),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      childAspectRatio: _activeTab == 1 ? 0.65 : 0.58,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                    ),
                     itemCount: filtered.length,
                     itemBuilder: (ctx, i) {
                       final p = filtered[i];
@@ -600,6 +599,26 @@ class _ProdukCard extends StatelessWidget {
     return colors[index % colors.length];
   }
 
+  Widget _bannerFallback() => Center(
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Icon(Icons.cake_outlined, color: Colors.white, size: 40),
+        if (produk.namaKategori != null && produk.namaKategori!.isNotEmpty) ...[
+          const SizedBox(height: 4),
+          Text(
+            produk.namaKategori!,
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.9),
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ],
+    ),
+  );
+
   @override
   Widget build(BuildContext context) {
     final isInCart = qty > 0;
@@ -638,7 +657,8 @@ class _ProdukCard extends StatelessWidget {
         children: [
           // ── Top banner ────────────────────────────────────
           Container(
-            height: 80,
+            height: 120,
+            clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: isPreOrder
@@ -654,30 +674,16 @@ class _ProdukCard extends StatelessWidget {
             ),
             child: Stack(
               children: [
-                Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.cake_outlined,
-                        color: Colors.white,
-                        size: 30,
-                      ),
-                      if (produk.namaKategori != null &&
-                          produk.namaKategori!.isNotEmpty) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          produk.namaKategori!,
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.9),
-                            fontSize: 9,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
+                if (produk.imageUrl != null && produk.imageUrl!.isNotEmpty)
+                  Positioned.fill(
+                    child: Image.network(
+                      '${ApiConstants.serverUrl}${produk.imageUrl}',
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => _bannerFallback(),
+                    ),
+                  )
+                else
+                  _bannerFallback(),
                 // Badge qty di keranjang
                 if (isInCart)
                   Positioned(
@@ -715,13 +721,13 @@ class _ProdukCard extends StatelessWidget {
                         bgColor = Colors.orange.shade600;
                         label = 'Pre Order';
                       } else if (produk.stok <= 5 && produk.stok > 0) {
-                        bgColor = _warning; // kuning / amber
+                        bgColor = _warning;
                         label = 'Menipis';
                       } else if (produk.stok == 0) {
                         bgColor = _danger;
                         label = 'Habis';
                       } else {
-                        bgColor = _success; // hijau
+                        bgColor = _success;
                         label = 'Ready';
                       }
 
@@ -749,7 +755,7 @@ class _ProdukCard extends StatelessWidget {
               ],
             ),
           ),
-
+          const SizedBox(height: 8),
           // ── Info ──────────────────────────────────────────
           Expanded(
             child: Padding(
@@ -763,7 +769,7 @@ class _ProdukCard extends StatelessWidget {
                     produk.namaProduk,
                     style: const TextStyle(
                       fontWeight: FontWeight.w700,
-                      fontSize: 12,
+                      fontSize: 13,
                       color: _textPrimary,
                     ),
                     maxLines: 1, // ← 2 → 1 biar tidak makan 2 baris
@@ -776,14 +782,14 @@ class _ProdukCard extends StatelessWidget {
                     children: [
                       Icon(
                         Icons.inventory_2_outlined,
-                        size: 10,
+                        size: 12,
                         color: stokColor,
                       ),
                       const SizedBox(width: 3),
                       Text(
                         isPreOrder ? 'By Order' : 'Stok: ${produk.stok}',
                         style: TextStyle(
-                          fontSize: 10,
+                          fontSize: 11,
                           color: stokColor,
                           fontWeight: FontWeight.w600,
                         ),
@@ -796,13 +802,13 @@ class _ProdukCard extends StatelessWidget {
                     const SizedBox(height: 2),
                     Row(
                       children: [
-                        Icon(Icons.schedule, size: 10, color: expColor),
+                        Icon(Icons.schedule, size: 12, color: expColor),
                         const SizedBox(width: 3),
                         Flexible(
                           child: Text(
                             _expiredLabel(produk.expiredDate),
                             style: TextStyle(
-                              fontSize: 9,
+                              fontSize: 11,
                               color: expColor,
                               fontWeight: FontWeight.w500,
                             ),
@@ -830,7 +836,7 @@ class _ProdukCard extends StatelessWidget {
                       _formatRupiah(produk.hargaTampil),
                       style: const TextStyle(
                         fontWeight: FontWeight.w800,
-                        fontSize: 12,
+                        fontSize: 13,
                         color: _danger,
                       ),
                     ),
@@ -839,7 +845,7 @@ class _ProdukCard extends StatelessWidget {
                       _formatRupiah(produk.hargaJual),
                       style: const TextStyle(
                         fontWeight: FontWeight.w800,
-                        fontSize: 12,
+                        fontSize: 13,
                         color: _primary,
                       ),
                     ),
