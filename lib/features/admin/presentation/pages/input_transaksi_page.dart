@@ -677,7 +677,9 @@ class _ProdukCard extends StatelessWidget {
                 if (produk.imageUrl != null && produk.imageUrl!.isNotEmpty)
                   Positioned.fill(
                     child: Image.network(
-                      '${ApiConstants.serverUrl}${produk.imageUrl}',
+                      produk.imageUrl!.startsWith('http')
+                          ? produk.imageUrl!
+                          : '${ApiConstants.serverUrl}${produk.imageUrl}',
                       fit: BoxFit.cover,
                       errorBuilder: (_, __, ___) => _bannerFallback(),
                     ),

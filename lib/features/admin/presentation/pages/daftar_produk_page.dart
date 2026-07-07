@@ -587,7 +587,9 @@ class _ProdukGridCard extends StatelessWidget {
                 if (produk.imageUrl != null && produk.imageUrl!.isNotEmpty)
                   Positioned.fill(
                     child: Image.network(
-                      '${ApiConstants.serverUrl}${produk.imageUrl}',
+                      produk.imageUrl!.startsWith('http')
+                          ? produk.imageUrl!
+                          : '${ApiConstants.serverUrl}${produk.imageUrl}',
                       fit: BoxFit.cover,
                       errorBuilder: (_, __, ___) => _headerFallback(),
                     ),
@@ -845,7 +847,9 @@ class _ProdukListCard extends StatelessWidget {
               ),
               child: produk.imageUrl != null && produk.imageUrl!.isNotEmpty
                   ? Image.network(
-                      '${ApiConstants.serverUrl}${produk.imageUrl}',
+                      produk.imageUrl!.startsWith('http')
+                          ? produk.imageUrl!
+                          : '${ApiConstants.serverUrl}${produk.imageUrl}',
                       fit: BoxFit.cover,
                       errorBuilder: (_, __, ___) => _iconFallback(),
                     )
