@@ -1,6 +1,6 @@
 class ApiConstants {
-  static const String baseUrl = 'http://192.168.100.6:8080/v1';
-
+  static const String baseUrl =
+      'https://dannisasweetbe-production.up.railway.app/v1';
 
   // Base URL server tanpa /v1 — dipakai buat akses file statis (gambar produk, dll)
   static String get serverUrl => baseUrl.replaceAll('/v1', '');
